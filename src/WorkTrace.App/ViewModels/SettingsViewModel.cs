@@ -195,30 +195,27 @@ public sealed partial class SettingsViewModel(
         Apply(s => s.General.GlobalShortcut = value!.Trim());
     }
 
+    /// <summary>
+    /// Saves one change on top of the latest stored settings. Updates are serialised by the store, so
+    /// quick successive changes (and a pause from the tray meanwhile) are all kept.
+    /// </summary>
     private void Apply(Action<WorkTraceSettings> change)
     {
-        if (_loading)
+        if (!_loading)
         {
-            return;
+            _ = UpdateAsync(change);
         }
-
-        var copy = settings.Current.Clone();
-        change(copy);
-        var errors = copy.Validate();
-        if (errors.Count > 0)
-        {
-            Notifications.Show(errors[0], NotificationKind.Warning);
-            return;
-        }
-
-        _ = SaveAsync(copy);
     }
 
-    private async Task SaveAsync(WorkTraceSettings copy)
+    private async Task UpdateAsync(Action<WorkTraceSettings> change)
     {
         try
         {
-            await settings.SaveAsync(copy);
+            await settings.UpdateAsync(change);
+        }
+        catch (SettingsValidationException ex)
+        {
+            Notifications.Show(ex.Errors[0], NotificationKind.Warning);
         }
         catch (Exception ex)
         {

@@ -95,4 +95,35 @@ public class JsonSettingsStoreTests
 
         Assert.Same(settings, received);
     }
+
+    [Fact]
+    public async Task ConcurrentUpdates_AreAllApplied()
+    {
+        using var data = new TestDataDirectory();
+        await using var services = data.BuildServices();
+        var store = services.GetRequiredService<ISettingsStore>();
+        await store.LoadAsync(Ct);
+
+        await Task.WhenAll(
+            store.UpdateAsync(s => s.Tracking.CheckInIntervalMinutes = 45, Ct),
+            store.UpdateAsync(s => s.Tracking.Enabled = false, Ct),
+            store.UpdateAsync(s => s.Tracking.PopupMode = PopupMode.Focused, Ct));
+
+        var current = store.Current;
+        Assert.Equal(45, current.Tracking.CheckInIntervalMinutes);
+        Assert.False(current.Tracking.Enabled);
+        Assert.Equal(PopupMode.Focused, current.Tracking.PopupMode);
+    }
+
+    [Fact]
+    public async Task InvalidUpdate_ChangesNothing()
+    {
+        using var data = new TestDataDirectory();
+        await using var services = data.BuildServices();
+        var store = services.GetRequiredService<ISettingsStore>();
+        await store.LoadAsync(Ct);
+
+        await Assert.ThrowsAsync<SettingsValidationException>(() => store.UpdateAsync(s => s.Reporting.RoundingMinutes = 7, Ct));
+        Assert.Equal(0, store.Current.Reporting.RoundingMinutes);
+    }
 }

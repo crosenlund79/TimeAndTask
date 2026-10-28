@@ -511,10 +511,13 @@ public sealed class TrackingEngine : IAsyncDisposable
 
     private async Task SavePauseSettingsAsync(bool enabled, DateTime? pausedUntil, CancellationToken ct)
     {
-        var copy = _settings.Current.Clone();
-        copy.Tracking.Enabled = enabled;
-        copy.Tracking.PausedUntilUtc = pausedUntil;
-        await _settings.SaveAsync(copy, ct);
+        await _settings.UpdateAsync(
+            s =>
+            {
+                s.Tracking.Enabled = enabled;
+                s.Tracking.PausedUntilUtc = pausedUntil;
+            },
+            ct);
     }
 
     private void OnSettingsChanged(object? sender, WorkTraceSettings settings) =>

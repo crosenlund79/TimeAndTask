@@ -64,6 +64,33 @@ public sealed class JsonSettingsStore(AppPaths paths, TimeProvider timeProvider,
         Changed?.Invoke(this, settings);
     }
 
+    public async Task<WorkTraceSettings> UpdateAsync(Action<WorkTraceSettings> change, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(change);
+        WorkTraceSettings updated;
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            updated = Current.Clone();
+            change(updated);
+            var errors = updated.Validate();
+            if (errors.Count > 0)
+            {
+                throw new SettingsValidationException(errors);
+            }
+
+            await WriteAsync(updated, cancellationToken);
+            Current = updated;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+
+        Changed?.Invoke(this, updated);
+        return updated;
+    }
+
     public void Dispose() => _gate.Dispose();
 
     private async Task<WorkTraceSettings> ReadOrDefaultAsync(CancellationToken cancellationToken)

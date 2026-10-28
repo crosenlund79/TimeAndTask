@@ -13,6 +13,14 @@ public interface ISettingsStore
     /// </summary>
     Task<WorkTraceSettings> LoadAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Applies <paramref name="change"/> to a copy of the latest settings and saves it, serialised with other
+    /// updates. Use this rather than Current + SaveAsync when several parts of the app change settings
+    /// (e.g. the tracking engine pausing while the settings page is open) so no update is lost.
+    /// </summary>
+    /// <exception cref="SettingsValidationException">The result is invalid; nothing is written.</exception>
+    Task<WorkTraceSettings> UpdateAsync(Action<WorkTraceSettings> change, CancellationToken cancellationToken = default);
+
     /// <summary>Validates and atomically persists settings.</summary>
     /// <exception cref="SettingsValidationException">The settings are invalid; nothing is written.</exception>
     Task SaveAsync(WorkTraceSettings settings, CancellationToken cancellationToken = default);
