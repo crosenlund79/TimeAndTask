@@ -27,7 +27,7 @@ public static class AppServices
         services.AddSingleton<TrackingController>();
         services.AddSingleton<GlobalHotkey>();
         services.AddSingleton<SystemEventsBridge>();
-        services.AddTransient<CheckInViewModel>();
+        services.AddTransient<CheckInViewModel>(); // the presenter creates popups untracked; registered for tests
 
         // One main window per process: page view models are singletons so state (search text,
         // unsaved edits) survives hiding the window to the tray.

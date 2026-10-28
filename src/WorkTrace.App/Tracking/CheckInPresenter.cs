@@ -58,7 +58,9 @@ public sealed class CheckInPresenter(IServiceProvider services, ISettingsStore s
 
     private CheckInWindow Open(int? promptId, DateTime? scheduledAtUtc, PromptReason reason, int? autoDismissSeconds, bool takeFocus)
     {
-        var viewModel = services.GetRequiredService<CheckInViewModel>();
+        // Created outside the container: a transient IDisposable resolved from the root provider would be
+        // kept alive (and disposed again) until the application exits.
+        var viewModel = ActivatorUtilities.CreateInstance<CheckInViewModel>(services);
         viewModel.Configure(promptId, scheduledAtUtc, reason, autoDismissSeconds);
         viewModel.Recorded += (_, observation) => Recorded?.Invoke(this, observation);
 

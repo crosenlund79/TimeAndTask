@@ -313,6 +313,7 @@ public sealed partial class CheckInViewModel(
     {
         _searchCts?.Cancel();
         _searchCts?.Dispose();
+        _searchCts = null;
     }
 
     partial void OnSearchTextChanged(string? value) => ScheduleSearch();
