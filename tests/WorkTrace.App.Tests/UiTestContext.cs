@@ -44,8 +44,18 @@ internal sealed class UiTestContext : IAsyncDisposable
         return context;
     }
 
+    /// <summary>Check-in popups that exist right now (to find the one a test opens).</summary>
+    public static IReadOnlyList<WorkTrace.App.Views.CheckInWindow> Popups() =>
+        [.. System.Windows.Application.Current.Windows.OfType<WorkTrace.App.Views.CheckInWindow>()];
+
     public async ValueTask DisposeAsync()
     {
+        // Never leave windows behind for the next test (they share one Application).
+        foreach (var window in System.Windows.Application.Current.Windows.OfType<System.Windows.Window>().ToList())
+        {
+            window.Close();
+        }
+
         await Services.DisposeAsync();
         SqliteConnection.ClearAllPools();
         try

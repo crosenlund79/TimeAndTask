@@ -246,14 +246,13 @@ public class CheckInTests
         await using var ctx = await UiTestContext.CreateAsync();
         var presenter = ctx.Get<CheckInPresenter>();
 
+        var before = UiTestContext.Popups();
         var outcomeTask = presenter.ShowPromptAsync(1, DateTime.UtcNow, PromptReason.Scheduled, CancellationToken.None);
         await WpfTestHost.SettleAsync();
         Assert.True(presenter.IsOpen);
 
         presenter.ShowManual(); // brings the open popup forward instead of opening a second one
-        Assert.Single(Application.Current.Windows.OfType<CheckInWindow>());
-
-        var window = Application.Current.Windows.OfType<CheckInWindow>().Single();
+        var window = Assert.Single(UiTestContext.Popups().Except(before));
         ((CheckInViewModel)window.DataContext).DismissCommand.Execute(null);
         Assert.Equal(PromptOutcome.Dismissed, await outcomeTask);
         Assert.False(presenter.IsOpen);

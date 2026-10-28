@@ -48,10 +48,11 @@ public class FocusTests
             }
 
             await WpfTestHost.SettleAsync();
+            var before = UiTestContext.Popups();
             ctx.Get<CheckInPresenter>().ShowManual();
             await WpfTestHost.SettleAsync(10);
 
-            var popup = Assert.Single(Application.Current.Windows.OfType<CheckInWindow>());
+            var popup = Assert.Single(UiTestContext.Popups().Except(before));
             Assert.Same(popup.SearchBox, FocusManager.GetFocusedElement(popup));
             if (!canActivate)
             {
@@ -83,10 +84,11 @@ public class FocusTests
                 Assert.Skip("This desktop session does not allow the test process to activate windows.");
             }
 
+            var before = UiTestContext.Popups();
             var outcome = ctx.Get<CheckInPresenter>().ShowPromptAsync(1, ctx.Time.GetUtcNow().UtcDateTime, PromptReason.Scheduled, CancellationToken.None);
             await WpfTestHost.SettleAsync(10);
 
-            var popup = Assert.Single(Application.Current.Windows.OfType<CheckInWindow>());
+            var popup = Assert.Single(UiTestContext.Popups().Except(before));
             Assert.False(popup.IsActive, "An unobtrusive scheduled popup must not take focus.");
             Assert.True(main.IsActive);
             Assert.False(popup.IsKeyboardFocusWithin);
@@ -109,10 +111,11 @@ public class FocusTests
         try
         {
             var canActivate = main.IsActive;
+            var before = UiTestContext.Popups();
             var outcome = ctx.Get<CheckInPresenter>().ShowPromptAsync(1, ctx.Time.GetUtcNow().UtcDateTime, PromptReason.Scheduled, CancellationToken.None);
             await WpfTestHost.SettleAsync(10);
 
-            var popup = Assert.Single(Application.Current.Windows.OfType<CheckInWindow>());
+            var popup = Assert.Single(UiTestContext.Popups().Except(before));
             Assert.Same(popup.SearchBox, FocusManager.GetFocusedElement(popup));
             if (canActivate)
             {
@@ -140,6 +143,7 @@ public class FocusTests
         var vm = ctx.Get<CheckInViewModel>();
         vm.Configure(null, null, PromptReason.Scheduled, null);
         var window = new CheckInWindow(vm, PopupPosition.BottomRight, takeFocus: false);
+        window.Show();
         try
         {
             var bindings = window.InputBindings.OfType<KeyBinding>()
@@ -226,12 +230,13 @@ public class FocusTests
                 Assert.Skip("Could not put another application in the foreground in this desktop session.");
             }
 
+            var before = UiTestContext.Popups();
             if (!Win32Input.Chord(Win32Input.VkControl, Win32Input.VkMenu, Win32Input.VkShift, Win32Input.VkF11))
             {
                 Assert.Skip("Synthetic keyboard input is not available in this desktop session.");
             }
 
-            var popup = await WaitForAsync(() => Application.Current.Windows.OfType<CheckInWindow>().FirstOrDefault());
+            var popup = await WaitForAsync(() => UiTestContext.Popups().Except(before).FirstOrDefault());
             if (popup is null)
             {
                 Assert.Skip("The global shortcut was not delivered in this desktop session.");
