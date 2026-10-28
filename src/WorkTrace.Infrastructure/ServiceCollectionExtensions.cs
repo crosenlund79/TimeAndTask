@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using WorkTrace.Core.Management;
 using WorkTrace.Core.Services;
+using WorkTrace.Infrastructure.Management;
 using WorkTrace.Core.Settings;
 using WorkTrace.Infrastructure.Persistence;
 using WorkTrace.Infrastructure.Settings;
@@ -26,6 +28,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<DatabaseInitializer>();
         services.AddSingleton<ISettingsStore, JsonSettingsStore>();
         services.AddSingleton<IAppStatusService, AppStatusService>();
+        services.AddSingleton<IClientService, ClientService>();
+        services.AddSingleton<ITaskService, TaskService>();
+        services.AddSingleton<ILookupService, LookupService>();
 
         return services;
     }
