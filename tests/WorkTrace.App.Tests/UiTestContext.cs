@@ -30,6 +30,7 @@ internal sealed class UiTestContext : IAsyncDisposable
 
     public static async Task<UiTestContext> CreateAsync()
     {
+        WorkTrace.App.Views.CheckInWindow.CaptureCreationTraces = true;
         var context = new UiTestContext();
         var services = new ServiceCollection();
         services.AddLogging();
@@ -50,8 +51,11 @@ internal sealed class UiTestContext : IAsyncDisposable
 
     /// <summary>Describes popups for assertion messages (to diagnose unexpected extra windows).</summary>
     public static string Describe(IEnumerable<WorkTrace.App.Views.CheckInWindow> popups) =>
-        string.Join("; ", popups.Select(p =>
-            $"[{(p.DataContext as WorkTrace.App.ViewModels.CheckInViewModel)?.Subheading ?? "?"}, visible={p.IsVisible}, loaded={p.IsLoaded}]"));
+        string.Join("\n", popups.Select(p =>
+            $"[{(p.DataContext as WorkTrace.App.ViewModels.CheckInViewModel)?.Subheading ?? "?"}, visible={p.IsVisible}, loaded={p.IsLoaded}]\n" +
+            string.Join("\n", (p.CreationTrace ?? "(no trace)").Split('\n')
+                .Where(l => l.Contains("WorkTrace", StringComparison.Ordinal))
+                .Take(8))));
 
     public async ValueTask DisposeAsync()
     {

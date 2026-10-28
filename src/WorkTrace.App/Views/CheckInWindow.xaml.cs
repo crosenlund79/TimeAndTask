@@ -29,6 +29,11 @@ public partial class CheckInWindow : Window
     public CheckInWindow(CheckInViewModel viewModel, PopupPosition position, bool takeFocus, ILogger? logger = null)
     {
         _logger = logger;
+        if (CaptureCreationTraces)
+        {
+            CreationTrace = Environment.StackTrace;
+        }
+
         _viewModel = viewModel;
         _position = position;
         _takeFocus = takeFocus;
@@ -85,6 +90,11 @@ public partial class CheckInWindow : Window
                 first, second, IsActive);
         });
     }
+
+    /// <summary>Tests only: record where each popup was created, to diagnose unexpected extra popups.</summary>
+    internal static bool CaptureCreationTraces { get; set; }
+
+    internal string? CreationTrace { get; }
 
     /// <summary>Outcome of the most recent activation attempt (diagnostics and tests).</summary>
     internal NativeMethods.ForegroundResult? LastActivation { get; private set; }

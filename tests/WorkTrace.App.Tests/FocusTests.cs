@@ -90,7 +90,9 @@ public class FocusTests
             var outcome = ctx.Get<CheckInPresenter>().ShowPromptAsync(1, ctx.Time.GetUtcNow().UtcDateTime, PromptReason.Scheduled, CancellationToken.None);
             await WpfTestHost.SettleAsync(10);
 
-            var popup = Assert.Single(UiTestContext.Popups().Except(before));
+            var opened = UiTestContext.Popups().Except(before).ToList();
+            Assert.True(opened.Count == 1, $"Expected one new popup, found {opened.Count}:\n{UiTestContext.Describe(opened)}");
+            var popup = opened[0];
             Assert.False(popup.IsActive, "An unobtrusive scheduled popup must not take focus.");
             Assert.True(main.IsActive);
             Assert.False(popup.IsKeyboardFocusWithin);
@@ -117,7 +119,9 @@ public class FocusTests
             var outcome = ctx.Get<CheckInPresenter>().ShowPromptAsync(1, ctx.Time.GetUtcNow().UtcDateTime, PromptReason.Scheduled, CancellationToken.None);
             await WpfTestHost.SettleAsync(10);
 
-            var popup = Assert.Single(UiTestContext.Popups().Except(before));
+            var opened = UiTestContext.Popups().Except(before).ToList();
+            Assert.True(opened.Count == 1, $"Expected one new popup, found {opened.Count}:\n{UiTestContext.Describe(opened)}");
+            var popup = opened[0];
             Assert.Same(popup.SearchBox, FocusManager.GetFocusedElement(popup));
             if (canActivate)
             {
