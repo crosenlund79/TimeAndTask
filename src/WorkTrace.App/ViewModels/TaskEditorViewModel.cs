@@ -35,7 +35,14 @@ public sealed partial class TaskEditorViewModel : ObservableObject
         ClientOptions = [.. clients.Where(c => c.IsActive || c.Id == ClientId)];
         TaskSystemOptions = [new PickerOption(PickerOption.NoneKey, "None"), .. taskSystems.Where(s => s.IsActive || s.Id == TaskSystemId)];
         ChannelOptions = [new PickerOption(PickerOption.NoneKey, "None"), .. channels.Where(c => c.IsActive || c.Id == DefaultChannelId)];
+
+        // The editable client box binds both SelectedValue and Text. Its text must start as the selected
+        // client's name: an empty text would make the ComboBox's type-ahead clear the selection on load.
+        ClientText = ClientOptions.FirstOrDefault(o => o.Id == ClientId)?.Name;
     }
+
+    /// <summary>The values the editor was opened with (for diagnostics and tests).</summary>
+    public TaskInput Original => _original;
 
     public TaskSummary? Existing { get; }
 

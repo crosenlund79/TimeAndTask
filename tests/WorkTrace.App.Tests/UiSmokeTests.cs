@@ -51,11 +51,11 @@ public class UiSmokeTests
             tasks.SelectedItem = tasks.Items[0];
             await WpfTestHost.SettleAsync();
             Assert.NotNull(tasks.Editor);
-            Assert.False(tasks.HasUnsavedChanges, "Rendering the editor must not modify it (ComboBox write-back).");
+            Assert.False(tasks.HasUnsavedChanges, $"Rendering the editor must not modify it: {tasks.Editor.ToInput()} vs {tasks.Editor.Original}");
             tasks.SelectedItem = tasks.Items[1];
             await WpfTestHost.SettleAsync();
             Assert.Equal(tasks.Items[1].Id, tasks.Editor!.Id);
-            Assert.False(tasks.HasUnsavedChanges, "Switching tasks must not modify the editor.");
+            Assert.False(tasks.HasUnsavedChanges, $"Switching tasks must not modify the editor: {tasks.Editor.ToInput()} vs {tasks.Editor.Original}");
             tasks.SelectedItem = tasks.Items[0];
             await WpfTestHost.SettleAsync();
             tasks.Editor!.Title = "Changed";

@@ -208,4 +208,17 @@ public class ViewModelFlowTests
         Assert.Contains(vm.Editor!.ClientOptions, o => o.Name == "Added elsewhere");
         Assert.False(vm.HasUnsavedChanges);
     });
+
+    [Fact]
+    public Task Editor_StartsWithClientNameAsText() => WpfTestHost.RunAsync(async () =>
+    {
+        await using var ctx = await UiTestContext.CreateAsync();
+        var vm = ctx.Get<TasksViewModel>();
+        await vm.ActivateAsync(null);
+        vm.NewTaskCommand.Execute(null);
+
+        Assert.Equal("Internal", vm.Editor!.ClientText);
+        Assert.False(vm.Editor.CanCreateClient);
+        Assert.False(vm.Editor.IsDirty);
+    });
 }
