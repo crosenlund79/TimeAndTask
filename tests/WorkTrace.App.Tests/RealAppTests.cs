@@ -24,7 +24,7 @@ public partial class RealAppTests(ITestOutputHelper output)
     private static readonly TimeSpan AutoDismiss = TimeSpan.FromSeconds(10);
 
     [Fact]
-    public async Task ScheduledCheckIns_AppearAndAutoClose_HiddenInTray_AndAfterRestart()
+    public async Task ScheduledCheckIns_AppearAndAutoClose_HiddenInTray_AndAfterRestart_WithSingleInstanceAndCloseToTray()
     {
         if (Mutex.TryOpenExisting(@"Local\WorkTrace.SingleInstance.6E1B9F4A", out var existing))
         {
@@ -55,6 +55,23 @@ public partial class RealAppTests(ITestOutputHelper output)
                 Assert.False(
                     FindWindows(app.Id, MainWindowTitle).Any(IsWindowVisible),
                     "The main window should stay hidden in the tray on a normal start");
+
+                // Single instance: a second launch exits and asks the running one to show its window.
+                using (var second = Start(exe, paths))
+                {
+                    Assert.True(second.WaitForExit(20_000), "A second WorkTrace instance kept running");
+                    Assert.Equal(0, second.ExitCode);
+                }
+
+                var main = await WaitForAsync(() => FindWindows(app.Id, MainWindowTitle).FirstOrDefault(IsWindowVisible), TimeSpan.FromSeconds(10), app);
+                Assert.True(main != IntPtr.Zero, "The running instance did not show its main window when launched again");
+
+                // Closing the window hides it to the tray; the app keeps running (and keeps scheduling).
+                PostMessageW(main, WmClose, IntPtr.Zero, IntPtr.Zero);
+                var hidden = await WaitForAsync(() => IsWindowVisible(main) ? IntPtr.Zero : 1, TimeSpan.FromSeconds(10), app);
+                Assert.True(hidden != IntPtr.Zero, "Closing the main window should hide it to the tray");
+                Assert.False(app.HasExited, "Closing the main window must not exit WorkTrace");
+
                 await ExpectScheduledPopupAsync(app, paths, expectedMissed: 2);
                 Stop(app);
             }
@@ -243,4 +260,10 @@ public partial class RealAppTests(ITestOutputHelper output)
 
     [LibraryImport("user32.dll")]
     private static partial IntPtr GetForegroundWindow();
+
+    private const uint WmClose = 0x0010;
+
+    [LibraryImport("user32.dll", EntryPoint = "PostMessageW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool PostMessageW(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam);
 }

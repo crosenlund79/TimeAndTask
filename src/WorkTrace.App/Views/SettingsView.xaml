@@ -26,6 +26,13 @@
                       Visibility="{Binding Tracking.IsPaused, Converter={StaticResource BoolToVisibility}}" />
             </StackPanel>
           </controls:SettingRow>
+          <StackPanel Margin="0,0,0,8">
+            <TextBlock Text="{Binding Tracking.LastAttemptText}" Style="{StaticResource CaptionText}"
+                       Visibility="{Binding Tracking.LastAttemptText, Converter={StaticResource NullToCollapsed}}" />
+            <TextBlock Text="{Binding Tracking.Warning}" Style="{StaticResource CaptionText}" TextWrapping="Wrap"
+                       Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                       Visibility="{Binding Tracking.HasWarning, Converter={StaticResource BoolToVisibility}}" />
+          </StackPanel>
           <Border Style="{StaticResource SettingsDivider}" />
           <controls:SettingRow Header="Periodic check-ins" Description="Ask what you are working on at regular times. Manual check-ins always work.">
             <CheckBox IsChecked="{Binding PeriodicPromptsEnabled}" Content="On" AutomationProperties.Name="Periodic check-ins" />
@@ -87,8 +94,7 @@
             <CheckBox IsChecked="{Binding ReminderSound}" Content="On" AutomationProperties.Name="Reminder sound" />
           </controls:SettingRow>
           <controls:SettingRow Header="Try it" Description="Shows a real scheduled check-in now, using the mode and countdown above. If you ignore it, it is recorded as missed.">
-            <Button Content="Show a scheduled check-in now" Padding="12,5" Command="{Binding Tracking.TriggerScheduledNowCommand}"
-                    IsEnabled="{Binding Tracking.IsTracking}" />
+            <Button Content="Show a scheduled check-in now" Padding="12,5" Command="{Binding Tracking.TriggerScheduledNowCommand}" />
           </controls:SettingRow>
           <controls:SettingRow Header="Keyboard shortcut" Description="Opens a check-in from anywhere, or focuses the open one.">
             <StackPanel Width="180">

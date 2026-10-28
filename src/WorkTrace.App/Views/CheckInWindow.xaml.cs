@@ -25,6 +25,7 @@ public partial class CheckInWindow : Window
     private readonly bool _takeFocus;
     private readonly DispatcherTimer _tick;
     private readonly ILogger? _logger;
+    private bool _swallowAltCode;
 
     public CheckInWindow(CheckInViewModel viewModel, PopupPosition position, bool takeFocus, ILogger? logger = null)
     {
@@ -44,14 +45,22 @@ public partial class CheckInWindow : Window
         ShowActivated = takeFocus;
 
         _tick = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(1) };
-        _tick.Tick += (_, _) => _viewModel.Tick();
+        _tick.Tick += (_, _) =>
+        {
+            _viewModel.Tick();
+            if (!_viewModel.IsCountdownActive)
+            {
+                _tick.Stop(); // nothing left to count down
+            }
+        };
 
         viewModel.CloseRequested += OnCloseRequested;
         SourceInitialized += (_, _) => NativeMethods.StylePopup(new WindowInteropHelper(this).Handle);
         Loaded += OnLoaded;
         SizeChanged += (_, _) => PlaceOnScreen();
         Activated += (_, _) => FocusSearchIfNeeded();
-        PreviewKeyDown += (_, _) => _viewModel.NotifyInteraction();
+        PreviewKeyDown += OnWindowPreviewKeyDown;
+        PreviewTextInput += OnWindowPreviewTextInput;
         PreviewMouseDown += (_, _) => _viewModel.NotifyInteraction();
         MouseEnter += (_, _) => _viewModel.SetHovered(true);
         MouseLeave += (_, _) => _viewModel.SetHovered(false);
@@ -118,10 +127,71 @@ public partial class CheckInWindow : Window
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         PlaceOnScreen();
-        _tick.Start();
+        if (_viewModel.IsCountdownActive)
+        {
+            _tick.Start();
+        }
         if (_takeFocus)
         {
             ActivateForInput();
+        }
+    }
+
+    /// <summary>
+    /// Alt+1…4 (top row or number pad) records the recent task with that number. Handled here, before the
+    /// focused search box sees the keys, so the shortcut works wherever focus is and never types into it.
+    /// </summary>
+    /// <returns>True when the keys were the shortcut (handled even if there is no such recent task).</returns>
+    internal bool TryHandleRecentShortcut(Key key, ModifierKeys modifiers)
+    {
+        if (modifiers != ModifierKeys.Alt)
+        {
+            return false;
+        }
+
+        var number = key switch
+        {
+            >= Key.D1 and <= Key.D4 => key - Key.D1 + 1,
+            >= Key.NumPad1 and <= Key.NumPad4 => key - Key.NumPad1 + 1,
+            _ => 0,
+        };
+        if (number == 0)
+        {
+            return false;
+        }
+
+        // Alt+number pad also makes Windows type an Alt code character when Alt is released.
+        _swallowAltCode = key >= Key.NumPad1;
+        var parameter = number.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if (_viewModel.PickRecentByNumberCommand.CanExecute(parameter))
+        {
+            _viewModel.PickRecentByNumberCommand.Execute(parameter);
+        }
+
+        return true;
+    }
+
+    private void OnWindowPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        _viewModel.NotifyInteraction();
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        if (key is not (Key.LeftAlt or Key.RightAlt))
+        {
+            _swallowAltCode = false;
+        }
+
+        if (TryHandleRecentShortcut(key, Keyboard.Modifiers))
+        {
+            e.Handled = true;
+        }
+    }
+
+    private void OnWindowPreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        if (_swallowAltCode)
+        {
+            _swallowAltCode = false;
+            e.Handled = true;
         }
     }
 

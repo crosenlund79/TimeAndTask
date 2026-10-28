@@ -75,4 +75,31 @@ public class SettingsTests
         Assert.True(vm.IsCustomInterval);
         Assert.Equal("37", vm.CustomIntervalText);
     });
+
+    [Theory]
+    [InlineData("0", null)]
+    [InlineData("7", 7)]
+    [InlineData("241", null)]
+    [InlineData("240", 240)]
+    [InlineData("1.5", null)]
+    [InlineData("1,5", null)]
+    [InlineData("-5", null)]
+    [InlineData("abc", null)]
+    [InlineData("", null)]
+    [InlineData(" 1 ", 1)]
+    public Task CustomInterval_AcceptsOnlyWholeMinutesFrom1To240(string text, int? saved) => WpfTestHost.RunAsync(async () =>
+    {
+        await using var ctx = await UiTestContext.CreateAsync();
+        var vm = ctx.Get<SettingsViewModel>();
+        await vm.ActivateAsync(null);
+        var store = ctx.Get<ISettingsStore>();
+
+        vm.IntervalChoice = SettingsViewModel.CustomIntervalKey;
+        vm.CustomIntervalText = text;
+        await WpfTestHost.SettleAsync();
+
+        Assert.Equal(saved ?? 30, store.Current.Tracking.CheckInIntervalMinutes);
+        Assert.Equal(saved is null, vm.IntervalError is not null);
+        Assert.True(store.Current.Validate().Count == 0);
+    });
 }

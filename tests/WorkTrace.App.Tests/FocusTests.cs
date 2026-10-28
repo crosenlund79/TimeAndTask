@@ -142,24 +142,47 @@ public class FocusTests
         }
     });
 
-    [Fact]
-    public Task Popup_DeclaresAltNumberShortcuts_ForRecentTasks() => WpfTestHost.RunAsync(async () =>
+    [Theory]
+    [InlineData(Key.D1, ModifierKeys.Alt, true)]
+    [InlineData(Key.NumPad1, ModifierKeys.Alt, true)]
+    [InlineData(Key.D2, ModifierKeys.Alt, false)]
+    [InlineData(Key.D1, ModifierKeys.None, false)]
+    [InlineData(Key.D1, ModifierKeys.Alt | ModifierKeys.Control, false)] // AltGr: types characters on many layouts
+    [InlineData(Key.D5, ModifierKeys.Alt, false)]
+    public Task AltNumber_IsHandledAtWindowLevel_WithFocusInTheSearchBox(Key key, ModifierKeys modifiers, bool records) => WpfTestHost.RunAsync(async () =>
     {
         await using var ctx = await UiTestContext.CreateAsync();
+        var (_, recent) = await SeedRecentAsync(ctx);
         var vm = ctx.Get<CheckInViewModel>();
         vm.Configure(null, null, PromptReason.Scheduled, null);
         var window = new CheckInWindow(vm, PopupPosition.BottomRight, takeFocus: false);
+        var closed = false;
+        window.Closed += (_, _) => closed = true;
         window.Show();
         try
         {
-            var bindings = window.InputBindings.OfType<KeyBinding>()
-                .Where(b => b.Modifiers == ModifierKeys.Alt && b.Key is >= Key.D1 and <= Key.D4)
-                .OrderBy(b => b.Key)
-                .ToList();
+            await vm.LoadAsync();
+            Assert.True(vm.HasRecent);
+            Assert.Single(vm.Recent);
+            var before = (await ctx.Get<ICheckInService>().GetLastObservationAsync())!.Id;
 
-            Assert.Equal(4, bindings.Count);
-            Assert.All(bindings, b => Assert.Same(vm.PickRecentByNumberCommand, b.Command));
-            Assert.Equal(["1", "2", "3", "4"], bindings.Select(b => (string)b.CommandParameter));
+            var isShortcut = modifiers == ModifierKeys.Alt && key is not Key.D5;
+            Assert.Equal(isShortcut, window.TryHandleRecentShortcut(key, modifiers));
+            var watch = Stopwatch.StartNew();
+            while (!closed && watch.ElapsedMilliseconds < (records ? 5000 : 300))
+            {
+                await WpfTestHost.SettleAsync(1);
+            }
+
+            var last = (await ctx.Get<ICheckInService>().GetLastObservationAsync())!;
+            Assert.Equal(records, closed);
+            Assert.Equal(records, last.Id != before);
+            if (records)
+            {
+                Assert.Equal(recent.Id, last.TaskId);
+            }
+
+            Assert.True(string.IsNullOrEmpty(vm.SearchText));
         }
         finally
         {

@@ -47,6 +47,11 @@
         <StackPanel Grid.Column="1" VerticalAlignment="Center">
           <TextBlock Text="{Binding Tracking.StatusText}" FontSize="16" FontWeight="SemiBold" />
           <TextBlock Text="{Binding Tracking.StatusDetail}" Style="{StaticResource CaptionText}" />
+          <TextBlock Text="{Binding Tracking.LastAttemptText}" Style="{StaticResource CaptionText}"
+                     Visibility="{Binding Tracking.LastAttemptText, Converter={StaticResource NullToCollapsed}}" />
+          <TextBlock Text="{Binding Tracking.Warning}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,2,0,0"
+                     Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                     Visibility="{Binding Tracking.HasWarning, Converter={StaticResource BoolToVisibility}}" />
         </StackPanel>
         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
           <Button Padding="14,6" Margin="0,0,8,0" Style="{DynamicResource AccentButtonStyle}" Command="{Binding Tracking.RecordNowCommand}"

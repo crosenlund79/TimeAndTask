@@ -19,10 +19,6 @@
   <Window.InputBindings>
     <KeyBinding Key="Escape" Command="{Binding DismissCommand}" />
     <KeyBinding Modifiers="Ctrl" Key="Return" Command="{Binding SaveCommand}" />
-    <KeyBinding Modifiers="Alt" Key="D1" Command="{Binding PickRecentByNumberCommand}" CommandParameter="1" />
-    <KeyBinding Modifiers="Alt" Key="D2" Command="{Binding PickRecentByNumberCommand}" CommandParameter="2" />
-    <KeyBinding Modifiers="Alt" Key="D3" Command="{Binding PickRecentByNumberCommand}" CommandParameter="3" />
-    <KeyBinding Modifiers="Alt" Key="D4" Command="{Binding PickRecentByNumberCommand}" CommandParameter="4" />
     <KeyBinding Modifiers="Alt" Key="M" Command="{Binding ToggleDetailsCommand}" />
   </Window.InputBindings>
 
@@ -243,8 +239,9 @@
       </Grid>
 
       <!-- Auto-dismiss countdown -->
-      <StackPanel Margin="0,10,0,0" Visibility="{Binding IsCountdownActive, Converter={StaticResource BoolToVisibility}}">
-        <ProgressBar Height="2" Minimum="0" Maximum="{Binding CountdownTotal}" Value="{Binding SecondsRemaining, Mode=OneWay}" IsTabStop="False" />
+      <StackPanel Margin="0,10,0,0" Visibility="{Binding HasCountdown, Converter={StaticResource BoolToVisibility}}">
+        <ProgressBar Height="2" Minimum="0" Maximum="{Binding CountdownTotal}" Value="{Binding SecondsRemaining, Mode=OneWay}" IsTabStop="False"
+                     Visibility="{Binding IsCountdownActive, Converter={StaticResource BoolToVisibility}}" />
         <TextBlock Text="{Binding CountdownText}" Style="{StaticResource CaptionText}" FontSize="11" Margin="0,4,0,0" />
       </StackPanel>
     </StackPanel>

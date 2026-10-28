@@ -56,7 +56,6 @@ public sealed partial class CheckInViewModel(
     private CancellationTokenSource? _searchCts;
     private Task _searchTask = Task.CompletedTask;
     private IReadOnlyList<ClientSummary> _clients = [];
-    private bool _hovered;
 
     /// <summary>Raised when the popup should close, with how it ended.</summary>
     public event EventHandler<PromptOutcome>? CloseRequested;
@@ -141,15 +140,26 @@ public sealed partial class CheckInViewModel(
     public partial int SecondsRemaining { get; private set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasCountdown))]
     public partial int CountdownTotal { get; private set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CountdownText))]
     public partial bool IsCountdownActive { get; private set; }
 
-    public string CountdownText => IsCountdownActive
-        ? $"Closes in {SecondsRemaining / 60}:{SecondsRemaining % 60:00} unless you interact"
-        : string.Empty;
+    /// <summary>The pointer is over the popup: the countdown waits.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CountdownText))]
+    public partial bool IsCountdownPaused { get; private set; }
+
+    /// <summary>This popup closes by itself (scheduled prompts with auto-dismiss).</summary>
+    public bool HasCountdown => CountdownTotal > 0;
+
+    public string CountdownText =>
+        !HasCountdown ? string.Empty
+        : !IsCountdownActive ? "Stays open until you answer or close it"
+        : IsCountdownPaused ? $"Paused at {SecondsRemaining / 60:00}:{SecondsRemaining % 60:00} while the pointer is here"
+        : $"Closes in {SecondsRemaining / 60:00}:{SecondsRemaining % 60:00} unless you interact";
 
     /// <summary>Plain-language preview of what Enter will record.</summary>
     public string PendingSummary
@@ -283,7 +293,7 @@ public sealed partial class CheckInViewModel(
     /// <summary>Called once per second by the window.</summary>
     public void Tick()
     {
-        if (!IsCountdownActive || _hovered || IsBusy)
+        if (!IsCountdownActive || IsCountdownPaused || IsBusy)
         {
             return;
         }
@@ -300,7 +310,7 @@ public sealed partial class CheckInViewModel(
     public void NotifyInteraction() => IsCountdownActive = false;
 
     /// <summary>Pointer over the popup pauses the countdown.</summary>
-    public void SetHovered(bool hovered) => _hovered = hovered;
+    public void SetHovered(bool hovered) => IsCountdownPaused = hovered;
 
     public void MoveSelection(int delta)
     {

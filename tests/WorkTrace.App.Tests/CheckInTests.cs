@@ -222,6 +222,43 @@ public class CheckInTests
     });
 
     [Fact]
+    public Task Countdown_PausesWhileHovered_AndShowsMinutesAndSeconds() => WpfTestHost.RunAsync(async () =>
+    {
+        await using var ctx = await UiTestContext.CreateAsync();
+        var vm = await OpenAsync(ctx, autoDismiss: 125);
+        PromptOutcome? outcome = null;
+        vm.CloseRequested += (_, o) => outcome = o;
+        Assert.True(vm.HasCountdown);
+        Assert.StartsWith("Closes in 02:05", vm.CountdownText, StringComparison.Ordinal);
+
+        vm.Tick();
+        Assert.StartsWith("Closes in 02:04", vm.CountdownText, StringComparison.Ordinal);
+
+        vm.SetHovered(true);
+        Assert.True(vm.IsCountdownPaused);
+        Assert.StartsWith("Paused at 02:04", vm.CountdownText, StringComparison.Ordinal);
+        for (var i = 0; i < 200; i++)
+        {
+            vm.Tick();
+        }
+
+        Assert.Null(outcome);
+        Assert.Equal(124, vm.SecondsRemaining);
+
+        vm.SetHovered(false);
+        vm.Tick();
+        Assert.Equal(123, vm.SecondsRemaining);
+
+        vm.NotifyInteraction();
+        Assert.False(vm.IsCountdownActive);
+        Assert.Equal("Stays open until you answer or close it", vm.CountdownText);
+
+        var manual = await OpenAsync(ctx);
+        Assert.False(manual.HasCountdown);
+        Assert.Equal(string.Empty, manual.CountdownText);
+    });
+
+    [Fact]
     public Task AnsweringAScheduledPrompt_MarksItAnswered() => WpfTestHost.RunAsync(async () =>
     {
         var (ctx, invoice, _) = await SeedAsync();

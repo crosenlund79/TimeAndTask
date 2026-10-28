@@ -71,6 +71,10 @@ internal sealed class TrayIconService(
         logger.LogInformation("Tray icon initialized");
     }
 
+    /// <summary>Tests: the status line, and which of Pause/Resume the menu offers.</summary>
+    internal (string? Status, bool CanPause, bool CanResume, string? ToolTip) MenuState =>
+        (_statusItem?.Text, _pauseItem?.Available == true, _resumeItem?.Available == true, _notifyIcon?.Text);
+
     /// <summary>Shows the global shortcut next to "Record activity now".</summary>
     public void UpdateShortcut(string? shortcut)
     {
@@ -119,8 +123,8 @@ internal sealed class TrayIconService(
 
         var detail = string.IsNullOrEmpty(tracking.StatusDetail) ? string.Empty : $" · {tracking.StatusDetail}";
         _statusItem!.Text = tracking.StatusText + detail;
-        _pauseItem!.Visible = !tracking.IsPaused;
-        _resumeItem!.Visible = tracking.IsPaused;
+        _pauseItem!.Available = !tracking.IsPaused;
+        _resumeItem!.Available = tracking.IsPaused;
         _notifyIcon.Icon = tracking.IsTracking ? _trackingIcon : _idleIcon;
 
         // NotifyIcon.Text is limited to 127 characters.
