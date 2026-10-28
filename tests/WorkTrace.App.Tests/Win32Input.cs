@@ -12,6 +12,8 @@ internal static partial class Win32Input
     internal const ushort VkMenu = 0x12; // Alt
     internal const ushort VkSpace = 0x20;
     internal const ushort Vk1 = 0x31;
+    internal const ushort VkShift = 0x10;
+    internal const ushort VkF11 = 0x7A;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct Input

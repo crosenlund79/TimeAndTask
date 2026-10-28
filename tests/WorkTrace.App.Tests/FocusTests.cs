@@ -195,7 +195,7 @@ public class FocusTests
     });
 
     /// <summary>
-    /// End to end with real keystrokes: another application is in the foreground, Ctrl+Alt+Space opens the
+    /// End to end with real keystrokes: another application is in the foreground, the global shortcut opens the
     /// popup in the foreground with the search box focused, and Alt+1 records recent task 1.
     /// Skipped where the CI desktop cannot deliver synthetic input or change the foreground window.
     /// </summary>
@@ -207,9 +207,10 @@ public class FocusTests
         var presenter = ctx.Get<CheckInPresenter>();
         var hotkey = ctx.Get<GlobalHotkey>();
         hotkey.Pressed += (_, _) => presenter.ShowManual();
-        if (!hotkey.Register("Ctrl+Alt+Space"))
+        // An unusual combination: Ctrl+Alt+Space itself is taken on the CI image. The code path is identical.
+        if (!hotkey.Register("Ctrl+Alt+Shift+F11"))
         {
-            Assert.Skip("Ctrl+Alt+Space is registered by another program on this machine.");
+            Assert.Skip("The test shortcut is registered by another program on this machine.");
         }
 
         using var other = StartOtherApplication();
@@ -225,7 +226,7 @@ public class FocusTests
                 Assert.Skip("Could not put another application in the foreground in this desktop session.");
             }
 
-            if (!Win32Input.Chord(Win32Input.VkControl, Win32Input.VkMenu, Win32Input.VkSpace))
+            if (!Win32Input.Chord(Win32Input.VkControl, Win32Input.VkMenu, Win32Input.VkShift, Win32Input.VkF11))
             {
                 Assert.Skip("Synthetic keyboard input is not available in this desktop session.");
             }
