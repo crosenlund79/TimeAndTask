@@ -5,6 +5,7 @@
     <Project Path="src/WorkTrace.Infrastructure/WorkTrace.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/WorkTrace.App.Tests/WorkTrace.App.Tests.csproj" />
     <Project Path="tests/WorkTrace.Tests/WorkTrace.Tests.csproj" />
   </Folder>
 </Solution>

@@ -1,0 +1,9 @@
+<Project>
+  <!-- Imported after NuGet targets, so this wins over xunit.v3's default: never try to run on non-Windows hosts. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))"
+          Condition="Exists($([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../')))" />
+  <PropertyGroup Condition="!$([MSBuild]::IsOSPlatform('Windows'))">
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
+</Project>
