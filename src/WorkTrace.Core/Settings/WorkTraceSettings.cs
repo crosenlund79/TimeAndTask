@@ -18,6 +18,10 @@ public sealed class WorkTraceSettings
 
     public ReportingSettings Reporting { get; set; } = new();
 
+    /// <summary>Deep copy, so editors can change settings without touching <see cref="ISettingsStore.Current"/>.</summary>
+    public WorkTraceSettings Clone() =>
+        System.Text.Json.JsonSerializer.Deserialize<WorkTraceSettings>(System.Text.Json.JsonSerializer.Serialize(this))!;
+
     /// <summary>Returns human-readable validation errors; empty when valid.</summary>
     public IReadOnlyList<string> Validate()
     {
@@ -124,9 +128,16 @@ public enum LockedTimeHandling
 
 public sealed class TrackingSettings
 {
+    /// <summary>False while tracking is paused until the user resumes it.</summary>
     public bool Enabled { get; set; } = true;
 
+    /// <summary>When set (and in the future), tracking is paused until this time and then resumes by itself.</summary>
+    public DateTime? PausedUntilUtc { get; set; }
+
     public bool PeriodicPromptsEnabled { get; set; } = true;
+
+    /// <summary>Ask what you are working on shortly after tracking starts (app start, resume, unpause).</summary>
+    public bool PromptOnStart { get; set; } = true;
 
     public int CheckInIntervalMinutes { get; set; } = 30;
 
