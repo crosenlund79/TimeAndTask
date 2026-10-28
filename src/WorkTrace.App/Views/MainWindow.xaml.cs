@@ -15,10 +15,12 @@ public partial class MainWindow : Window
     {
         _lifetime = lifetime;
         _settings = settings;
+        ViewModel = viewModel;
         DataContext = viewModel;
         InitializeComponent();
-        Loaded += (_, _) => viewModel.LoadCommand.Execute(null);
     }
+
+    public MainViewModel ViewModel { get; }
 
     protected override void OnClosing(CancelEventArgs e)
     {
@@ -28,15 +30,14 @@ public partial class MainWindow : Window
             return;
         }
 
+        e.Cancel = true;
         if (_settings.Current.General.CloseToTray)
         {
-            // Keep the window instance alive and simply hide it: the app continues in the tray.
-            e.Cancel = true;
+            // Keep the window instance (and any unsaved edits) alive: the app continues in the tray.
             Hide();
         }
         else
         {
-            e.Cancel = true;
             _lifetime.RequestExit();
         }
     }

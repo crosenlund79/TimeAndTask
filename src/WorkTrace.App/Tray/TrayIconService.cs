@@ -35,6 +35,7 @@ internal sealed class TrayIconService(WindowManager windows, IAppLifetime lifeti
         menu.Items.Add(Pending("Record activity now", 3));
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add(Item("Open WorkTrace", windows.ShowMainWindow, bold: true));
+        menu.Items.Add(Item("Tasks and clients", () => windows.ShowMainWindow(AppSection.Tasks)));
         menu.Items.Add(Pending("Activity log", 4));
         menu.Items.Add(Pending("Weekly overview", 6));
         menu.Items.Add(Pending("Screenshot history", 5));

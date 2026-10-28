@@ -9,12 +9,24 @@ internal sealed class WindowManager(IServiceProvider services)
 {
     private MainWindow? _mainWindow;
 
-    public void ShowMainWindow()
+    public void ShowMainWindow() => ShowMainWindow(null);
+
+    /// <summary>Shows the main window, optionally switching to <paramref name="section"/>.</summary>
+    public void ShowMainWindow(AppSection? section)
     {
         if (_mainWindow is null)
         {
             _mainWindow = services.GetRequiredService<MainWindow>();
             _mainWindow.Closed += (_, _) => _mainWindow = null;
+        }
+
+        if (section is { } target)
+        {
+            _mainWindow.ViewModel.NavigateTo(target);
+        }
+        else if (_mainWindow.ViewModel.SelectedSection is null)
+        {
+            _mainWindow.ViewModel.NavigateTo(AppSection.Home);
         }
 
         if (!_mainWindow.IsVisible)

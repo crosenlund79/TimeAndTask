@@ -107,11 +107,7 @@ public partial class App : Application, IAppLifetime
 #endif
 
         builder.Services.AddWorkTraceInfrastructure(paths);
-        builder.Services.AddSingleton<IAppLifetime>(this);
-        builder.Services.AddSingleton<WindowManager>();
-        builder.Services.AddSingleton<TrayIconService>();
-        builder.Services.AddTransient<MainViewModel>();
-        builder.Services.AddTransient<MainWindow>();
+        builder.Services.AddWorkTraceApp(this);
 
         return builder.Build();
     }

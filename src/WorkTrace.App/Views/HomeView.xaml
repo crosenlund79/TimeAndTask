@@ -1,0 +1,110 @@
+<UserControl x:Class="WorkTrace.App.Views.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:WorkTrace.App.ViewModels"
+             xmlns:shell="clr-namespace:WorkTrace.App.Shell"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:HomeViewModel}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel MaxWidth="900" HorizontalAlignment="Left">
+      <TextBlock Text="Overview" Style="{StaticResource PageTitleText}" />
+      <TextBlock Style="{StaticResource PageSubtitleText}"
+                 Text="Set up the clients and tasks you work on. Check-ins and timesheets will use them." />
+
+      <!-- Quick actions -->
+      <UniformGrid Columns="3" Margin="0,24,0,0">
+        <Button Margin="0,0,12,0" Padding="16,14" HorizontalContentAlignment="Left" Command="{Binding NavigateCommand}"
+                CommandParameter="{x:Static shell:AppSection.Tasks}">
+          <StackPanel>
+            <TextBlock Text="&#xE9D5;" Style="{StaticResource IconText}" FontSize="20" HorizontalAlignment="Left" />
+            <TextBlock Text="{Binding Status.TaskCount, StringFormat={}{0} tasks, FallbackValue=Tasks}" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,0" />
+            <TextBlock Text="Search, edit and archive" Style="{StaticResource CaptionText}" />
+          </StackPanel>
+        </Button>
+        <Button Margin="0,0,12,0" Padding="16,14" HorizontalContentAlignment="Left" Command="{Binding NavigateCommand}"
+                CommandParameter="{x:Static shell:AppSection.Clients}">
+          <StackPanel>
+            <TextBlock Text="&#xE716;" Style="{StaticResource IconText}" FontSize="20" HorizontalAlignment="Left" />
+            <TextBlock Text="{Binding Status.ClientCount, StringFormat={}{0} clients, FallbackValue=Clients}" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,0" />
+            <TextBlock Text="Customers and internal work" Style="{StaticResource CaptionText}" />
+          </StackPanel>
+        </Button>
+        <Button Padding="16,14" HorizontalContentAlignment="Left" Command="{Binding NavigateCommand}"
+                CommandParameter="{x:Static shell:AppSection.Lists}">
+          <StackPanel>
+            <TextBlock Text="&#xE8FD;" Style="{StaticResource IconText}" FontSize="20" HorizontalAlignment="Left" />
+            <TextBlock FontSize="16" FontWeight="SemiBold" Margin="0,10,0,0" Text="Lists" />
+            <TextBlock Style="{StaticResource CaptionText}">
+              <Run Text="{Binding Status.TaskSystemCount, Mode=OneWay, FallbackValue=0}" /><Run Text=" task systems · " /><Run Text="{Binding Status.ChannelCount, Mode=OneWay, FallbackValue=0}" /><Run Text=" channels" />
+            </TextBlock>
+          </StackPanel>
+        </Button>
+      </UniformGrid>
+
+      <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+        <Button Padding="14,6" Margin="0,0,8,0" Style="{DynamicResource AccentButtonStyle}" Command="{Binding NewTaskCommand}">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
+            <TextBlock Text="New task" />
+          </StackPanel>
+        </Button>
+        <Button Padding="14,6" Command="{Binding NewClientCommand}">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
+            <TextBlock Text="New client" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+
+      <Grid Margin="0,28,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="3*" />
+          <ColumnDefinition Width="16" />
+          <ColumnDefinition Width="2*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Text="Local data" Style="{StaticResource SectionTitleText}" />
+            <Grid Margin="0,10,0,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+              </Grid.RowDefinitions>
+              <TextBlock Text="Folder" Style="{StaticResource CaptionText}" Margin="0,3,16,3" />
+              <TextBlock Grid.Column="1" Text="{Binding Status.DataDirectory}" ToolTip="{Binding Status.DataDirectory}" TextTrimming="CharacterEllipsis" Margin="0,3" />
+              <TextBlock Grid.Row="1" Text="Schema" Style="{StaticResource CaptionText}" Margin="0,3,16,3" />
+              <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Status.AppliedMigrations.Count, StringFormat={}{0} migration(s) applied}" Margin="0,3" />
+              <TextBlock Grid.Row="2" Text="Version" Style="{StaticResource CaptionText}" Margin="0,3,16,3" />
+              <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Version}" Margin="0,3" />
+            </Grid>
+            <Button Content="Open data folder" Padding="12,5" Margin="0,14,0,0" HorizontalAlignment="Left" Command="{Binding OpenDataFolderCommand}" />
+          </StackPanel>
+        </Border>
+
+        <Border Grid.Column="2" Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Text="Coming next" Style="{StaticResource SectionTitleText}" />
+            <ItemsControl ItemsSource="{Binding Roadmap}" Margin="0,8,0,0" Focusable="False">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:RoadmapItem}">
+                  <DockPanel Margin="0,4">
+                    <TextBlock DockPanel.Dock="Right" Text="{Binding Phase}" Style="{StaticResource CaptionText}" Margin="8,0,0,0" />
+                    <TextBlock Text="{Binding Feature}" TextWrapping="Wrap" />
+                  </DockPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

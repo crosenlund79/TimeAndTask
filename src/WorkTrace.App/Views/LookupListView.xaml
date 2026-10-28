@@ -1,0 +1,109 @@
+<UserControl x:Class="WorkTrace.App.Views.LookupListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:WorkTrace.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="500"
+             d:DataContext="{d:DesignInstance Type=vm:LookupListViewModel}">
+  <Border Style="{StaticResource Card}">
+    <DockPanel>
+      <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+        <TextBlock Text="{Binding Title}" Style="{StaticResource SectionTitleText}" />
+        <TextBlock Text="{Binding Description}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,2,0,0" />
+      </StackPanel>
+
+      <!-- Add row -->
+      <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <TextBox x:Name="NewNameBox" Text="{Binding NewName, UpdateSourceTrigger=PropertyChanged}" MaxLength="100"
+                   AutomationProperties.Name="New item name">
+            <TextBox.InputBindings>
+              <KeyBinding Key="Enter" Command="{Binding AddCommand}" />
+            </TextBox.InputBindings>
+          </TextBox>
+          <TextBlock Text="Add new…" Margin="12,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                     Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                     Visibility="{Binding Text, ElementName=NewNameBox, Converter={StaticResource NullToCollapsed}, ConverterParameter=invert}" />
+          <Button Grid.Column="1" Margin="8,0,0,0" Padding="12,5" Command="{Binding AddCommand}" ToolTip="Add (Enter)">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,6,0" />
+              <TextBlock Text="Add" />
+            </StackPanel>
+          </Button>
+        </Grid>
+        <TextBlock Text="{Binding NewNameError}" Style="{StaticResource ErrorText}" />
+      </StackPanel>
+
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl ItemsSource="{Binding Items}" Focusable="False">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:LookupItemViewModel}">
+              <Grid x:Name="Row" Margin="0,2">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                  <Button Style="{StaticResource IconButton}" Content="&#xE70E;" FontSize="11" Width="26" ToolTip="Move up"
+                          Command="{Binding MoveUpCommand}" IsEnabled="{Binding IsFirst, Converter={StaticResource InverseBool}}" />
+                  <Button Style="{StaticResource IconButton}" Content="&#xE70D;" FontSize="11" Width="26" ToolTip="Move down"
+                          Command="{Binding MoveDownCommand}" IsEnabled="{Binding IsLast, Converter={StaticResource InverseBool}}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Margin="6,0,8,0">
+                  <TextBox Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}" MaxLength="100"
+                           LostKeyboardFocus="OnNameLostFocus" ToolTip="Click to rename · Enter saves · Esc cancels"
+                           AutomationProperties.Name="Name">
+                    <TextBox.InputBindings>
+                      <KeyBinding Key="Enter" Command="{Binding CommitRenameCommand}" />
+                      <KeyBinding Key="Escape" Command="{Binding CancelRenameCommand}" />
+                    </TextBox.InputBindings>
+                  </TextBox>
+                  <TextBlock Text="{Binding UsageText}" Style="{StaticResource CaptionText}" FontSize="11" Margin="2,2,0,0" />
+                  <TextBlock Text="{Binding RenameError}" Style="{StaticResource ErrorText}" />
+                </StackPanel>
+
+                <Button Grid.Column="2" Padding="10,4" VerticalAlignment="Top" Margin="0,2,4,0" MinWidth="64"
+                        Command="{Binding ToggleActiveCommand}">
+                  <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource IconButton}">
+                      <Setter Property="Width" Value="30" />
+                      <Setter Property="Content" Value="&#xE7B3;" />
+                      <Setter Property="ToolTip" Value="Shown in pickers – click to hide" />
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                          <Setter Property="Content" Value="&#xED1A;" />
+                          <Setter Property="ToolTip" Value="Hidden from pickers – click to show" />
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </Button.Style>
+                </Button>
+
+                <Button Grid.Column="3" Style="{StaticResource IconButton}" Content="&#xE74D;" VerticalAlignment="Top" Margin="0,2,0,0"
+                        Command="{Binding DeleteCommand}" IsEnabled="{Binding CanDelete}" ToolTip="{Binding DeleteToolTip}" />
+              </Grid>
+              <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsActive}" Value="False">
+                  <Setter TargetName="Row" Property="Opacity" Value="0.55" />
+                </DataTrigger>
+              </DataTemplate.Triggers>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </DockPanel>
+  </Border>
+</UserControl>

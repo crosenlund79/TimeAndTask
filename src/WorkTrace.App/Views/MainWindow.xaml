@@ -4,106 +4,120 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:WorkTrace.App.ViewModels"
+        xmlns:views="clr-namespace:WorkTrace.App.Views"
+        xmlns:shell="clr-namespace:WorkTrace.App.Shell"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
         Title="WorkTrace"
         Icon="pack://application:,,,/Assets/worktrace.ico"
-        Width="760" Height="560" MinWidth="560" MinHeight="420"
+        Width="1080" Height="700" MinWidth="820" MinHeight="520"
         WindowStartupLocation="CenterScreen">
-  <Grid Margin="24">
-    <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="*" />
-    </Grid.RowDefinitions>
 
-    <!-- Header -->
-    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-      <Image Source="pack://application:,,,/Assets/worktrace.ico" Width="40" Height="40" Margin="0,0,14,0" />
-      <StackPanel VerticalAlignment="Center">
-        <TextBlock Text="WorkTrace" FontSize="24" FontWeight="SemiBold" />
-        <TextBlock Opacity="0.7">
-          <Run Text="Personal work log &amp; timesheet assistant · v" /><Run Text="{Binding Version, Mode=OneWay}" />
-        </TextBlock>
+  <Window.InputBindings>
+    <KeyBinding Modifiers="Ctrl" Key="D1" Command="{Binding GoToSectionCommand}" CommandParameter="{x:Static shell:AppSection.Home}" />
+    <KeyBinding Modifiers="Ctrl" Key="D2" Command="{Binding GoToSectionCommand}" CommandParameter="{x:Static shell:AppSection.Tasks}" />
+    <KeyBinding Modifiers="Ctrl" Key="D3" Command="{Binding GoToSectionCommand}" CommandParameter="{x:Static shell:AppSection.Clients}" />
+    <KeyBinding Modifiers="Ctrl" Key="D4" Command="{Binding GoToSectionCommand}" CommandParameter="{x:Static shell:AppSection.Lists}" />
+  </Window.InputBindings>
+
+  <Window.Resources>
+    <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+      <views:HomeView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:TasksViewModel}">
+      <views:TasksView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:ClientsViewModel}">
+      <views:ClientsView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:ListsViewModel}">
+      <views:ListsView />
+    </DataTemplate>
+  </Window.Resources>
+
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="208" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+
+    <!-- Navigation rail -->
+    <DockPanel Margin="12,16,8,12">
+      <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,0,0,20">
+        <Image Source="pack://application:,,,/Assets/worktrace.ico" Width="28" Height="28" Margin="0,0,10,0" />
+        <TextBlock Text="WorkTrace" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
       </StackPanel>
-    </StackPanel>
 
-    <!-- Error banner -->
-    <Border Grid.Row="1" Padding="12,8" Margin="0,0,0,12" CornerRadius="4" Background="#33DC2626"
-            Visibility="{Binding ErrorMessage, Converter={StaticResource NullToCollapsed}}">
-      <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
+      <TextBlock DockPanel.Dock="Bottom" Margin="12,8,0,0" Style="{StaticResource CaptionText}" FontSize="11"
+                 Text="Data is stored only on this PC" ToolTip="All data lives under %LocalAppData%\WorkTrace" />
+
+      <ListBox ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}"
+               Background="Transparent" BorderThickness="0"
+               ItemContainerStyle="{StaticResource NavListBoxItem}"
+               AutomationProperties.Name="Navigation">
+        <ListBox.ItemTemplate>
+          <DataTemplate DataType="{x:Type vm:NavigationItem}">
+            <StackPanel Orientation="Horizontal" ToolTip="{Binding Shortcut}">
+              <TextBlock Text="{Binding Glyph}" Style="{StaticResource IconText}" FontSize="16" Margin="2,0,12,0" />
+              <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </DockPanel>
+
+    <!-- Page -->
+    <Border Grid.Column="1" Background="{DynamicResource LayerFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1,1,0,0" CornerRadius="8,0,0,0">
+      <ContentControl Content="{Binding SelectedSection.Page}" Margin="28,22,28,20" Focusable="False" />
     </Border>
 
-    <Grid Grid.Row="2">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="3*" />
-        <ColumnDefinition Width="16" />
-        <ColumnDefinition Width="2*" />
-      </Grid.ColumnDefinitions>
-
-      <!-- Storage status -->
-      <GroupBox Header="Local data">
-        <Grid Margin="4" DataContext="{Binding Status}">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-          </Grid.ColumnDefinitions>
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-          </Grid.RowDefinitions>
-          <Grid.Resources>
-            <Style TargetType="TextBlock">
-              <Setter Property="Margin" Value="0,3,12,3" />
-              <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    <!-- Notification (toast) -->
+    <Border Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="208,0,0,24"
+            MinWidth="320" MaxWidth="640" Padding="14,10" CornerRadius="8"
+            Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+            DataContext="{Binding Notifications}"
+            Visibility="{Binding Current, Converter={StaticResource NullToCollapsed}}">
+      <Border.Effect>
+        <DropShadowEffect BlurRadius="18" ShadowDepth="3" Opacity="0.25" />
+      </Border.Effect>
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock FontSize="16" Margin="0,0,12,0">
+          <TextBlock.Style>
+            <Style TargetType="TextBlock" BasedOn="{StaticResource IconText}">
+              <Setter Property="Text" Value="&#xE946;" />
+              <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding Current.Kind}" Value="{x:Static shell:NotificationKind.Success}">
+                  <Setter Property="Text" Value="&#xE73E;" />
+                  <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Current.Kind}" Value="{x:Static shell:NotificationKind.Warning}">
+                  <Setter Property="Text" Value="&#xE7BA;" />
+                  <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Current.Kind}" Value="{x:Static shell:NotificationKind.Error}">
+                  <Setter Property="Text" Value="&#xE783;" />
+                  <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+                </DataTrigger>
+              </Style.Triggers>
             </Style>
-          </Grid.Resources>
-
-          <TextBlock Grid.Row="0" Text="Data folder" Opacity="0.7" />
-          <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding DataDirectory}" ToolTip="{Binding DataDirectory}" />
-          <TextBlock Grid.Row="1" Text="Database" Opacity="0.7" />
-          <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DatabasePath}" ToolTip="{Binding DatabasePath}" />
-          <TextBlock Grid.Row="2" Text="Schema" Opacity="0.7" />
-          <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding AppliedMigrations.Count, StringFormat={}{0} migration(s) applied}" />
-          <TextBlock Grid.Row="3" Text="Clients" Opacity="0.7" />
-          <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ClientCount}" />
-          <TextBlock Grid.Row="4" Text="Tasks" Opacity="0.7" />
-          <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding TaskCount}" />
-          <TextBlock Grid.Row="5" Text="Observations" Opacity="0.7" />
-          <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding ObservationCount}" />
-          <TextBlock Grid.Row="6" Text="Lookups" Opacity="0.7" />
-          <TextBlock Grid.Row="6" Grid.Column="1">
-            <Run Text="{Binding TaskSystemCount, Mode=OneWay}" /><Run Text=" task systems · " /><Run Text="{Binding ChannelCount, Mode=OneWay}" /><Run Text=" channels" />
-          </TextBlock>
-
-          <StackPanel Grid.Row="7" Grid.ColumnSpan="2" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,16,0,0">
-            <Button Content="Open data folder" Padding="12,5" Margin="0,0,8,0"
-                    Command="{Binding DataContext.OpenDataFolderCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-            <Button Content="Refresh" Padding="12,5"
-                    Command="{Binding DataContext.LoadCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-          </StackPanel>
-        </Grid>
-      </GroupBox>
-
-      <!-- Roadmap -->
-      <GroupBox Grid.Column="2" Header="Not yet available">
-        <ItemsControl ItemsSource="{Binding Roadmap}" Margin="4">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <DockPanel Margin="0,4">
-                <TextBlock DockPanel.Dock="Right" Text="{Binding Phase}" Opacity="0.6" Margin="8,0,0,0" />
-                <TextBlock Text="{Binding Feature}" TextWrapping="Wrap" />
-              </DockPanel>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </GroupBox>
-    </Grid>
+          </TextBlock.Style>
+        </TextBlock>
+        <TextBlock Grid.Column="1" Text="{Binding Current.Message}" TextWrapping="Wrap" VerticalAlignment="Center" />
+        <Button Grid.Column="2" Margin="16,0,0,0" Padding="12,4"
+                Content="{Binding Current.ActionText}" Command="{Binding Current.Action}"
+                Visibility="{Binding Current.ActionText, Converter={StaticResource NullToCollapsed}}" />
+        <Button Grid.Column="3" Style="{StaticResource IconButton}" Margin="8,0,-4,0" Content="&#xE711;"
+                ToolTip="Dismiss" Command="{Binding DismissCommand}" />
+      </Grid>
+    </Border>
   </Grid>
 </Window>
