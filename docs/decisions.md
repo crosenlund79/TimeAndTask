@@ -158,3 +158,26 @@ all windows on dispose.
 The host is a plain `Application` loading App.xaml's resources: constructing `App` ran `OnStartup`, i.e. a
 complete WorkTrace (engine, tray, hotkey) inside the test process, whose start-up check-in appeared in random
 tests and whose hotkey made Ctrl+Alt+Space look taken.
+
+## ADR-030 — Every check-in attempt has a visible result
+**Decision:** the engine returns and publishes a `CheckInAttemptResult` for every attempt (shown, skipped,
+suppressed, not tracking, then answered/missed/dismissed/failed), logs it at Information, and the UI shows the
+last one with the interval, next check-in and any error. "Show now" reports why nothing appeared.
+**Reason:** owner reported scheduled check-ins not appearing while the UI looked normal; silent no-ops
+(paused, popup open, lock state, timer exceptions) were indistinguishable from a broken scheduler.
+
+## ADR-031 — Scheduling is verified against the real executable
+**Decision:** `RealAppTests` launches the built WorkTrace.exe in CI with a private data directory and a
+1-minute interval, waits for the scheduled popup window, its auto-close and the Missed row, then restarts it
+(hidden in the tray, second launch, close-to-tray) and repeats. WorkTrace's log is printed on failure.
+`SchedulingTests` runs the engine with the real clock and presenter in-process.
+**Reason:** in-process tests with a fake clock exercised neither the real timer nor the app's start-up
+wiring, so they could pass while scheduling failed on a real machine.
+
+## ADR-032 — Self-healing tracking state
+**Decision:** state that depends on paired Windows notifications heals itself: a missing resume after sleep is
+detected by the engine's own timer running (or an unlock), and a lock without unlock is checked against the real
+desktop state before a prompt is suppressed. Both log a warning.
+**Reason:** an unpaired notification silently switched off scheduled check-ins until restart while manual check-ins
+kept working — the symptom the owner reported after Phase 3 refinements; CI (clean machine) showed the scheduler and
+popup path itself working.

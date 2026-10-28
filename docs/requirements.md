@@ -55,8 +55,13 @@ the tray 🟡, passes tests ✅.
 | Focused and unobtrusive (no focus stealing) modes | ✅ | `ScheduledPopup_InUnobtrusiveMode_DoesNotTakeFocus`, `…InFocusedMode_TakesFocus` |
 | Configurable global shortcut | ✅ | `SettingsTests`; `GlobalShortcut_FromAnotherApplication_…` (real keystrokes, CI) |
 | Manual check-ins always receive keyboard focus (main window active, minimized, hidden; other app active) | ✅ | `FocusTests` (CI on windows-latest) |
-| Recent tasks via Alt+1–4, safe no-op without recents or while searching | ✅ | `FocusTests` (bindings, no-op, real Alt+1) |
-| Interval presets 1/5/10/15/30/60 min + custom 1–240, applied live without backlog/duplicates | ✅ | `Interval_…` (validation, settings), engine interval tests |
+| Recent tasks via Alt+1–4 (top row or number pad), safe no-op without recents or while searching, never types into search | ✅ | `FocusTests` (`AltNumber_IsHandledAtWindowLevel_…`, no-op, real Alt+1 from another app) |
+| Interval presets 1/5/10/15/30/60 min + custom 1–240, applied live without backlog/duplicates | ✅ | `Interval_…`, `CustomInterval_AcceptsOnlyWholeMinutesFrom1To240` (0, 7, 241, 1.5 …), engine interval tests |
+| Scheduled check-ins appear in the real app (1-min interval, hidden in tray, after restart) | ✅ (CI) / 🟡 owner machine | `RealAppTests` (launches WorkTrace.exe), `SchedulingTests` (real clock + presenter) |
+| Tracking status visible: Active/Paused/Error, interval, next check-in, last attempt and outcome, warnings | ✅ | `TrackingStateTests`, `SchedulingTests` |
+| "Show a scheduled check-in now" uses the real path and explains when it cannot run | ✅ | `ShowNow_…` tests |
+| Countdown mm:ss, paused on hover, stops on interaction, closes as missed | ✅ | `Countdown_…` tests, `RealAppTests` |
+| Single instance; close-to-tray and reopen | ✅ (CI) | `RealAppTests` |
 | Scheduler aligned to interval (default 30 min), DST-safe | ✅ | `CheckInScheduleTests`, engine tests |
 | Auto-dismiss after timeout; missed check-in stored; time after it uncertain | ✅ | `UnansweredPrompt_IsStoredAsMissed_FromItsScheduledTime` |
 | No duplicate popups; no backlog after sleep/restart | ✅ | `OpenPopup_PreventsDuplicatePrompts`, `SleepEndsTheSegment_AndNoBacklogIsShownAfterResume` |
@@ -64,7 +69,7 @@ the tray 🟡, passes tests ✅.
 | Sleep/resume, shutdown, crash, clock change never fabricate tracking | ✅ | engine tests |
 | Locked time recorded as uncertain; prompts suppressed while locked | ✅ | `LockedSession_…` |
 | Settings: popup mode, interval, position, timeout, sound, remember last task, enable prompts | ✅ | `SettingsTests` |
-| Tray reflects tracking state; recording and pause at the top | 🟡 | manual |
+| Tray reflects tracking state; recording and pause at the top | ✅ / 🟡 | `TrackingStateTests` (status, Pause/Resume items); menu look manual |
 | Observations persist with original values and origin (scheduled/manual) | ✅ | `CheckInServiceTests` |
 
 **Acceptance:** check-ins persist correctly ✅; focus modes behave as configured 🟡 (manual); ignored

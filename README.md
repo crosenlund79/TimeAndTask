@@ -36,8 +36,10 @@ instance brings the running instance's window to the front. `--show` opens the w
 Every 30 minutes (on the hour and half hour) a small popup asks what you are working on. The interval
 can be 1, 5, 10, 15, 30 or 60 minutes, or any whole number of minutes from 1 to 240 (Settings → Check-in
 interval → Custom). Changes apply immediately; missed slots are never replayed. Settings → "Show a scheduled
-check-in now" triggers a real scheduled check-in for testing.
-- **Enter** on an empty search repeats the previous task · **Alt+1…4** records the numbered recent task
+check-in now" triggers a real scheduled check-in for testing and says why when it cannot (paused, a
+check-in already open). Overview and Settings show the state, interval, next check-in and the last
+check-in attempt with its outcome; scheduled popups show a small countdown (paused while the pointer is on it).
+- **Enter** on an empty search repeats the previous task · **Alt+1…4** (top row or number pad) records the numbered recent task
   (shown with its key while the search box is empty; does nothing when there are no recent tasks)
 - Type to search (title, ticket ID or client), **↑/↓** to choose, **Enter** to record; unknown text creates a task
 - **Esc** skips; an unanswered check-in closes itself and the time after it is marked uncertain

@@ -187,6 +187,26 @@ unclean exit, `RecoverAsync` closes open segments at their last heartbeat (reaso
 prompts into Missed and closes open lock periods. Lock periods are recorded only while tracking.
 A backward clock jump can produce segments that overlap in UTC; the Phase 4 estimator must flatten them.
 
+**Observability.** Every attempt to show a check-in has a result (`CheckInAttemptResult`: Shown,
+SkippedPopupOpen, SuppressedLocked, NotTracking, then Answered / Missed / Dismissed / Failed when the popup
+closes). It is logged at Information ("Check-in attempt (Scheduled): Shown", "Check-in popup closed: TimedOut")
+and published in `TrackingStatus` together with the interval, the next check-in and any timer error (state
+Error; the timer retries every minute). Overview and Settings show it; a warning is shown when check-ins are
+held back (session reported locked) or failing. "Show a scheduled check-in now" returns the result, and the UI
+explains anything other than Shown.
+
+**Missed resume.** `SystemEvents` raises `Resume` only for user-initiated resume notifications
+(`PBT_APMRESUMESUSPEND`); a wake that Windows reports only as `PBT_APMRESUMEAUTOMATIC` (possible on Modern Standby
+and remote-wake systems) produced no event, so the engine stayed "asleep": no segment, no scheduled check-ins,
+"Show now" disabled, while the global shortcut (which bypasses the engine) kept working. While marked asleep the
+engine now arms its timer one minute ahead; a timer can only run on an awake computer, so if it fires (or the
+session is unlocked) without a resume notification, tracking resumes and a warning is logged.
+
+**Lock state.** Session lock/unlock arrives as `SessionSwitch` events. If a lock is ever not followed by an
+unlock (e.g. remote-desktop connect/disconnect sequences), every prompt would be suppressed silently. Before
+suppressing, the engine therefore asks `ISessionStateProbe` (App: `OpenInputDesktop` + `SwitchDesktop`, which
+fails only while the secure desktop is shown) and clears a stale lock with a warning in the log.
+
 **Pause.** Stored in settings (`Tracking.Enabled = false` for "until resumed", `PausedUntilUtc` for a timed
 pause) so it survives restarts; the engine resumes by itself when a timed pause ends.
 
@@ -202,7 +222,14 @@ after the window settles and the outcome is logged ("Check-in popup activation: 
 *Keyboard focus:* after activation WPF focuses the window itself, not a control, so the search box is focused
 explicitly unless the user already clicked into another input of the popup. (Phase 3 shipped with a check that
 treated "window focused" as "input focused", so typing went nowhere — fixed.) The window is a tool window (not in Alt+Tab), topmost, Windows 11 rounded
-corners, positioned in the work area. The auto-dismiss countdown pauses on hover and stops on any input.
+corners, positioned in the work area. The auto-dismiss countdown (mm:ss and a thin bar) pauses while the pointer is over the popup ("Paused at …")
+and stops on any key or click ("Stays open until you answer or close it"); its one-second tick stops with it.
+A focused-mode popup's own activation is not an interaction (it used to stop the countdown, so focused
+popups never auto-closed).
+
+*Recent-task shortcuts:* Alt+1…4 (top row or number pad) are handled in the window's `PreviewKeyDown`
+before the search box sees them; with the number pad the Alt-code character Windows types afterwards is
+swallowed. Alt with Ctrl (AltGr) is ignored, since it types characters such as @ on many layouts.
 
 ## Logging
 `ILogger<T>` everywhere, Serilog daily rolling files (14 retained, 10 MB cap) in the logs folder.
