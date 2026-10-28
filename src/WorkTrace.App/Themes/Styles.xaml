@@ -20,6 +20,45 @@
   <SolidColorBrush x:Key="EstimatedBrush" Color="#D97706" />
   <SolidColorBrush x:Key="UnclassifiedBrush" Color="#9CA3AF" />
 
+  <!--
+    WorkTrace logo as vector artwork (same geometry as assets/icons/worktrace.svg): crisp at any size and DPI,
+    unlike the .ico frames. 256×256 design grid.
+  -->
+  <DrawingImage x:Key="WorkTraceLogo">
+    <DrawingImage.Drawing>
+      <DrawingGroup>
+        <GeometryDrawing Brush="#0F766E">
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="8,8,240,240" RadiusX="56" RadiusY="56" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing>
+          <GeometryDrawing.Pen>
+            <Pen Brush="White" Thickness="22" />
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry Center="128,136" RadiusX="78" RadiusY="78" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M 94,138 L 120,164 L 166,108">
+          <GeometryDrawing.Pen>
+            <Pen Brush="White" Thickness="24" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+          </GeometryDrawing.Pen>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#0F766E">
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry Center="128,50" RadiusX="24" RadiusY="24" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#F59E0B">
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry Center="128,50" RadiusX="17" RadiusY="17" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+      </DrawingGroup>
+    </DrawingImage.Drawing>
+  </DrawingImage>
+
   <!-- Typography -->
   <Style x:Key="PageTitleText" TargetType="TextBlock">
     <Setter Property="FontSize" Value="26" />

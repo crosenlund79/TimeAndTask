@@ -29,7 +29,7 @@ public sealed record RecentTaskItem(TaskSummary Task, int Number)
 
     public string Shortcut => $"Alt+{Number}";
 
-    public string ToolTip => $"{Task.Title} — {Task.ClientName}{(Task.ExternalId is { } id ? $" · {id}" : string.Empty)}\nClick or press {Shortcut} to record";
+    public string ToolTip => $"{Task.Title} — {Task.ClientName}{(Task.ExternalId is { } id ? $" · {id}" : string.Empty)}\nClick or press {Shortcut} to record it now";
 }
 
 /// <summary>
@@ -91,10 +91,13 @@ public sealed partial class CheckInViewModel(
         : null;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsSearching), nameof(PendingSummary))]
+    [NotifyPropertyChangedFor(nameof(IsSearching), nameof(PendingSummary), nameof(HasRecent))]
     public partial string? SearchText { get; set; }
 
     public bool IsSearching => !string.IsNullOrWhiteSpace(SearchText);
+
+    /// <summary>Recent tasks are shown (and Alt+1…4 active) only while the search box is empty.</summary>
+    public bool HasRecent => !IsSearching && Recent.Count > 0;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PendingSummary))]
@@ -253,6 +256,8 @@ public sealed partial class CheckInViewModel(
                 Recent.Add(new RecentTaskItem(task, Recent.Count + 1));
             }
 
+            OnPropertyChanged(nameof(HasRecent));
+
             OnPropertyChanged(nameof(PendingSummary));
         }
         catch (Exception ex)
@@ -356,9 +361,13 @@ public sealed partial class CheckInViewModel(
     [RelayCommand(CanExecute = nameof(CanRecord))]
     private Task PickRecentAsync(RecentTaskItem? item) => item is null ? Task.CompletedTask : RecordAsync(item.Task, null);
 
+    /// <summary>
+    /// Alt+1…4: records the recent task with that number. Does nothing while searching (the recent list is
+    /// hidden then) or when there is no such recent task.
+    /// </summary>
     [RelayCommand(CanExecute = nameof(CanRecord))]
     private Task PickRecentByNumberAsync(string? number) =>
-        int.TryParse(number, out var n) && Recent.FirstOrDefault(r => r.Number == n) is { } item
+        HasRecent && int.TryParse(number, out var n) && Recent.FirstOrDefault(r => r.Number == n) is { } item
             ? RecordAsync(item.Task, null)
             : Task.CompletedTask;
 

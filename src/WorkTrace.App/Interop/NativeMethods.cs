@@ -53,6 +53,12 @@ internal static partial class NativeMethods
     [LibraryImport("kernel32.dll")]
     internal static partial uint GetCurrentThreadId();
 
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    internal const int SW_SHOW = 5;
+
     [LibraryImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
     internal static partial IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex);
 
@@ -80,6 +86,7 @@ internal static partial class NativeMethods
         var attached = foregroundThread != 0 && foregroundThread != currentThread && AttachThreadInput(currentThread, foregroundThread, true);
         try
         {
+            ShowWindow(hwnd, SW_SHOW);
             BringWindowToTop(hwnd);
             SetForegroundWindow(hwnd);
         }

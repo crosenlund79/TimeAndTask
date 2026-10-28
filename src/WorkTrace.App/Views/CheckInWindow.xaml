@@ -26,7 +26,19 @@
     <KeyBinding Modifiers="Alt" Key="M" Command="{Binding ToggleDetailsCommand}" />
   </Window.InputBindings>
 
-  <Border BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8">
+  <!-- The border turns accent-coloured while the popup has keyboard focus, so it is obvious where typing goes. -->
+  <Border CornerRadius="8">
+    <Border.Style>
+      <Style TargetType="Border">
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+        <Style.Triggers>
+          <DataTrigger Binding="{Binding IsActive, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+          </DataTrigger>
+        </Style.Triggers>
+      </Style>
+    </Border.Style>
     <StackPanel Margin="16,12,16,12">
 
       <!-- Header (drag to move) -->
@@ -36,10 +48,13 @@
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <Image Source="pack://application:,,,/WorkTrace;component/Assets/worktrace.ico" Width="20" Height="20" Margin="0,2,10,0" VerticalAlignment="Top" />
+        <Image Source="{StaticResource WorkTraceLogo}" Width="22" Height="22" Margin="0,1,10,0" VerticalAlignment="Top"
+               RenderOptions.BitmapScalingMode="HighQuality" ToolTip="WorkTrace" />
         <StackPanel Grid.Column="1">
           <TextBlock Text="{Binding Heading}" FontSize="15" FontWeight="SemiBold" />
-          <TextBlock Text="{Binding Subheading}" Style="{StaticResource CaptionText}" />
+          <TextBlock Style="{StaticResource CaptionText}">
+            <Run Text="WorkTrace" FontWeight="SemiBold" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" /><Run Text=" · " /><Run Text="{Binding Subheading, Mode=OneWay}" />
+          </TextBlock>
         </StackPanel>
         <Button Grid.Column="2" Style="{StaticResource IconButton}" Content="&#xE711;" FontSize="11" VerticalAlignment="Top"
                 ToolTip="Skip this check-in (Esc)" Command="{Binding DismissCommand}" IsTabStop="False" />
@@ -128,28 +143,32 @@
         </ListBox.ItemTemplate>
       </ListBox>
 
-      <!-- Recent tasks: one click or Alt+number -->
-      <ItemsControl ItemsSource="{Binding Recent}" Margin="0,8,0,0" Focusable="False"
-                    Visibility="{Binding IsSearching, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <WrapPanel />
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate DataType="{x:Type vm:RecentTaskItem}">
-            <Button Margin="0,0,6,6" Padding="10,4" MaxWidth="200" IsTabStop="False" ToolTip="{Binding ToolTip}"
-                    Command="{Binding DataContext.PickRecentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                    CommandParameter="{Binding}">
-              <StackPanel Orientation="Horizontal">
-                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" MaxWidth="140" />
-                <TextBlock Text="{Binding Number}" Margin="8,0,0,0" FontSize="11" VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-              </StackPanel>
-            </Button>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
+      <!-- Recent tasks: one click or Alt+number records immediately -->
+      <StackPanel Margin="0,8,0,0"
+                  Visibility="{Binding HasRecent, Converter={StaticResource BoolToVisibility}}">
+        <TextBlock Text="Recent — click or press Alt+number to record" Style="{StaticResource CaptionText}" FontSize="11" Margin="0,0,0,4" />
+        <ItemsControl ItemsSource="{Binding Recent}" Focusable="False">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:RecentTaskItem}">
+              <Button Margin="0,0,6,6" Padding="8,3" MaxWidth="210" IsTabStop="False" ToolTip="{Binding ToolTip}"
+                      Command="{Binding DataContext.PickRecentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      CommandParameter="{Binding}" AutomationProperties.Name="{Binding Title}">
+                <StackPanel Orientation="Horizontal">
+                  <Border Style="{StaticResource Pill}" Margin="0,0,6,0" Padding="5,0">
+                    <TextBlock Text="{Binding Shortcut}" Style="{StaticResource PillText}" FontSize="10" />
+                  </Border>
+                  <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" MaxWidth="140" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
 
       <!-- Note -->
       <Grid Margin="0,4,0,0">

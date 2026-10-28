@@ -1,7 +1,10 @@
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using Microsoft.Extensions.Logging;
 using WorkTrace.App.Interop;
 using WorkTrace.App.ViewModels;
 using WorkTrace.Core.Settings;
@@ -21,9 +24,11 @@ public partial class CheckInWindow : Window
     private readonly PopupPosition _position;
     private readonly bool _takeFocus;
     private readonly DispatcherTimer _tick;
+    private readonly ILogger? _logger;
 
-    public CheckInWindow(CheckInViewModel viewModel, PopupPosition position, bool takeFocus)
+    public CheckInWindow(CheckInViewModel viewModel, PopupPosition position, bool takeFocus, ILogger? logger = null)
     {
+        _logger = logger;
         _viewModel = viewModel;
         _position = position;
         _takeFocus = takeFocus;
@@ -55,13 +60,40 @@ public partial class CheckInWindow : Window
     /// <summary>How the popup ended; Dismissed unless the view model says otherwise.</summary>
     public PromptOutcome Outcome { get; private set; } = PromptOutcome.Dismissed;
 
-    /// <summary>Brings the popup to the front with keyboard focus (global shortcut, tray click).</summary>
+    /// <summary>
+    /// Brings the popup to the front with keyboard focus in the search box (global shortcut, tray, focused
+    /// mode). Windows may refuse a foreground change the first time (foreground lock), so the result is
+    /// checked once more after the activation has settled.
+    /// </summary>
     public void ActivateForInput()
     {
         _viewModel.NotifyInteraction();
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+        }
+
+        TryActivate();
+        FocusSearchBox();
+        Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () =>
+        {
+            if (!IsActive)
+            {
+                TryActivate();
+            }
+
+            FocusSearchBox();
+            _logger?.LogInformation("Check-in popup activation: active={Active}, foreground={Foreground}",
+                IsActive, NativeMethods.GetForegroundWindow() == Handle);
+        });
+    }
+
+    private IntPtr Handle => new WindowInteropHelper(this).Handle;
+
+    private void TryActivate()
+    {
+        NativeMethods.ForceForeground(Handle);
         Activate();
-        NativeMethods.ForceForeground(new WindowInteropHelper(this).Handle);
-        FocusSearchIfNeeded();
     }
 
     /// <summary>Closes with a specific outcome (application exit).</summary>
@@ -102,16 +134,36 @@ public partial class CheckInWindow : Window
         };
     }
 
+    /// <summary>
+    /// After activation WPF focuses the window itself, not a control; then typing goes nowhere. Move focus
+    /// to the search box unless the user is already in one of the popup's inputs (e.g. clicked the note box).
+    /// </summary>
     private void FocusSearchIfNeeded()
     {
-        if (!IsKeyboardFocusWithin)
+        if (!IsUserInputFocused())
         {
-            Dispatcher.BeginInvoke(DispatcherPriority.Input, () =>
+            FocusSearchBox();
+        }
+    }
+
+    private bool IsUserInputFocused() =>
+        Keyboard.FocusedElement is DependencyObject focused
+        && !ReferenceEquals(focused, this)
+        && IsAncestorOf(focused)
+        && focused is TextBoxBase or ComboBox or ComboBoxItem or DatePicker or ButtonBase or ListBoxItem or Expander or ToggleButton;
+
+    private void FocusSearchBox()
+    {
+        SearchBox.Focus();
+        Keyboard.Focus(SearchBox);
+        Dispatcher.BeginInvoke(DispatcherPriority.Input, () =>
+        {
+            if (!IsUserInputFocused())
             {
                 SearchBox.Focus();
                 Keyboard.Focus(SearchBox);
-            });
-        }
+            }
+        });
     }
 
     private void OnHeaderMouseDown(object sender, MouseButtonEventArgs e)

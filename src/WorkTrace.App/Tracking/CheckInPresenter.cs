@@ -64,7 +64,7 @@ public sealed class CheckInPresenter(IServiceProvider services, ISettingsStore s
         viewModel.Configure(promptId, scheduledAtUtc, reason, autoDismissSeconds);
         viewModel.Recorded += (_, observation) => Recorded?.Invoke(this, observation);
 
-        var window = new CheckInWindow(viewModel, settings.Current.Tracking.PopupPosition, takeFocus);
+        var window = new CheckInWindow(viewModel, settings.Current.Tracking.PopupPosition, takeFocus, logger);
         _window = window;
         _isOpen = true;
         window.Closed += (_, _) =>
