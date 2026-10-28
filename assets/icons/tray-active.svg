@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>WorkTrace</title>
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="#0F766E"/>
+  <circle cx="128" cy="136" r="78" fill="none" stroke="#FFFFFF" stroke-width="22"/>
+  <polyline points="94,138 120,164 166,108" fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="128" cy="50" r="24" fill="#0F766E"/>
+  <circle cx="128" cy="50" r="17" fill="#F59E0B"/>
+</svg>

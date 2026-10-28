@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WorkTrace.App/WorkTrace.App.csproj" />
+    <Project Path="src/WorkTrace.Core/WorkTrace.Core.csproj" />
+    <Project Path="src/WorkTrace.Infrastructure/WorkTrace.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WorkTrace.Tests/WorkTrace.Tests.csproj" />
+  </Folder>
+</Solution>

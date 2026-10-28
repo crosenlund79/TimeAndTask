@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RootNamespace>WorkTrace.App</RootNamespace>
+    <AssemblyName>WorkTrace</AssemblyName>
+    <UseWPF>true</UseWPF>
+    <!-- Windows Forms is used only for NotifyIcon (system tray). -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\..\assets\icons\worktrace.ico</ApplicationIcon>
+    <!-- WPF0001: Fluent ThemeMode is still marked experimental in .NET 10. -->
+    <NoWarn>$(NoWarn);WPF0001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Avoid Application/MessageBox/etc. ambiguities between WPF and Windows Forms. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="..\..\assets\icons\worktrace.ico" Link="Assets\worktrace.ico" />
+    <Resource Include="..\..\assets\icons\tray-active.ico" Link="Assets\tray-active.ico" />
+    <Resource Include="..\..\assets\icons\tray-paused.ico" Link="Assets\tray-paused.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WorkTrace.Core\WorkTrace.Core.csproj" />
+    <ProjectReference Include="..\WorkTrace.Infrastructure\WorkTrace.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
