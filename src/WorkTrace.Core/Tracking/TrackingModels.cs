@@ -15,7 +15,35 @@ public enum TrackingState
 
     /// <summary>The computer is asleep (between suspend and resume notifications).</summary>
     Suspended = 3,
+
+    /// <summary>Tracking could not run (start-up or timer failure); see <see cref="TrackingStatus.LastError"/>.</summary>
+    Error = 4,
 }
+
+/// <summary>What happened when a check-in came due (or was requested with "show now").</summary>
+public enum CheckInAttemptResult
+{
+    /// <summary>The popup was shown and is waiting for an answer.</summary>
+    Shown = 0,
+
+    /// <summary>Not shown: a check-in popup was already open.</summary>
+    SkippedPopupOpen = 1,
+
+    /// <summary>Not shown: the Windows session is locked (stored as suppressed).</summary>
+    SuppressedLocked = 2,
+
+    /// <summary>Not shown: tracking is paused, asleep or stopped.</summary>
+    NotTracking = 3,
+
+    /// <summary>The popup could not be shown (see the log).</summary>
+    Failed = 4,
+
+    Answered = 5,
+    Missed = 6,
+    Dismissed = 7,
+}
+
+public sealed record CheckInAttempt(DateTime AtUtc, CheckInAttemptResult Result);
 
 /// <summary>Snapshot of the tracking engine for the tray, popup and overview.</summary>
 public sealed record TrackingStatus(
@@ -23,9 +51,18 @@ public sealed record TrackingStatus(
     DateTime? PausedUntilUtc,
     DateTime? NextCheckInUtc,
     bool IsSessionLocked,
-    bool PeriodicPromptsEnabled)
+    bool PeriodicPromptsEnabled,
+    int IntervalMinutes = 30,
+    CheckInAttempt? LastAttempt = null,
+    string? LastError = null)
 {
     public static TrackingStatus Initial { get; } = new(TrackingState.Stopped, null, null, false, true);
+}
+
+/// <summary>Whether the Windows session is currently locked; null when it cannot be determined.</summary>
+public interface ISessionStateProbe
+{
+    bool? IsSessionLocked();
 }
 
 /// <summary>How a shown check-in popup ended.</summary>

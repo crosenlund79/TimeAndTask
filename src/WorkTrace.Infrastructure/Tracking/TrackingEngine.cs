@@ -36,6 +36,7 @@ public sealed class TrackingEngine : IAsyncDisposable
     private readonly TimeZoneInfo _timeZone;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly CancellationTokenSource _shutdown = new();
+    private readonly object _statusLock = new();
 
     private ITimer? _timer;
     private Task _lastTimerRun = Task.CompletedTask;
@@ -55,6 +56,9 @@ public sealed class TrackingEngine : IAsyncDisposable
     private DateTime? _lastPromptUtc;
     private DateTime _baselineWallUtc;
     private long _baselineTimestamp;
+    private CheckInAttempt? _lastAttempt;
+    private string? _lastError;
+    private readonly ISessionStateProbe? _sessionProbe;
 
     /// <param name="monotonicClock">
     /// Source of elapsed time unaffected by wall-clock changes (defaults to <paramref name="timeProvider"/>'s
@@ -67,8 +71,10 @@ public sealed class TrackingEngine : IAsyncDisposable
         TimeProvider timeProvider,
         ILogger<TrackingEngine> logger,
         TimeZoneInfo? timeZone = null,
-        TimeProvider? monotonicClock = null)
+        TimeProvider? monotonicClock = null,
+        ISessionStateProbe? sessionProbe = null)
     {
+        _sessionProbe = sessionProbe;
         _store = store;
         _settings = settings;
         _presenter = presenter;
@@ -212,19 +218,27 @@ public sealed class TrackingEngine : IAsyncDisposable
 
     /// <summary>
     /// Shows a real scheduled check-in immediately (Settings "show now"), honouring the popup mode and
-    /// auto-dismiss, so behaviour can be tried without waiting for the next slot. Ignored when not tracking.
+    /// auto-dismiss, so behaviour can be tried without waiting for the next slot. Returns what happened,
+    /// e.g. <see cref="CheckInAttemptResult.NotTracking"/> while paused, so the UI can explain it.
     /// </summary>
-    public Task TriggerCheckInNowAsync() => WithGateAsync(async ct =>
+    public async Task<CheckInAttemptResult> TriggerCheckInNowAsync()
     {
-        if (_segmentId is null)
+        var result = CheckInAttemptResult.NotTracking;
+        await WithGateAsync(async ct =>
         {
-            return;
-        }
+            var now = Now;
+            if (_segmentId is null)
+            {
+                result = Record(now, CheckInAttemptResult.NotTracking, "requested now");
+                return;
+            }
 
-        var now = Now;
-        await TriggerPromptAsync(now, PromptReason.Scheduled, now, ct);
-        _nextPromptUtc = ComputeNextPrompt(now);
-    });
+            result = await TriggerPromptAsync(now, PromptReason.Scheduled, now, ct);
+            _nextPromptUtc = ComputeNextPrompt(now);
+        });
+
+        return result;
+    }
 
     /// <summary>The system clock was changed; split the segment if the wall clock jumped.</summary>
     public Task NotifyTimeChangedAsync() => WithGateAsync(ct => DetectClockJumpAsync(Now, ct));
@@ -265,6 +279,7 @@ public sealed class TrackingEngine : IAsyncDisposable
             await WithGateAsync(async ct =>
             {
                 var now = Now;
+                _lastError = null;
                 await DetectClockJumpAsync(now, ct);
 
                 if (_paused && Tracking.PausedUntilUtc is { } until && until <= now && Tracking.Enabled)
@@ -302,31 +317,51 @@ public sealed class TrackingEngine : IAsyncDisposable
         catch (Exception ex) when (ex is not ObjectDisposedException)
         {
             _logger.LogError(ex, "Tracking timer failed; retrying in one minute");
+            _lastError = $"Scheduling failed: {ex.Message}";
+            PublishStatus();
             _timer?.Change(TimeSpan.FromMinutes(1), Timeout.InfiniteTimeSpan);
         }
     }
 
-    private async Task TriggerPromptAsync(DateTime scheduledUtc, PromptReason reason, DateTime now, CancellationToken ct)
+    private async Task<CheckInAttemptResult> TriggerPromptAsync(DateTime scheduledUtc, PromptReason reason, DateTime now, CancellationToken ct)
     {
         _lastPromptUtc = now;
 
         if (_presenter.IsOpen)
         {
             // The user is already looking at a check-in; a second popup would only get in the way.
-            _logger.LogDebug("Check-in skipped: popup already open");
-            return;
+            return Record(now, CheckInAttemptResult.SkippedPopupOpen, reason.ToString());
+        }
+
+        if (_locked && _sessionProbe?.IsSessionLocked() == false)
+        {
+            // A lock notification without a matching unlock (e.g. remote-desktop reconnects) must not
+            // silence check-ins forever: trust the actual session state.
+            _logger.LogWarning("Session reported as locked but is not; clearing the lock state");
+            _locked = false;
+            _suppressedWhileLocked = false;
+            await EndLockAsync(now, ct);
         }
 
         if (_locked)
         {
             await _store.CreatePromptAsync(scheduledUtc, null, CheckInOutcome.Suppressed, ct);
             _suppressedWhileLocked = true;
-            return;
+            return Record(now, CheckInAttemptResult.SuppressedLocked, reason.ToString());
         }
 
         var promptId = await _store.CreatePromptAsync(scheduledUtc, now, CheckInOutcome.Pending, ct);
         _openPromptId = promptId;
+        Record(now, CheckInAttemptResult.Shown, reason.ToString());
         _lastPromptRun = RunPromptAsync(promptId, scheduledUtc, reason);
+        return CheckInAttemptResult.Shown;
+    }
+
+    private CheckInAttemptResult Record(DateTime now, CheckInAttemptResult result, string context)
+    {
+        _lastAttempt = new CheckInAttempt(now, result);
+        _logger.LogInformation("Check-in attempt ({Context}): {Result}", context, result);
+        return result;
     }
 
     private async Task RunPromptAsync(int promptId, DateTime scheduledUtc, PromptReason reason)
@@ -364,6 +399,16 @@ public sealed class TrackingEngine : IAsyncDisposable
             {
                 await _store.ResolvePromptAsync(promptId, value, Now);
             }
+
+            _lastAttempt = new CheckInAttempt(Now, outcome switch
+            {
+                PromptOutcome.Answered => CheckInAttemptResult.Answered,
+                PromptOutcome.Dismissed => CheckInAttemptResult.Dismissed,
+                PromptOutcome.TimedOut => CheckInAttemptResult.Missed,
+                _ => CheckInAttemptResult.Failed,
+            });
+            _logger.LogInformation("Check-in popup closed: {Outcome}", outcome);
+            PublishStatus();
 
             if (_openPromptId == promptId)
             {
@@ -583,7 +628,13 @@ public sealed class TrackingEngine : IAsyncDisposable
     private void AfterChange()
     {
         Reschedule();
-        var state = !_started || _stopped ? TrackingState.Stopped
+        PublishStatus();
+    }
+
+    private void PublishStatus()
+    {
+        var state = _lastError is not null && _started && !_stopped ? TrackingState.Error
+            : !_started || _stopped ? TrackingState.Stopped
             : _suspended ? TrackingState.Suspended
             : _paused ? TrackingState.Paused
             : TrackingState.Tracking;
@@ -592,13 +643,22 @@ public sealed class TrackingEngine : IAsyncDisposable
             state == TrackingState.Paused ? Tracking.PausedUntilUtc : null,
             state == TrackingState.Tracking ? NextVisiblePrompt() : null,
             _locked,
-            Tracking.PeriodicPromptsEnabled);
+            Tracking.PeriodicPromptsEnabled,
+            Tracking.CheckInIntervalMinutes,
+            _lastAttempt,
+            _lastError);
 
-        if (status != Status)
+        lock (_statusLock)
         {
+            if (status == Status)
+            {
+                return;
+            }
+
             Status = status;
-            StatusChanged?.Invoke(this, status);
         }
+
+        StatusChanged?.Invoke(this, status);
     }
 
     private DateTime? NextVisiblePrompt() =>

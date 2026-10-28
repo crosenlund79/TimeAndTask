@@ -28,13 +28,14 @@ internal sealed class UiTestContext : IAsyncDisposable
     public T Get<T>()
         where T : notnull => Services.GetRequiredService<T>();
 
-    public static async Task<UiTestContext> CreateAsync()
+    /// <param name="realTime">Use the system clock (real timers) instead of <see cref="Time"/>.</param>
+    public static async Task<UiTestContext> CreateAsync(bool realTime = false)
     {
         WorkTrace.App.Views.CheckInWindow.CaptureCreationTraces = true;
         var context = new UiTestContext();
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddSingleton<TimeProvider>(context.Time);
+        services.AddSingleton<TimeProvider>(realTime ? TimeProvider.System : context.Time);
         services.AddWorkTraceInfrastructure(new AppPaths(context._root));
         services.AddWorkTraceApp(new FakeLifetime());
         services.AddSingleton<IDialogService>(context.Dialogs);

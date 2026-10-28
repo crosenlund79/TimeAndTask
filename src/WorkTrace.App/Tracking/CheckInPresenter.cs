@@ -45,6 +45,8 @@ public sealed class CheckInPresenter(IServiceProvider services, ISettingsStore s
     {
         if (_window is not null)
         {
+            // The user asked for this popup: never auto-close it under their hands.
+            (_window.DataContext as CheckInViewModel)?.NotifyInteraction();
             _window.ActivateForInput();
             return;
         }
@@ -74,9 +76,25 @@ public sealed class CheckInPresenter(IServiceProvider services, ISettingsStore s
             viewModel.Dispose();
         };
 
-        window.Show();
+        try
+        {
+            window.Show();
+        }
+        catch
+        {
+            // A popup that never appeared must not block every later check-in as "already open".
+            _window = null;
+            _isOpen = false;
+            viewModel.Dispose();
+            throw;
+        }
+
         _ = LoadAsync(viewModel);
-        logger.LogDebug("Check-in popup opened ({Kind})", promptId is null ? "manual" : "scheduled");
+        logger.LogInformation(
+            "Check-in popup shown ({Kind}, {Mode}, auto-close {Seconds} s)",
+            promptId is null ? "manual" : reason.ToString(),
+            takeFocus ? "focused" : "unobtrusive",
+            autoDismissSeconds?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "off");
         return window;
     }
 

@@ -42,7 +42,8 @@ public static class ServiceCollectionExtensions
             sp.GetRequiredService<ISettingsStore>(),
             sp.GetRequiredService<ICheckInPresenter>(),
             sp.GetRequiredService<TimeProvider>(),
-            sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<TrackingEngine>>()));
+            sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<TrackingEngine>>(),
+            sessionProbe: sp.GetService<ISessionStateProbe>()));
 
         return services;
     }

@@ -20,6 +20,19 @@ internal static partial class NativeMethods
     internal const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
     internal const int DWMWCP_ROUND = 2;
 
+    internal const uint DESKTOP_SWITCHDESKTOP = 0x0100;
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    internal static partial IntPtr OpenInputDesktop(uint dwFlags, [MarshalAs(UnmanagedType.Bool)] bool fInherit, uint dwDesiredAccess);
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool SwitchDesktop(IntPtr hDesktop);
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool CloseDesktop(IntPtr hDesktop);
+
     [LibraryImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static partial bool AllowSetForegroundWindow(int dwProcessId);

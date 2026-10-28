@@ -72,7 +72,7 @@ public partial class CheckInWindow : Window
     /// </summary>
     public void ActivateForInput()
     {
-        _viewModel.NotifyInteraction();
+        // Not an interaction: a focused-mode scheduled popup activates itself and must keep its countdown.
         if (WindowState == WindowState.Minimized)
         {
             WindowState = WindowState.Normal;
