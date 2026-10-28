@@ -155,3 +155,6 @@ from another application reproduced it and now guards the fix.
 **Decision:** tests identify the popup they opened (difference against a snapshot) and the test context closes
 all windows on dispose.
 **Reason:** one shared Application per process; a stray window from one test broke unrelated tests.
+The host is a plain `Application` loading App.xaml's resources: constructing `App` ran `OnStartup`, i.e. a
+complete WorkTrace (engine, tray, hotkey) inside the test process, whose start-up check-in appeared in random
+tests and whose hotkey made Ctrl+Alt+Space look taken.

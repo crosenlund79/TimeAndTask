@@ -37,6 +37,8 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
 ```
 - `EnableWindowsTargeting=true` lets the WPF project compile on Linux; it only **runs** on Windows.
 - Test runner is Microsoft.Testing.Platform (`global.json` → `test.runner`); use `--project`/`--solution`.
+- `WorkTrace.App.Tests` hosts a plain `Application` with App.xaml's resources — never `new App()`, which would
+  run `OnStartup` (a full WorkTrace with engine, tray and hotkey) inside the test process.
 - `WorkTrace.App.Tests` is skipped automatically on non-Windows hosts (its `Directory.Build.targets`);
   it runs in CI. It renders every page with the real theme and fails on WPF binding errors — keep it green
   and extend it whenever a view is added.
