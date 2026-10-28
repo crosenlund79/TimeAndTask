@@ -24,7 +24,7 @@ src/WorkTrace.App             net10.0-windows  WPF + tray, ViewModels, Windows-o
 tests/WorkTrace.Tests         net10.0          unit + SQLite integration tests (run on Linux and Windows)
 tests/WorkTrace.App.Tests     net10.0-windows  WPF smoke (binding errors) + view-model flow tests; Windows only
 assets/icons                  SVG/ICO + generate_icons.py (Pillow)
-docs/                         architecture.md, requirements.md, decisions.md
+docs/                         architecture.md, requirements.md, decisions.md, BOARD.md
 ```
 Windows-only capabilities (screen capture, power/lock events, hotkeys, Run key) live in the App
 project behind Core interfaces so Core/Infrastructure stay testable cross-platform (ADR-003).
@@ -103,6 +103,17 @@ resource URIs are assembly-qualified (`pack://application:,,,/WorkTrace;componen
   verified manually by the owner and built/tested by CI on `windows-latest`.
 - Tray icon art is provisional (Phase 7 will hand-tune small frames).
 - Fluent `ThemeMode` is experimental in .NET 10 (WPF0001 suppressed).
+
+## Board (`docs/BOARD.md`)
+The project's mini Scrum board: Backlog → To do → In progress → Review / Test → Done. Cards have an ID (`WT-nnn`),
+title, category (feature, bug, architecture, testing, idea), description and acceptance criteria where relevant.
+- Move a card to In progress when you start it; update the board in the same commit as the work.
+- User-facing work goes to **Review / Test** when implemented and CI is green, never straight to Done. Only the owner
+  moves it to Done (or tells you to). Internal work (tests, refactoring, docs) may go to Done on green CI.
+- Turn owner feedback, bugs and test results into new cards or updates; a failed review moves the card back to
+  In progress with the finding. New ideas go to Backlog, not To do, until the owner agrees.
+- Record evidence (test names, CI run) on the card. Keep edits small; no history logs, estimates or ceremonies.
+- In the final report of each work round, list the cards that moved and what the owner should review next.
 
 ## Current phase
 - Phase 1 — Foundation: complete.
