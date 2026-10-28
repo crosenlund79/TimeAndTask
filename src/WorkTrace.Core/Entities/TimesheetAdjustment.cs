@@ -5,7 +5,7 @@ namespace WorkTrace.Core.Entities;
 /// observations or allocations. <see cref="BaselineMinutes"/> records the computed value at the time
 /// of the adjustment so later divergence can be flagged instead of silently resolved.
 /// </summary>
-public class TimesheetAdjustment : IAuditedEntity
+public class TimesheetAdjustment : IAuditedEntity, IChangeTracked
 {
     public const int NoteMaxLength = 2000;
 

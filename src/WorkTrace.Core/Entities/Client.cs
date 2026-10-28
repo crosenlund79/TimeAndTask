@@ -4,7 +4,7 @@ namespace WorkTrace.Core.Entities;
 /// A customer or internal cost bearer. Every task belongs to a client.
 /// Clients are deactivated rather than deleted once referenced.
 /// </summary>
-public class Client : IAuditedEntity
+public class Client : IAuditedEntity, IChangeTracked
 {
     public const int NameMaxLength = 200;
     public const int DescriptionMaxLength = 2000;

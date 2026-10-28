@@ -3,7 +3,7 @@ namespace WorkTrace.Core.Entities;
 /// <summary>
 /// Shared shape of user-configurable lookup lists (task systems, communication channels).
 /// </summary>
-public abstract class LookupItem
+public abstract class LookupItem : IChangeTracked
 {
     public const int NameMaxLength = 100;
 

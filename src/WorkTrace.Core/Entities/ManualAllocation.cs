@@ -14,7 +14,7 @@ public enum AllocationKind
 /// timeline (most recently created wins on overlap), so recalculation can never discard them and
 /// the flattened result cannot double-count time.
 /// </summary>
-public class ManualAllocation : IAuditedEntity
+public class ManualAllocation : IAuditedEntity, IChangeTracked
 {
     public const int NoteMaxLength = 4000;
 

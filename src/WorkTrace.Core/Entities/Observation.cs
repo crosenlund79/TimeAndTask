@@ -17,7 +17,7 @@ public enum ObservationOrigin
 /// statement always stays distinguishable from later corrections.
 /// </para>
 /// </summary>
-public class Observation
+public class Observation : IChangeTracked
 {
     public const int NoteMaxLength = 4000;
 

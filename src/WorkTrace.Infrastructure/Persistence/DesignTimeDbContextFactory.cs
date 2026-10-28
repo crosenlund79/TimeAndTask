@@ -11,6 +11,6 @@ internal sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<W
         var options = new DbContextOptionsBuilder<WorkTraceDbContext>()
             .UseSqlite(SqliteConnectionStrings.ForFile("design-time.db"))
             .Options;
-        return new WorkTraceDbContext(options);
+        return new WorkTraceDbContext(options, TimeProvider.System);
     }
 }

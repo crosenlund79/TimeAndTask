@@ -3,7 +3,7 @@ namespace WorkTrace.Core.Entities;
 /// <summary>
 /// A reusable work item. Named WorkTask to avoid clashing with <see cref="System.Threading.Tasks.Task"/>.
 /// </summary>
-public class WorkTask : IAuditedEntity
+public class WorkTask : IAuditedEntity, IChangeTracked
 {
     public const int TitleMaxLength = 500;
     public const int ExternalIdMaxLength = 100;
