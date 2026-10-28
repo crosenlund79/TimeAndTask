@@ -68,6 +68,11 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
   scheduled popups in Unobtrusive mode must never take focus. `FocusTests` (incl. a real-keystroke test from
   another process) guard both — keep them green.
 - Engine tests use `FakeTimeProvider` + a separate monotonic clock; `TrackingEngine.IdleAsync` makes them deterministic.
+  Model sleep with `Sleep(...)` (no timers fire while asleep), not `AdvanceAsync`.
+- Every check-in attempt has a `CheckInAttemptResult` that is logged and shown in the UI — never add a silent no-op path.
+  State that depends on paired Windows notifications (resume after sleep, unlock) must self-heal (ADR-032).
+- Fake-clock tests do not prove scheduling works: `RealAppTests` launches the built WorkTrace.exe (1-min interval) and
+  `SchedulingTests` uses the real clock; keep both green. UI test contexts stop the engine before disposing.
 - Services throw `DomainValidationException` (field errors), `OperationNotAllowedException`
   (e.g. deleting a referenced record) or `EntityNotFoundException`; view models map these to inline
   errors / notifications via `ViewModelBase.RunAsync`.
@@ -104,5 +109,6 @@ resource URIs are assembly-qualified (`pack://application:,,,/WorkTrace;componen
 - Phase 2 — Clients and tasks: complete.
 - **Phase 3 — Check-ins: complete** (tracking engine, popup in focused/unobtrusive mode, global shortcut,
   pause/resume, sleep/lock/clock handling, Settings page, Today timeline; refinements: 1–240 min interval,
-  reliable shortcut focus, Alt+1–4 clarity, "show check-in now"). **Next: Phase 4 — estimation
+  reliable shortcut focus, Alt+1–4 clarity, "show check-in now"; round 2: scheduling self-heal, status/last attempt in UI, countdown, Alt+number at window
+  level). Scheduled check-ins must be confirmed on the owner's machine before Phase 4. **Next: Phase 4 — estimation
   engine and activity log** (inputs: segments, lock periods, observations, prompts, manual allocations).
