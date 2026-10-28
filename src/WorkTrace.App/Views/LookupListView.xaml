@@ -55,11 +55,13 @@
                   <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                  <Button Style="{StaticResource IconButton}" Content="&#xE70E;" FontSize="11" Width="26" ToolTip="Move up"
-                          Command="{Binding MoveUpCommand}" IsEnabled="{Binding IsFirst, Converter={StaticResource InverseBool}}" />
-                  <Button Style="{StaticResource IconButton}" Content="&#xE70D;" FontSize="11" Width="26" ToolTip="Move down"
-                          Command="{Binding MoveDownCommand}" IsEnabled="{Binding IsLast, Converter={StaticResource InverseBool}}" />
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,1,0,0">
+                  <Button Style="{StaticResource IconButton}" Content="&#xE70E;" FontSize="11" Width="28" ToolTip="{Binding MoveUpToolTip}"
+                          Command="{Binding MoveUpCommand}" IsEnabled="{Binding IsFirst, Converter={StaticResource InverseBool}}"
+                          AutomationProperties.Name="Move up" />
+                  <Button Style="{StaticResource IconButton}" Content="&#xE70D;" FontSize="11" Width="28" ToolTip="{Binding MoveDownToolTip}"
+                          Command="{Binding MoveDownCommand}" IsEnabled="{Binding IsLast, Converter={StaticResource InverseBool}}"
+                          AutomationProperties.Name="Move down" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Margin="6,0,8,0">
@@ -75,25 +77,18 @@
                   <TextBlock Text="{Binding RenameError}" Style="{StaticResource ErrorText}" />
                 </StackPanel>
 
-                <Button Grid.Column="2" Padding="10,4" VerticalAlignment="Top" Margin="0,2,4,0" MinWidth="64"
-                        Command="{Binding ToggleActiveCommand}">
-                  <Button.Style>
-                    <Style TargetType="Button" BasedOn="{StaticResource IconButton}">
-                      <Setter Property="Width" Value="30" />
-                      <Setter Property="Content" Value="&#xE7B3;" />
-                      <Setter Property="ToolTip" Value="Shown in pickers – click to hide" />
-                      <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsActive}" Value="False">
-                          <Setter Property="Content" Value="&#xED1A;" />
-                          <Setter Property="ToolTip" Value="Hidden from pickers – click to show" />
-                        </DataTrigger>
-                      </Style.Triggers>
-                    </Style>
-                  </Button.Style>
+                <Button Grid.Column="2" Style="{StaticResource SubtleButton}" Height="30" MinWidth="70" VerticalAlignment="Top" Margin="0,2,6,0"
+                        Command="{Binding ToggleActiveCommand}" ToolTip="{Binding ToggleActiveToolTip}"
+                        AutomationProperties.Name="{Binding ToggleActiveLabel}">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding ToggleActiveGlyph}" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,6,0" />
+                    <TextBlock Text="{Binding ToggleActiveLabel}" VerticalAlignment="Center" />
+                  </StackPanel>
                 </Button>
 
-                <Button Grid.Column="3" Style="{StaticResource IconButton}" Content="&#xE74D;" VerticalAlignment="Top" Margin="0,2,0,0"
-                        Command="{Binding DeleteCommand}" IsEnabled="{Binding CanDelete}" ToolTip="{Binding DeleteToolTip}" />
+                <Button Grid.Column="3" Style="{StaticResource IconButton}" Content="&#xE74D;" VerticalAlignment="Top" Margin="0,1,0,0"
+                        Command="{Binding DeleteCommand}" IsEnabled="{Binding CanDelete}" ToolTip="{Binding DeleteToolTip}"
+                        AutomationProperties.Name="Delete" />
               </Grid>
               <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding IsActive}" Value="False">

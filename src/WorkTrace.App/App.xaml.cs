@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using WorkTrace.App.Shell;
+using WorkTrace.App.Tracking;
 using WorkTrace.App.Tray;
 using WorkTrace.App.ViewModels;
 using WorkTrace.App.Views;
@@ -12,6 +13,7 @@ using WorkTrace.Infrastructure;
 using WorkTrace.Infrastructure.Logging;
 using WorkTrace.Infrastructure.Persistence;
 using WorkTrace.Infrastructure.Storage;
+using WorkTrace.Infrastructure.Tracking;
 
 namespace WorkTrace.App;
 
@@ -56,6 +58,8 @@ public partial class App : Application, IAppLifetime
             var tray = _host.Services.GetRequiredService<TrayIconService>();
             tray.Initialize();
 
+            StartTracking(_host.Services, tray, settings);
+
             var windows = _host.Services.GetRequiredService<WindowManager>();
             _singleInstance.ListenForActivation(() => Dispatcher.BeginInvoke(windows.ShowMainWindow));
 
@@ -82,6 +86,48 @@ public partial class App : Application, IAppLifetime
     }
 
     public void RequestExit() => ShutdownCore(exitCode: 0);
+
+    private void StartTracking(IServiceProvider services, TrayIconService tray, WorkTraceSettings settings)
+    {
+        var presenter = services.GetRequiredService<CheckInPresenter>();
+        var hotkey = services.GetRequiredService<GlobalHotkey>();
+        hotkey.Pressed += (_, _) => presenter.ShowManual();
+        if (!hotkey.Register(settings.General.GlobalShortcut))
+        {
+            tray.ShowNotification("Shortcut not available", $"{settings.General.GlobalShortcut} is used by another application. Choose another one in Settings.");
+        }
+
+        var store = services.GetRequiredService<ISettingsStore>();
+        store.Changed += (_, changed) => Dispatcher.BeginInvoke(() => OnSettingsChanged(changed, hotkey, tray));
+
+        services.GetRequiredService<SystemEventsBridge>().Start();
+        _ = StartEngineAsync(services.GetRequiredService<TrackingEngine>());
+    }
+
+    private async Task StartEngineAsync(TrackingEngine engine)
+    {
+        try
+        {
+            await engine.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogCritical(ex, "Tracking could not start");
+            MessageBox.Show($"Tracking could not start.\n\n{ex.Message}", "WorkTrace", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private static void OnSettingsChanged(WorkTraceSettings settings, GlobalHotkey hotkey, TrayIconService tray)
+    {
+        ApplyTheme(settings.General.Theme);
+        if (!string.Equals(hotkey.Current, settings.General.GlobalShortcut, StringComparison.OrdinalIgnoreCase)
+            && !hotkey.Register(settings.General.GlobalShortcut))
+        {
+            tray.ShowNotification("Shortcut not available", $"{settings.General.GlobalShortcut} is used by another application or is not valid.");
+        }
+
+        tray.UpdateShortcut(settings.General.GlobalShortcut);
+    }
 
     protected override void OnSessionEnding(SessionEndingCancelEventArgs e)
     {
@@ -139,6 +185,14 @@ public partial class App : Application, IAppLifetime
 
         try
         {
+            // Stop tracking first so the segment ends now (not when the window happens to close).
+            if (_host?.Services.GetService<TrackingEngine>() is { } engine)
+            {
+                Task.Run(engine.StopAsync).Wait(TimeSpan.FromSeconds(5));
+            }
+
+            _host?.Services.GetService<SystemEventsBridge>()?.Dispose();
+            _host?.Services.GetService<GlobalHotkey>()?.Dispose();
             _host?.Services.GetService<WindowManager>()?.CloseAll();
             _host?.Services.GetService<TrayIconService>()?.Dispose();
 

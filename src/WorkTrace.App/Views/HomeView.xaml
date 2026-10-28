@@ -5,106 +5,170 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:WorkTrace.App.ViewModels"
              xmlns:shell="clr-namespace:WorkTrace.App.Shell"
-             mc:Ignorable="d"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
              d:DataContext="{d:DesignInstance Type=vm:HomeViewModel}">
-  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <StackPanel MaxWidth="900" HorizontalAlignment="Left">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <StackPanel>
       <TextBlock Text="Overview" Style="{StaticResource PageTitleText}" />
-      <TextBlock Style="{StaticResource PageSubtitleText}"
-                 Text="Set up the clients and tasks you work on. Check-ins and timesheets will use them." />
+      <TextBlock Style="{StaticResource PageSubtitleText}" Text="What WorkTrace has recorded today, and quick access to your tasks and clients." />
+    </StackPanel>
 
-      <!-- Quick actions -->
-      <UniformGrid Columns="3" Margin="0,24,0,0">
-        <Button Margin="0,0,12,0" Padding="16,14" HorizontalContentAlignment="Left" Command="{Binding NavigateCommand}"
-                CommandParameter="{x:Static shell:AppSection.Tasks}">
-          <StackPanel>
-            <TextBlock Text="&#xE9D5;" Style="{StaticResource IconText}" FontSize="20" HorizontalAlignment="Left" />
-            <TextBlock Text="{Binding Status.TaskCount, StringFormat={}{0} tasks, FallbackValue=Tasks}" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,0" />
-            <TextBlock Text="Search, edit and archive" Style="{StaticResource CaptionText}" />
-          </StackPanel>
-        </Button>
-        <Button Margin="0,0,12,0" Padding="16,14" HorizontalContentAlignment="Left" Command="{Binding NavigateCommand}"
-                CommandParameter="{x:Static shell:AppSection.Clients}">
-          <StackPanel>
-            <TextBlock Text="&#xE716;" Style="{StaticResource IconText}" FontSize="20" HorizontalAlignment="Left" />
-            <TextBlock Text="{Binding Status.ClientCount, StringFormat={}{0} clients, FallbackValue=Clients}" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,0" />
-            <TextBlock Text="Customers and internal work" Style="{StaticResource CaptionText}" />
-          </StackPanel>
-        </Button>
-        <Button Padding="16,14" HorizontalContentAlignment="Left" Command="{Binding NavigateCommand}"
-                CommandParameter="{x:Static shell:AppSection.Lists}">
-          <StackPanel>
-            <TextBlock Text="&#xE8FD;" Style="{StaticResource IconText}" FontSize="20" HorizontalAlignment="Left" />
-            <TextBlock FontSize="16" FontWeight="SemiBold" Margin="0,10,0,0" Text="Lists" />
-            <TextBlock Style="{StaticResource CaptionText}">
-              <Run Text="{Binding Status.TaskSystemCount, Mode=OneWay, FallbackValue=0}" /><Run Text=" task systems · " /><Run Text="{Binding Status.ChannelCount, Mode=OneWay, FallbackValue=0}" /><Run Text=" channels" />
-            </TextBlock>
-          </StackPanel>
-        </Button>
-      </UniformGrid>
-
-      <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
-        <Button Padding="14,6" Margin="0,0,8,0" Style="{DynamicResource AccentButtonStyle}" Command="{Binding NewTaskCommand}">
-          <StackPanel Orientation="Horizontal">
-            <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
-            <TextBlock Text="New task" />
-          </StackPanel>
-        </Button>
-        <Button Padding="14,6" Command="{Binding NewClientCommand}">
-          <StackPanel Orientation="Horizontal">
-            <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
-            <TextBlock Text="New client" />
-          </StackPanel>
-        </Button>
-      </StackPanel>
-
-      <Grid Margin="0,28,0,0">
+    <!-- Tracking status -->
+    <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,18,0,0" Padding="16,12">
+      <Grid>
         <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="3*" />
-          <ColumnDefinition Width="16" />
-          <ColumnDefinition Width="2*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-
-        <Border Style="{StaticResource Card}">
-          <StackPanel>
-            <TextBlock Text="Local data" Style="{StaticResource SectionTitleText}" />
-            <Grid Margin="0,10,0,0">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-              </Grid.ColumnDefinitions>
-              <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-              </Grid.RowDefinitions>
-              <TextBlock Text="Folder" Style="{StaticResource CaptionText}" Margin="0,3,16,3" />
-              <TextBlock Grid.Column="1" Text="{Binding Status.DataDirectory}" ToolTip="{Binding Status.DataDirectory}" TextTrimming="CharacterEllipsis" Margin="0,3" />
-              <TextBlock Grid.Row="1" Text="Schema" Style="{StaticResource CaptionText}" Margin="0,3,16,3" />
-              <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Status.AppliedMigrations.Count, StringFormat={}{0} migration(s) applied}" Margin="0,3" />
-              <TextBlock Grid.Row="2" Text="Version" Style="{StaticResource CaptionText}" Margin="0,3,16,3" />
-              <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Version}" Margin="0,3" />
-            </Grid>
-            <Button Content="Open data folder" Padding="12,5" Margin="0,14,0,0" HorizontalAlignment="Left" Command="{Binding OpenDataFolderCommand}" />
-          </StackPanel>
+        <Border Width="36" Height="36" CornerRadius="18" Margin="0,0,14,0" VerticalAlignment="Center"
+                Background="{DynamicResource SubtleFillColorTertiaryBrush}">
+          <TextBlock x:Name="StateGlyph" FontSize="16" HorizontalAlignment="Center">
+            <TextBlock.Style>
+              <Style TargetType="TextBlock" BasedOn="{StaticResource IconText}">
+                <Setter Property="Text" Value="&#xE769;" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding Tracking.IsTracking}" Value="True">
+                    <Setter Property="Text" Value="&#xE916;" />
+                    <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </TextBlock.Style>
+          </TextBlock>
         </Border>
+        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+          <TextBlock Text="{Binding Tracking.StatusText}" FontSize="16" FontWeight="SemiBold" />
+          <TextBlock Text="{Binding Tracking.StatusDetail}" Style="{StaticResource CaptionText}" />
+        </StackPanel>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button Padding="14,6" Margin="0,0,8,0" Style="{DynamicResource AccentButtonStyle}" Command="{Binding Tracking.RecordNowCommand}"
+                  ToolTip="Record what you are working on (global shortcut, see Settings)">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
+              <TextBlock Text="Record activity" />
+            </StackPanel>
+          </Button>
+          <Button Padding="14,6" Content="Pause 1 hour" Command="{Binding Tracking.PauseCommand}" CommandParameter="60"
+                  Visibility="{Binding Tracking.IsTracking, Converter={StaticResource BoolToVisibility}}" />
+          <Button Padding="14,6" Content="Resume" Command="{Binding Tracking.ResumeCommand}"
+                  Visibility="{Binding Tracking.IsPaused, Converter={StaticResource BoolToVisibility}}" />
+        </StackPanel>
+      </Grid>
+    </Border>
 
-        <Border Grid.Column="2" Style="{StaticResource Card}">
-          <StackPanel>
-            <TextBlock Text="Coming next" Style="{StaticResource SectionTitleText}" />
-            <ItemsControl ItemsSource="{Binding Roadmap}" Margin="0,8,0,0" Focusable="False">
+    <Grid Grid.Row="2" Margin="0,16,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="3*" />
+        <ColumnDefinition Width="16" />
+        <ColumnDefinition Width="2*" MinWidth="250" MaxWidth="360" />
+      </Grid.ColumnDefinitions>
+
+      <!-- Today -->
+      <Border Style="{StaticResource Card}">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+            <TextBlock Text="Today" Style="{StaticResource SectionTitleText}" />
+            <TextBlock Text="{Binding TodaySummary}" Style="{StaticResource CaptionText}" />
+          </StackPanel>
+          <TextBlock DockPanel.Dock="Bottom" Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
+                     Text="Recorded facts only. Time estimates and corrections arrive with the activity log (Phase 4)." />
+          <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Today}" Focusable="False">
               <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="{x:Type vm:RoadmapItem}">
-                  <DockPanel Margin="0,4">
-                    <TextBlock DockPanel.Dock="Right" Text="{Binding Phase}" Style="{StaticResource CaptionText}" Margin="8,0,0,0" />
-                    <TextBlock Text="{Binding Feature}" TextWrapping="Wrap" />
-                  </DockPanel>
+                <DataTemplate DataType="{x:Type vm:TimelineItemViewModel}">
+                  <Grid Margin="0,4">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="48" />
+                      <ColumnDefinition Width="26" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{Binding Time}" Style="{StaticResource CaptionText}" VerticalAlignment="Top" Margin="0,1,0,0" />
+                    <TextBlock x:Name="Glyph" Grid.Column="1" Text="{Binding Glyph}" Style="{StaticResource IconText}" FontSize="12"
+                               VerticalAlignment="Top" Margin="0,3,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <StackPanel Grid.Column="2">
+                      <TextBlock x:Name="Title" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="{Binding Detail}" Style="{StaticResource CaptionText}"
+                                 Visibility="{Binding Detail, Converter={StaticResource NullToCollapsed}}" />
+                    </StackPanel>
+                  </Grid>
+                  <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding IsCheckIn}" Value="True">
+                      <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                      <Setter TargetName="Title" Property="FontWeight" Value="SemiBold" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsUncertain}" Value="True">
+                      <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                    </DataTrigger>
+                  </DataTemplate.Triggers>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
-          </StackPanel>
-        </Border>
-      </Grid>
-    </StackPanel>
-  </ScrollViewer>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+
+      <!-- Right column -->
+      <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel>
+          <Border Style="{StaticResource Card}" Padding="8">
+            <StackPanel>
+              <Button Padding="10,8" HorizontalContentAlignment="Left" Margin="0,0,0,4" Command="{Binding NavigateCommand}"
+                      CommandParameter="{x:Static shell:AppSection.Tasks}" Background="Transparent" BorderThickness="0">
+                <DockPanel>
+                  <TextBlock Text="&#xE9D5;" Style="{StaticResource IconText}" Margin="0,0,12,0" />
+                  <TextBlock Text="{Binding Status.TaskCount, StringFormat={}{0} tasks, FallbackValue=Tasks}" />
+                </DockPanel>
+              </Button>
+              <Button Padding="10,8" HorizontalContentAlignment="Left" Margin="0,0,0,4" Command="{Binding NavigateCommand}"
+                      CommandParameter="{x:Static shell:AppSection.Clients}" Background="Transparent" BorderThickness="0">
+                <DockPanel>
+                  <TextBlock Text="&#xE716;" Style="{StaticResource IconText}" Margin="0,0,12,0" />
+                  <TextBlock Text="{Binding Status.ClientCount, StringFormat={}{0} clients, FallbackValue=Clients}" />
+                </DockPanel>
+              </Button>
+              <StackPanel Orientation="Horizontal" Margin="6,6,0,2">
+                <Button Content="New task" Padding="12,4" Margin="0,0,8,0" Command="{Binding NewTaskCommand}" />
+                <Button Content="New client" Padding="12,4" Command="{Binding NewClientCommand}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+            <StackPanel>
+              <TextBlock Text="Local data" Style="{StaticResource SectionTitleText}" />
+              <TextBlock Text="{Binding Status.DataDirectory}" ToolTip="{Binding Status.DataDirectory}" Style="{StaticResource CaptionText}" Margin="0,6,0,0" />
+              <TextBlock Style="{StaticResource CaptionText}">
+                <Run Text="Version " /><Run Text="{Binding Version, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Status.AppliedMigrations.Count, Mode=OneWay, FallbackValue=0}" /><Run Text=" migration(s)" />
+              </TextBlock>
+              <Button Content="Open data folder" Padding="12,4" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding OpenDataFolderCommand}" />
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+            <StackPanel>
+              <TextBlock Text="Coming next" Style="{StaticResource SectionTitleText}" />
+              <ItemsControl ItemsSource="{Binding Roadmap}" Margin="0,6,0,0" Focusable="False">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:RoadmapItem}">
+                    <DockPanel Margin="0,3">
+                      <TextBlock DockPanel.Dock="Right" Text="{Binding Phase}" Style="{StaticResource CaptionText}" Margin="8,0,0,0" />
+                      <TextBlock Text="{Binding Feature}" TextWrapping="Wrap" />
+                    </DockPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
+  </Grid>
 </UserControl>

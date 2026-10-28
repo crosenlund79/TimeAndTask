@@ -1,6 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:views="clr-namespace:WorkTrace.App.Views">
+                    xmlns:views="clr-namespace:WorkTrace.App.Views"
+                    xmlns:controls="clr-namespace:WorkTrace.App.Controls">
 
   <!--
     Shared look for WorkTrace. Theme colours come from the built-in Fluent theme and are always
@@ -91,36 +92,81 @@
     Buttons. Standard controls (Button, TextBox, ComboBox, ...) are never restyled here: assigning a
     Style would replace the Fluent theme's implicit style. Only fully templated custom looks follow.
   -->
-  <!-- Borderless icon-only button; tooltip carries the meaning. -->
+  <!--
+    Small icon-only action; the tooltip carries the meaning (also shown when disabled, to explain why).
+    Resting state uses the secondary text colour; hover adds a fill and an outline so the hit area is obvious.
+  -->
   <Style x:Key="IconButton" TargetType="Button">
     <Setter Property="Background" Value="Transparent" />
-    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
     <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
     <Setter Property="FontSize" Value="13" />
-    <Setter Property="Width" Value="30" />
-    <Setter Property="Height" Value="30" />
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Height" Value="32" />
     <Setter Property="Cursor" Value="Hand" />
-    <Setter Property="Focusable" Value="True" />
     <Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+    <Setter Property="ToolTipService.InitialShowDelay" Value="300" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
-          <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="4">
+          <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="1" CornerRadius="4">
             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
               <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+              <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
               <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
             </Trigger>
             <Trigger Property="IsKeyboardFocused" Value="True">
-              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+              <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
-              <Setter Property="Opacity" Value="0.35" />
+              <Setter Property="Opacity" Value="0.3" />
               <Setter Property="Cursor" Value="Arrow" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Compact labelled action (icon + text) for row-level commands such as Hide/Show. -->
+  <Style x:Key="SubtleButton" TargetType="Button">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    <Setter Property="Height" Value="30" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+    <Setter Property="ToolTipService.InitialShowDelay" Value="300" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Padding" Value="8,0" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                  BorderThickness="1" CornerRadius="4" Padding="{TemplateBinding Padding}">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+              <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.4" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -191,6 +237,7 @@
     <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
     <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
     <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+    <Setter Property="VirtualizingPanel.ScrollUnit" Value="Pixel" />
     <Style.Triggers>
       <Trigger Property="IsEnabled" Value="False">
         <Setter Property="Opacity" Value="0.55" />
@@ -231,4 +278,33 @@
     </Setter>
   </Style>
 
+  <!-- Settings row: text on the left, control on the right (Windows Settings layout). -->
+  <Style TargetType="controls:SettingRow">
+    <Setter Property="Focusable" Value="False" />
+    <Setter Property="Margin" Value="0,6" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="controls:SettingRow">
+          <Grid MinHeight="40">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,24,0">
+              <TextBlock Text="{TemplateBinding Header}" TextWrapping="Wrap" />
+              <TextBlock Text="{TemplateBinding Description}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" TextTrimming="None"
+                         Visibility="{Binding Description, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource NullToCollapsed}}" />
+            </StackPanel>
+            <ContentPresenter Grid.Column="1" VerticalAlignment="Center" />
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="SettingsDivider" TargetType="Border">
+    <Setter Property="Height" Value="1" />
+    <Setter Property="Margin" Value="0,6" />
+    <Setter Property="Background" Value="{DynamicResource DividerStrokeColorDefaultBrush}" />
+  </Style>
 </ResourceDictionary>

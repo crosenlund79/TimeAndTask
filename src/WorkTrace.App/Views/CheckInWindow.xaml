@@ -1,0 +1,233 @@
+<Window x:Class="WorkTrace.App.Views.CheckInWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:WorkTrace.App.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:CheckInViewModel}"
+        Title="WorkTrace check-in"
+        Width="440" SizeToContent="Height"
+        WindowStyle="None" ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False"
+        WindowStartupLocation="Manual"
+        Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+
+  <WindowChrome.WindowChrome>
+    <WindowChrome CaptionHeight="0" ResizeBorderThickness="0" GlassFrameThickness="0" CornerRadius="8" UseAeroCaptionButtons="False" />
+  </WindowChrome.WindowChrome>
+
+  <Window.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding DismissCommand}" />
+    <KeyBinding Modifiers="Ctrl" Key="Return" Command="{Binding SaveCommand}" />
+    <KeyBinding Modifiers="Alt" Key="D1" Command="{Binding PickRecentByNumberCommand}" CommandParameter="1" />
+    <KeyBinding Modifiers="Alt" Key="D2" Command="{Binding PickRecentByNumberCommand}" CommandParameter="2" />
+    <KeyBinding Modifiers="Alt" Key="D3" Command="{Binding PickRecentByNumberCommand}" CommandParameter="3" />
+    <KeyBinding Modifiers="Alt" Key="D4" Command="{Binding PickRecentByNumberCommand}" CommandParameter="4" />
+    <KeyBinding Modifiers="Alt" Key="M" Command="{Binding ToggleDetailsCommand}" />
+  </Window.InputBindings>
+
+  <Border BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8">
+    <StackPanel Margin="16,12,16,12">
+
+      <!-- Header (drag to move) -->
+      <Grid x:Name="Header" Background="Transparent" MouseLeftButtonDown="OnHeaderMouseDown" Margin="0,0,0,10">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Image Source="pack://application:,,,/WorkTrace;component/Assets/worktrace.ico" Width="20" Height="20" Margin="0,2,10,0" VerticalAlignment="Top" />
+        <StackPanel Grid.Column="1">
+          <TextBlock Text="{Binding Heading}" FontSize="15" FontWeight="SemiBold" />
+          <TextBlock Text="{Binding Subheading}" Style="{StaticResource CaptionText}" />
+        </StackPanel>
+        <Button Grid.Column="2" Style="{StaticResource IconButton}" Content="&#xE711;" FontSize="11" VerticalAlignment="Top"
+                ToolTip="Skip this check-in (Esc)" Command="{Binding DismissCommand}" IsTabStop="False" />
+      </Grid>
+
+      <!-- Same as before: one key (Enter) or one click -->
+      <Button Margin="0,0,0,10" Padding="12,8" HorizontalContentAlignment="Stretch"
+              Command="{Binding ReusePreviousCommand}" ToolTip="Record the same task again (Enter with an empty search)"
+              Visibility="{Binding HasPrevious, Converter={StaticResource BoolToVisibility}}">
+        <DockPanel>
+          <Border DockPanel.Dock="Right" Style="{StaticResource Pill}" Margin="8,0,0,0">
+            <TextBlock Text="Enter" Style="{StaticResource PillText}" />
+          </Border>
+          <TextBlock DockPanel.Dock="Left" Text="&#xE72C;" Style="{StaticResource IconText}" Margin="0,0,10,0"
+                     Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+          <StackPanel>
+            <TextBlock TextTrimming="CharacterEllipsis">
+              <Run Text="Same as before: " Foreground="{DynamicResource TextFillColorSecondaryBrush}" /><Run Text="{Binding PreviousTask.Title, Mode=OneWay}" FontWeight="SemiBold" />
+            </TextBlock>
+            <TextBlock Text="{Binding PreviousContext}" Style="{StaticResource CaptionText}" />
+          </StackPanel>
+        </DockPanel>
+      </Button>
+
+      <!-- Search + client -->
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid>
+          <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                   Padding="32,6,8,6" VerticalContentAlignment="Center" PreviewKeyDown="OnSearchPreviewKeyDown"
+                   AutomationProperties.Name="Search tasks" />
+          <TextBlock Text="&#xE721;" Style="{StaticResource IconText}" Margin="11,0,0,0" IsHitTestVisible="False"
+                     Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Left" />
+          <TextBlock Text="Task, ticket ID or client…" Margin="33,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                     Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                     Visibility="{Binding Text, ElementName=SearchBox, Converter={StaticResource NullToCollapsed}, ConverterParameter=invert}" />
+        </Grid>
+        <ComboBox Grid.Column="1" Width="130" Margin="8,0,0,0" VerticalAlignment="Center" IsTextSearchEnabled="True"
+                  ItemsSource="{Binding ClientOptions}" DisplayMemberPath="Name" TextSearch.TextPath="Name"
+                  SelectedValuePath="Id" SelectedValue="{Binding ClientKey}"
+                  ToolTip="Limit the search to one client; also the client of a newly created task"
+                  AutomationProperties.Name="Client" />
+      </Grid>
+
+      <!-- Search results -->
+      <ListBox x:Name="SuggestionList" Margin="0,6,0,0" MaxHeight="232" Style="{StaticResource RowListBox}"
+               ItemsSource="{Binding Suggestions}" SelectedItem="{Binding SelectedSuggestion}"
+               MouseDoubleClick="OnSuggestionDoubleClick"
+               Visibility="{Binding IsSearching, Converter={StaticResource BoolToVisibility}}"
+               AutomationProperties.Name="Matching tasks">
+        <ListBox.ItemContainerStyle>
+          <Style TargetType="ListBoxItem" BasedOn="{StaticResource RowListBoxItem}">
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Focusable" Value="False" />
+          </Style>
+        </ListBox.ItemContainerStyle>
+        <ListBox.ItemTemplate>
+          <DataTemplate DataType="{x:Type vm:SuggestionItem}">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <TextBlock x:Name="Glyph" Text="&#xE9D5;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0"
+                         Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding Context}" Style="{StaticResource CaptionText}" FontSize="11" />
+              </StackPanel>
+              <Border Grid.Column="2" Style="{StaticResource Pill}" Margin="8,0,0,0"
+                      Visibility="{Binding HasExternalId, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="{Binding ExternalId}" Style="{StaticResource PillText}" FontFamily="{StaticResource MonoFont}" />
+              </Border>
+            </Grid>
+            <DataTemplate.Triggers>
+              <DataTrigger Binding="{Binding IsCreateNew}" Value="True">
+                <Setter TargetName="Glyph" Property="Text" Value="&#xE710;" />
+                <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+              </DataTrigger>
+            </DataTemplate.Triggers>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+
+      <!-- Recent tasks: one click or Alt+number -->
+      <ItemsControl ItemsSource="{Binding Recent}" Margin="0,8,0,0" Focusable="False"
+                    Visibility="{Binding IsSearching, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="{x:Type vm:RecentTaskItem}">
+            <Button Margin="0,0,6,6" Padding="10,4" MaxWidth="200" IsTabStop="False" ToolTip="{Binding ToolTip}"
+                    Command="{Binding DataContext.PickRecentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="{Binding}">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" MaxWidth="140" />
+                <TextBlock Text="{Binding Number}" Margin="8,0,0,0" FontSize="11" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+              </StackPanel>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- Note -->
+      <Grid Margin="0,4,0,0">
+        <TextBox x:Name="NoteBox" Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}" MaxLength="4000"
+                 AutomationProperties.Name="Note">
+          <TextBox.InputBindings>
+            <KeyBinding Key="Return" Command="{Binding SaveCommand}" />
+          </TextBox.InputBindings>
+        </TextBox>
+        <TextBlock Text="Note (optional)" Margin="12,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                   Visibility="{Binding Text, ElementName=NoteBox, Converter={StaticResource NullToCollapsed}, ConverterParameter=invert}" />
+      </Grid>
+
+      <!-- Optional details -->
+      <Expander Margin="0,8,0,0" IsExpanded="{Binding IsExpanded}" Header="More details  (Alt+M)">
+        <Grid Margin="0,4,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+
+          <TextBlock Text="Time" Style="{StaticResource FieldLabelText}" Margin="0,4,0,4" />
+          <TextBox Grid.Row="1" Text="{Binding ObservedTimeText, UpdateSourceTrigger=PropertyChanged}" MaxLength="5"
+                   ToolTip="When this applies (HH:mm). Defaults to now." AutomationProperties.Name="Time" />
+          <TextBlock Grid.Column="2" Text="Date" Style="{StaticResource FieldLabelText}" Margin="0,4,0,4" />
+          <DatePicker Grid.Row="1" Grid.Column="2" SelectedDate="{Binding ObservedDate}" AutomationProperties.Name="Date" />
+
+          <TextBlock Grid.Row="2" Text="Channel" Style="{StaticResource FieldLabelText}" Margin="0,10,0,4" />
+          <ComboBox Grid.Row="3" ItemsSource="{Binding ChannelOptions}" DisplayMemberPath="Name"
+                    SelectedValuePath="Id" SelectedValue="{Binding ChannelKey}" AutomationProperties.Name="Channel" />
+
+          <TextBlock Grid.Row="4" Grid.ColumnSpan="3" Text="For a new task" Style="{StaticResource FieldLabelText}" Margin="0,10,0,4" />
+          <ComboBox Grid.Row="5" ItemsSource="{Binding TaskSystemOptions}" DisplayMemberPath="Name"
+                    SelectedValuePath="Id" SelectedValue="{Binding TaskSystemKey}"
+                    ToolTip="Task system of a task created from this check-in" AutomationProperties.Name="Task system" />
+          <Grid Grid.Row="5" Grid.Column="2">
+            <TextBox x:Name="ExternalIdBox" Text="{Binding ExternalId, UpdateSourceTrigger=PropertyChanged}" MaxLength="100"
+                     FontFamily="{StaticResource MonoFont}" AutomationProperties.Name="Task ID" />
+            <TextBlock Text="Task ID" Margin="12,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                       Visibility="{Binding Text, ElementName=ExternalIdBox, Converter={StaticResource NullToCollapsed}, ConverterParameter=invert}" />
+          </Grid>
+        </Grid>
+      </Expander>
+
+      <TextBlock Text="{Binding ErrorMessage}" Style="{StaticResource ErrorText}" Margin="0,8,0,0" />
+
+      <!-- Footer -->
+      <Grid Margin="0,12,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="{Binding PendingSummary}" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Margin="0,0,10,0"
+                   ToolTip="{Binding PendingSummary}" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal">
+          <Button Content="Skip" Padding="12,5" Margin="0,0,8,0" IsTabStop="False" ToolTip="Skip this check-in (Esc)"
+                  Command="{Binding DismissCommand}" />
+          <Button Content="Save" Padding="18,5" Style="{DynamicResource AccentButtonStyle}" ToolTip="Save (Enter)"
+                  Command="{Binding SaveCommand}" />
+        </StackPanel>
+      </Grid>
+
+      <!-- Auto-dismiss countdown -->
+      <StackPanel Margin="0,10,0,0" Visibility="{Binding IsCountdownActive, Converter={StaticResource BoolToVisibility}}">
+        <ProgressBar Height="2" Minimum="0" Maximum="{Binding CountdownTotal}" Value="{Binding SecondsRemaining, Mode=OneWay}" IsTabStop="False" />
+        <TextBlock Text="{Binding CountdownText}" Style="{StaticResource CaptionText}" FontSize="11" Margin="0,4,0,0" />
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</Window>

@@ -6,4 +6,5 @@ public enum AppSection
     Tasks,
     Clients,
     Lists,
+    Settings,
 }

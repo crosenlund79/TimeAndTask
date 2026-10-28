@@ -35,6 +35,18 @@ public sealed partial class LookupItemViewModel : ObservableObject
 
     public bool CanDelete => !_summary.IsBuiltIn && _summary.UsageCount == 0;
 
+    public string MoveUpToolTip => IsFirst ? "Already at the top" : "Move up";
+
+    public string MoveDownToolTip => IsLast ? "Already at the bottom" : "Move down";
+
+    public string ToggleActiveLabel => IsActive ? "Hide" : "Show";
+
+    public string ToggleActiveGlyph => IsActive ? "\uED1A" : "\uE7B3";
+
+    public string ToggleActiveToolTip => IsActive
+        ? "Hide from pickers. Existing tasks and records keep it."
+        : "Hidden from pickers. Click to show it again.";
+
     public string UsageText => _summary.UsageCount switch
     {
         0 => _summary.IsBuiltIn ? "Built in" : "Not used",
@@ -43,8 +55,8 @@ public sealed partial class LookupItemViewModel : ObservableObject
     };
 
     public string DeleteToolTip => _summary.IsBuiltIn
-        ? "Built-in items can be renamed or hidden, not deleted"
-        : _summary.UsageCount > 0 ? "In use — hide it instead" : "Delete";
+        ? "Built-in items can't be deleted — rename or hide them instead"
+        : _summary.UsageCount > 0 ? "In use, so it can't be deleted — hide it instead" : "Delete permanently";
 
     [ObservableProperty]
     public partial string? EditName { get; set; }

@@ -16,6 +16,7 @@ public sealed partial class MainViewModel : ObservableObject
         TasksViewModel tasks,
         ClientsViewModel clients,
         ListsViewModel lists,
+        SettingsViewModel settings,
         INavigationService navigation,
         NotificationService notifications)
     {

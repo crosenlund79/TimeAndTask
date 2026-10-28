@@ -1,48 +1,61 @@
+using System.ComponentModel;
 using System.Windows;
 using Microsoft.Extensions.Logging;
 using WorkTrace.App.Shell;
+using WorkTrace.App.Tracking;
 using Drawing = System.Drawing;
 using Forms = System.Windows.Forms;
 
 namespace WorkTrace.App.Tray;
 
-public enum TrayState
-{
-    /// <summary>Check-in tracking is running.</summary>
-    Tracking,
-
-    /// <summary>Tracking is paused or not available.</summary>
-    Idle,
-}
-
 /// <summary>
-/// System tray icon and menu (Windows Forms <see cref="Forms.NotifyIcon"/>).
-/// Menu entries for features of later phases are present but disabled and labelled with their phase,
-/// so nothing unimplemented appears to work.
+/// System tray icon and menu. Recording and tracking controls come first; the icon and tooltip
+/// reflect whether time is being tracked.
 /// </summary>
-internal sealed class TrayIconService(WindowManager windows, IAppLifetime lifetime, ILogger<TrayIconService> logger) : IDisposable
+internal sealed class TrayIconService(
+    WindowManager windows,
+    IAppLifetime lifetime,
+    TrackingController tracking,
+    WorkTrace.Core.Settings.ISettingsStore settings,
+    ILogger<TrayIconService> logger) : IDisposable
 {
     private Forms.NotifyIcon? _notifyIcon;
     private Drawing.Icon? _trackingIcon;
     private Drawing.Icon? _idleIcon;
+    private Forms.ToolStripMenuItem? _statusItem;
+    private Forms.ToolStripMenuItem? _pauseItem;
+    private Forms.ToolStripMenuItem? _resumeItem;
+    private Forms.ToolStripMenuItem? _recordItem;
 
     public void Initialize()
     {
         _trackingIcon = LoadIcon("tray-active.ico");
         _idleIcon = LoadIcon("tray-paused.ico");
 
+        _statusItem = new Forms.ToolStripMenuItem { Enabled = false };
+        var record = Item("Record activity now", () => tracking.RecordNowCommand.Execute(null), bold: true);
+        _recordItem = record;
+        UpdateShortcut(settings.Current.General.GlobalShortcut);
+
+        _pauseItem = new Forms.ToolStripMenuItem("Pause tracking");
+        _pauseItem.DropDownItems.Add(Item("For 15 minutes", () => tracking.PauseCommand.Execute("15")));
+        _pauseItem.DropDownItems.Add(Item("For 30 minutes", () => tracking.PauseCommand.Execute("30")));
+        _pauseItem.DropDownItems.Add(Item("For 1 hour", () => tracking.PauseCommand.Execute("60")));
+        _pauseItem.DropDownItems.Add(Item("For 2 hours", () => tracking.PauseCommand.Execute("120")));
+        _pauseItem.DropDownItems.Add(new Forms.ToolStripSeparator());
+        _pauseItem.DropDownItems.Add(Item("Until I resume", () => tracking.PauseCommand.Execute("0")));
+        _resumeItem = Item("Resume tracking", () => tracking.ResumeCommand.Execute(null));
+
         var menu = new Forms.ContextMenuStrip();
-        menu.Items.Add(Pending("Record activity now", 3));
+        menu.Items.Add(_statusItem);
         menu.Items.Add(new Forms.ToolStripSeparator());
-        menu.Items.Add(Item("Open WorkTrace", windows.ShowMainWindow, bold: true));
+        menu.Items.Add(record);
+        menu.Items.Add(_pauseItem);
+        menu.Items.Add(_resumeItem);
+        menu.Items.Add(new Forms.ToolStripSeparator());
+        menu.Items.Add(Item("Open WorkTrace", windows.ShowMainWindow));
         menu.Items.Add(Item("Tasks and clients", () => windows.ShowMainWindow(AppSection.Tasks)));
-        menu.Items.Add(Pending("Activity log", 4));
-        menu.Items.Add(Pending("Weekly overview", 6));
-        menu.Items.Add(Pending("Screenshot history", 5));
-        menu.Items.Add(new Forms.ToolStripSeparator());
-        menu.Items.Add(Pending("Pause tracking", 3));
-        menu.Items.Add(Pending("Enable screenshots", 5));
-        menu.Items.Add(Pending("Settings", 7));
+        menu.Items.Add(Item("Settings", () => windows.ShowMainWindow(AppSection.Settings)));
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add(Item("Exit", lifetime.RequestExit));
 
@@ -52,22 +65,20 @@ internal sealed class TrayIconService(WindowManager windows, IAppLifetime lifeti
             Visible = true,
         };
         _notifyIcon.DoubleClick += (_, _) => windows.ShowMainWindow();
-        SetState(TrayState.Idle, "WorkTrace – check-in tracking arrives in Phase 3");
 
+        tracking.PropertyChanged += OnTrackingChanged;
+        UpdateFromStatus();
         logger.LogInformation("Tray icon initialized");
     }
 
-    public void SetState(TrayState state, string tooltip)
+    /// <summary>Shows the global shortcut next to "Record activity now".</summary>
+    public void UpdateShortcut(string? shortcut)
     {
-        if (_notifyIcon is null)
+        if (_recordItem is not null)
         {
-            return;
+            _recordItem.ShortcutKeyDisplayString = shortcut;
+            _recordItem.ShowShortcutKeys = !string.IsNullOrEmpty(shortcut);
         }
-
-        _notifyIcon.Icon = state == TrayState.Tracking ? _trackingIcon : _idleIcon;
-
-        // NotifyIcon.Text is limited to 127 characters.
-        _notifyIcon.Text = tooltip.Length > 127 ? tooltip[..127] : tooltip;
     }
 
     public void ShowNotification(string title, string text)
@@ -77,6 +88,7 @@ internal sealed class TrayIconService(WindowManager windows, IAppLifetime lifeti
 
     public void Dispose()
     {
+        tracking.PropertyChanged -= OnTrackingChanged;
         if (_notifyIcon is not null)
         {
             // Hide first so the icon does not linger in the tray until the mouse passes over it.
@@ -90,6 +102,32 @@ internal sealed class TrayIconService(WindowManager windows, IAppLifetime lifeti
         _idleIcon?.Dispose();
     }
 
+    private void OnTrackingChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(TrackingController.Status))
+        {
+            UpdateFromStatus();
+        }
+    }
+
+    private void UpdateFromStatus()
+    {
+        if (_notifyIcon is null)
+        {
+            return;
+        }
+
+        var detail = string.IsNullOrEmpty(tracking.StatusDetail) ? string.Empty : $" · {tracking.StatusDetail}";
+        _statusItem!.Text = tracking.StatusText + detail;
+        _pauseItem!.Visible = !tracking.IsPaused;
+        _resumeItem!.Visible = tracking.IsPaused;
+        _notifyIcon.Icon = tracking.IsTracking ? _trackingIcon : _idleIcon;
+
+        // NotifyIcon.Text is limited to 127 characters.
+        var tooltip = $"WorkTrace – {tracking.StatusText}{detail}";
+        _notifyIcon.Text = tooltip.Length > 127 ? tooltip[..127] : tooltip;
+    }
+
     private static Forms.ToolStripMenuItem Item(string text, Action onClick, bool bold = false)
     {
         var item = new Forms.ToolStripMenuItem(text);
@@ -101,9 +139,6 @@ internal sealed class TrayIconService(WindowManager windows, IAppLifetime lifeti
 
         return item;
     }
-
-    private static Forms.ToolStripMenuItem Pending(string text, int phase) =>
-        new($"{text}  (Phase {phase})") { Enabled = false };
 
     private static Drawing.Icon LoadIcon(string fileName)
     {

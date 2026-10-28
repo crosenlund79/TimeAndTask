@@ -43,6 +43,9 @@ public sealed partial class ClientsViewModel(
     [ObservableProperty]
     public partial string? EmptyMessage { get; private set; }
 
+    [ObservableProperty]
+    public partial string? ResultSummary { get; private set; }
+
     public bool HasEditor => Editor is not null;
 
     public bool HasUnsavedChanges => Editor?.IsDirty == true;
@@ -231,6 +234,9 @@ public sealed partial class ClientsViewModel(
         }
 
         EmptyMessage = Items.Count > 0 ? null : filter is null ? "No clients yet. Press Ctrl+N to add one." : "No clients match your filter.";
+        ResultSummary = Items.Count == _all.Count
+            ? (Items.Count == 1 ? "1 client" : $"{Items.Count} clients")
+            : $"{Items.Count} of {_all.Count} clients";
 
         var target = Items.FirstOrDefault(i => i.Id == selectId);
         if (refreshEditor && !HasUnsavedChanges)
