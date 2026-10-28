@@ -48,6 +48,11 @@ internal sealed class UiTestContext : IAsyncDisposable
     public static IReadOnlyList<WorkTrace.App.Views.CheckInWindow> Popups() =>
         [.. System.Windows.Application.Current.Windows.OfType<WorkTrace.App.Views.CheckInWindow>()];
 
+    /// <summary>Describes popups for assertion messages (to diagnose unexpected extra windows).</summary>
+    public static string Describe(IEnumerable<WorkTrace.App.Views.CheckInWindow> popups) =>
+        string.Join("; ", popups.Select(p =>
+            $"[{(p.DataContext as WorkTrace.App.ViewModels.CheckInViewModel)?.Subheading ?? "?"}, visible={p.IsVisible}, loaded={p.IsLoaded}]"));
+
     public async ValueTask DisposeAsync()
     {
         // Never leave windows behind for the next test (they share one Application).

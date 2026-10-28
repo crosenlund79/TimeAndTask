@@ -52,7 +52,9 @@ public class FocusTests
             ctx.Get<CheckInPresenter>().ShowManual();
             await WpfTestHost.SettleAsync(10);
 
-            var popup = Assert.Single(UiTestContext.Popups().Except(before));
+            var opened = UiTestContext.Popups().Except(before).ToList();
+            Assert.True(opened.Count == 1, $"Expected one new popup, found {opened.Count}: {UiTestContext.Describe(opened)}; existing before: {UiTestContext.Describe(before)}");
+            var popup = opened[0];
             Assert.Same(popup.SearchBox, FocusManager.GetFocusedElement(popup));
             if (!canActivate)
             {
@@ -243,6 +245,8 @@ public class FocusTests
             }
 
             await WpfTestHost.SettleAsync(10);
+            var opened = UiTestContext.Popups().Except(before).ToList();
+            Assert.True(opened.Count == 1, $"One shortcut press must open exactly one popup, found {opened.Count}: {UiTestContext.Describe(opened)}");
             var foreground = Win32Input.GetForegroundWindow();
             var who = foreground == new WindowInteropHelper(popup).Handle ? "popup"
                 : foreground == otherWindow ? "other application"
