@@ -101,7 +101,9 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         }
 
         _suppressReload = false;
-        await ReloadAsync(selectId: Editor?.Id ?? SelectedItem?.Id);
+
+        // Rebuild an unmodified editor so its pickers include clients/lists changed on other pages.
+        await ReloadAsync(selectId: Editor?.Id ?? SelectedItem?.Id, forceEditor: !HasUnsavedChanges);
 
         if (parameter is CreateNewRequest)
         {

@@ -191,4 +191,21 @@ public class ViewModelFlowTests
         await systems.AddCommand.ExecuteAsync(null);
         Assert.NotNull(systems.NewNameError);
     });
+
+    [Fact]
+    public Task ReturningToTasks_RefreshesEditorPickers() => WpfTestHost.RunAsync(async () =>
+    {
+        await using var ctx = await UiTestContext.CreateAsync();
+        var vm = ctx.Get<TasksViewModel>();
+        var client = (await ctx.Get<IClientService>().GetClientsAsync())[0];
+        await ctx.Get<ITaskService>().CreateAsync(new TaskInput(client.Id, null, null, "Task", null, null));
+        await vm.ActivateAsync(null);
+        vm.SelectedItem = vm.Items[0];
+
+        await ctx.Get<IClientService>().CreateAsync(new ClientInput("Added elsewhere", null, false));
+        await vm.ActivateAsync(null);
+
+        Assert.Contains(vm.Editor!.ClientOptions, o => o.Name == "Added elsewhere");
+        Assert.False(vm.HasUnsavedChanges);
+    });
 }
