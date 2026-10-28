@@ -22,8 +22,16 @@ public sealed partial class SettingsViewModel(
 
     public bool HasUnsavedChanges => false;
 
+    /// <summary>Key of the "Custom…" interval entry.</summary>
+    public const int CustomIntervalKey = -1;
+
+    public static IReadOnlyList<int> PresetIntervals { get; } = [1, 5, 10, 15, 30, 60];
+
     public IReadOnlyList<PickerOption> IntervalOptions { get; } =
-        [.. new[] { 10, 15, 20, 30, 45, 60, 90, 120 }.Select(m => new PickerOption(m, m < 60 ? $"Every {m} minutes" : m == 60 ? "Every hour" : $"Every {m / 60.0:0.#} hours"))];
+    [
+        .. PresetIntervals.Select(m => new PickerOption(m, m switch { 1 => "Every minute", 60 => "Every hour", _ => $"Every {m} minutes" })),
+        new PickerOption(CustomIntervalKey, "Custom…"),
+    ];
 
     public IReadOnlyList<PickerOption> AutoDismissOptions { get; } =
     [
@@ -44,8 +52,18 @@ public sealed partial class SettingsViewModel(
     [ObservableProperty]
     public partial bool PeriodicPromptsEnabled { get; set; }
 
+    /// <summary>Selected preset (minutes) or <see cref="CustomIntervalKey"/>.</summary>
     [ObservableProperty]
-    public partial int? IntervalMinutes { get; set; }
+    [NotifyPropertyChangedFor(nameof(IsCustomInterval))]
+    public partial int? IntervalChoice { get; set; }
+
+    public bool IsCustomInterval => IntervalChoice == CustomIntervalKey;
+
+    [ObservableProperty]
+    public partial string? CustomIntervalText { get; set; }
+
+    [ObservableProperty]
+    public partial string? IntervalError { get; private set; }
 
     [ObservableProperty]
     public partial bool IsFocusedMode { get; set; }
@@ -91,7 +109,10 @@ public sealed partial class SettingsViewModel(
         _loading = true;
         var s = settings.Current;
         PeriodicPromptsEnabled = s.Tracking.PeriodicPromptsEnabled;
-        IntervalMinutes = s.Tracking.CheckInIntervalMinutes;
+        var interval = s.Tracking.CheckInIntervalMinutes;
+        IntervalChoice = PresetIntervals.Contains(interval) ? interval : CustomIntervalKey;
+        CustomIntervalText = interval.ToString(System.Globalization.CultureInfo.CurrentCulture);
+        IntervalError = null;
         IsFocusedMode = s.Tracking.PopupMode == PopupMode.Focused;
         IsUnobtrusiveMode = s.Tracking.PopupMode == PopupMode.Unobtrusive;
         PositionKey = (int)s.Tracking.PopupPosition;
@@ -111,19 +132,44 @@ public sealed partial class SettingsViewModel(
 
     partial void OnPeriodicPromptsEnabledChanged(bool value) => Apply(s => s.Tracking.PeriodicPromptsEnabled = value);
 
-    partial void OnIntervalMinutesChanged(int? value)
+    partial void OnIntervalChoiceChanged(int? value)
     {
-        if (value is { } minutes)
+        IntervalError = null;
+        if (value is { } minutes && minutes != CustomIntervalKey)
         {
-            Apply(s =>
-            {
-                s.Tracking.CheckInIntervalMinutes = minutes;
-
-                // Keep the estimation horizon valid: at least one interval, default two.
-                s.Tracking.MaxEstimationHorizonMinutes = Math.Max(s.Tracking.MaxEstimationHorizonMinutes, minutes * 2);
-            });
+            CustomIntervalText = minutes.ToString(System.Globalization.CultureInfo.CurrentCulture);
+            ApplyInterval(minutes);
         }
     }
+
+    /// <summary>Committed when the custom box loses focus or Enter is pressed (not on every keystroke).</summary>
+    partial void OnCustomIntervalTextChanged(string? value)
+    {
+        if (_loading || !IsCustomInterval)
+        {
+            return;
+        }
+
+        if (!int.TryParse(value?.Trim(), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.CurrentCulture, out var minutes)
+            || minutes < TrackingSettings.MinIntervalMinutes
+            || minutes > TrackingSettings.MaxIntervalMinutes)
+        {
+            IntervalError = $"Enter whole minutes from {TrackingSettings.MinIntervalMinutes} to {TrackingSettings.MaxIntervalMinutes}.";
+            return;
+        }
+
+        IntervalError = null;
+        ApplyInterval(minutes);
+    }
+
+    private void ApplyInterval(int minutes) =>
+        Apply(s =>
+        {
+            s.Tracking.CheckInIntervalMinutes = minutes;
+
+            // Keep the estimation horizon valid: at least one interval.
+            s.Tracking.MaxEstimationHorizonMinutes = Math.Max(s.Tracking.MaxEstimationHorizonMinutes, minutes);
+        });
 
     partial void OnIsFocusedModeChanged(bool value)
     {

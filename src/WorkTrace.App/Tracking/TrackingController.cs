@@ -65,6 +65,10 @@ public sealed partial class TrackingController : ObservableObject
     [RelayCommand]
     private Task ResumeAsync() => RunAsync(_engine.ResumeAsync);
 
+    /// <summary>Shows a real scheduled check-in now (popup mode, countdown and missed handling as configured).</summary>
+    [RelayCommand]
+    private Task TriggerScheduledNowAsync() => RunAsync(_engine.TriggerCheckInNowAsync);
+
     private async Task RunAsync(Func<Task> action)
     {
         try

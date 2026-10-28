@@ -30,9 +30,20 @@
           <controls:SettingRow Header="Periodic check-ins" Description="Ask what you are working on at regular times. Manual check-ins always work.">
             <CheckBox IsChecked="{Binding PeriodicPromptsEnabled}" Content="On" AutomationProperties.Name="Periodic check-ins" />
           </controls:SettingRow>
-          <controls:SettingRow Header="Check-in interval" Description="Check-ins are aligned to the clock, e.g. :00 and :30.">
-            <ComboBox Width="180" ItemsSource="{Binding IntervalOptions}" DisplayMemberPath="Name"
-                      SelectedValuePath="Id" SelectedValue="{Binding IntervalMinutes}" AutomationProperties.Name="Check-in interval" />
+          <controls:SettingRow Header="Check-in interval" Description="Aligned to the clock, e.g. :00 and :30. Takes effect immediately; missed slots are never replayed.">
+            <StackPanel Width="180">
+              <ComboBox ItemsSource="{Binding IntervalOptions}" DisplayMemberPath="Name"
+                        SelectedValuePath="Id" SelectedValue="{Binding IntervalChoice}" AutomationProperties.Name="Check-in interval" />
+              <StackPanel Orientation="Horizontal" Margin="0,6,0,0"
+                          Visibility="{Binding IsCustomInterval, Converter={StaticResource BoolToVisibility}}">
+                <TextBox x:Name="CustomIntervalBox" Width="70" MaxLength="3" HorizontalContentAlignment="Right"
+                         Text="{Binding CustomIntervalText, UpdateSourceTrigger=LostFocus}"
+                         ToolTip="Whole minutes, 1–240. Press Enter to apply." AutomationProperties.Name="Custom interval in minutes"
+                         KeyDown="OnCustomIntervalKeyDown" />
+                <TextBlock Text="minutes" Margin="8,0,0,0" VerticalAlignment="Center" />
+              </StackPanel>
+              <TextBlock Text="{Binding IntervalError}" Style="{StaticResource ErrorText}" />
+            </StackPanel>
           </controls:SettingRow>
           <controls:SettingRow Header="Ask when tracking starts" Description="Shortly after start-up, waking the computer and resuming from a pause.">
             <CheckBox IsChecked="{Binding PromptOnStart}" Content="On" AutomationProperties.Name="Ask when tracking starts" />
@@ -74,6 +85,10 @@
           </controls:SettingRow>
           <controls:SettingRow Header="Reminder sound">
             <CheckBox IsChecked="{Binding ReminderSound}" Content="On" AutomationProperties.Name="Reminder sound" />
+          </controls:SettingRow>
+          <controls:SettingRow Header="Try it" Description="Shows a real scheduled check-in now, using the mode and countdown above. If you ignore it, it is recorded as missed.">
+            <Button Content="Show a scheduled check-in now" Padding="12,5" Command="{Binding Tracking.TriggerScheduledNowCommand}"
+                    IsEnabled="{Binding Tracking.IsTracking}" />
           </controls:SettingRow>
           <controls:SettingRow Header="Keyboard shortcut" Description="Opens a check-in from anywhere, or focuses the open one.">
             <StackPanel Width="180">
