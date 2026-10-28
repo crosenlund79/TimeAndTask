@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <WarningsAsErrors>$(WarningsAsErrors);nullable</WarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <!-- Allows building the WPF project on non-Windows hosts (CI/dev containers). Running still requires Windows. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Company>WorkTrace</Company>
+    <Product>WorkTrace</Product>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+</Project>
