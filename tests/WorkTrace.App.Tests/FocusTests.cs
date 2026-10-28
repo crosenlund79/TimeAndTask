@@ -217,7 +217,7 @@ public class FocusTests
         var presenter = ctx.Get<CheckInPresenter>();
         var hotkey = ctx.Get<GlobalHotkey>();
         hotkey.Pressed += (_, _) => presenter.ShowManual();
-        // An unusual combination: Ctrl+Alt+Space itself is taken on the CI image. The code path is identical.
+        // A combination nobody uses, so the test cannot collide with a real WorkTrace on a developer machine.
         if (!hotkey.Register("Ctrl+Alt+Shift+F11"))
         {
             Assert.Skip("The test shortcut is registered by another program on this machine.");

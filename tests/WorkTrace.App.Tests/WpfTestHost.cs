@@ -5,7 +5,7 @@ using System.Windows.Threading;
 namespace WorkTrace.App.Tests;
 
 /// <summary>
-/// Runs test code on a single long-lived STA thread hosting the real <see cref="App"/> resources
+/// Runs test code on a single long-lived STA thread hosting the application resources
 /// (Fluent theme + WorkTrace styles). WPF allows only one Application per process.
 /// </summary>
 internal static class WpfTestHost
@@ -36,8 +36,17 @@ internal static class WpfTestHost
         using var ready = new ManualResetEventSlim();
         var thread = new Thread(() =>
         {
-            var app = new App();
-            app.InitializeComponent();
+            // A plain Application with the same resources as App.xaml (Fluent theme + WorkTrace styles).
+            // Not App itself: WPF would run App.OnStartup once the dispatcher starts, i.e. start the whole
+            // application (tracking engine, tray icon, global hotkey) inside the test process.
+            var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+#pragma warning disable WPF0001 // ThemeMode is experimental in .NET 10 (as in App.xaml)
+            app.ThemeMode = ThemeMode.System;
+#pragma warning restore WPF0001
+            app.Resources.MergedDictionaries.Add(new ResourceDictionary
+            {
+                Source = new Uri("pack://application:,,,/WorkTrace;component/Themes/Styles.xaml"),
+            });
             app.DispatcherUnhandledException += (_, e) =>
             {
                 UnhandledExceptions.Add(e.Exception);
