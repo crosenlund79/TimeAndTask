@@ -9,6 +9,7 @@
     <UseWPF>true</UseWPF>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>WorkTrace.App.Tests</RootNamespace>
     <NoWarn>$(NoWarn);CA1707;CA2007;WPF0001</NoWarn>
   </PropertyGroup>
