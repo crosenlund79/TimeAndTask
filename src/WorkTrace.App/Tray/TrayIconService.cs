@@ -107,7 +107,7 @@ internal sealed class TrayIconService(WindowManager windows, IAppLifetime lifeti
 
     private static Drawing.Icon LoadIcon(string fileName)
     {
-        var resource = Application.GetResourceStream(new Uri($"pack://application:,,,/Assets/{fileName}"))
+        var resource = Application.GetResourceStream(new Uri($"pack://application:,,,/WorkTrace;component/Assets/{fileName}"))
             ?? throw new InvalidOperationException($"Icon resource '{fileName}' not found.");
         using var stream = resource.Stream;
         return new Drawing.Icon(stream, Forms.SystemInformation.SmallIconSize);

@@ -9,7 +9,7 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
         Title="WorkTrace"
-        Icon="pack://application:,,,/Assets/worktrace.ico"
+        Icon="pack://application:,,,/WorkTrace;component/Assets/worktrace.ico"
         Width="1080" Height="700" MinWidth="820" MinHeight="520"
         WindowStartupLocation="CenterScreen">
 
@@ -44,7 +44,7 @@
     <!-- Navigation rail -->
     <DockPanel Margin="12,16,8,12">
       <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,0,0,20">
-        <Image Source="pack://application:,,,/Assets/worktrace.ico" Width="28" Height="28" Margin="0,0,10,0" />
+        <Image Source="pack://application:,,,/WorkTrace;component/Assets/worktrace.ico" Width="28" Height="28" Margin="0,0,10,0" />
         <TextBlock Text="WorkTrace" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
       </StackPanel>
 
