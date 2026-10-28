@@ -45,9 +45,27 @@ the tray 🟡, passes tests ✅.
 
 **Acceptance:** entities can be created, edited, reused and persisted across restarts ✅.
 
-## Phase 3 — Check-ins ⬜
-Popup (focused/unobtrusive), keyboard handling, scheduler, manual check-ins, auto-dismiss, missed
-check-ins, pause/resume, tracking segments, lock periods, global shortcut.
+## Phase 3 — Check-ins
+| Requirement | Status | Verification |
+|---|---|---|
+| Compact popup: client, task, optional note; details expandable (time/date, channel, task system/ID for new task) | ✅ / 🟡 | `CheckInTests` (render, flows); manual look & feel |
+| Keyboard: Enter saves, Esc dismisses, Tab/Shift+Tab, arrows through suggestions, Alt+1–4 recent, Ctrl+Enter | ✅ / 🟡 | VM tests; manual keyboard pass |
+| Fast reuse of the previous task (Enter on empty search / one click) | ✅ | `Enter_OnEmptySearch_RepeatsThePreviousTask` |
+| Create tasks from the popup | ✅ | `UnknownText_CreatesTheTask_ForThePreviousClient` |
+| Focused and unobtrusive (no focus stealing) modes | ✅ / 🟡 | render test in both modes; manual focus check |
+| Configurable global shortcut | ✅ / 🟡 | `SettingsTests`; manual (RegisterHotKey) |
+| Scheduler aligned to interval (default 30 min), DST-safe | ✅ | `CheckInScheduleTests`, engine tests |
+| Auto-dismiss after timeout; missed check-in stored; time after it uncertain | ✅ | `UnansweredPrompt_IsStoredAsMissed_FromItsScheduledTime` |
+| No duplicate popups; no backlog after sleep/restart | ✅ | `OpenPopup_PreventsDuplicatePrompts`, `SleepEndsTheSegment_AndNoBacklogIsShownAfterResume` |
+| Pause/resume (timed and indefinite), persisted | ✅ | `TimedPause_…`, `IndefinitePause_SurvivesRestart_UntilResumed` |
+| Sleep/resume, shutdown, crash, clock change never fabricate tracking | ✅ | engine tests |
+| Locked time recorded as uncertain; prompts suppressed while locked | ✅ | `LockedSession_…` |
+| Settings: popup mode, interval, position, timeout, sound, remember last task, enable prompts | ✅ | `SettingsTests` |
+| Tray reflects tracking state; recording and pause at the top | 🟡 | manual |
+| Observations persist with original values and origin (scheduled/manual) | ✅ | `CheckInServiceTests` |
+
+**Acceptance:** check-ins persist correctly ✅; focus modes behave as configured 🟡 (manual); ignored
+check-ins create uncertainty rather than fabricated work ✅.
 
 ## Phase 4 — Activity log and estimation ⬜
 Estimation engine (see architecture.md), editable grid, filters, auto-save, undo (ChangeLog),

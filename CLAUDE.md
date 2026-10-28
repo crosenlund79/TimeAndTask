@@ -57,6 +57,12 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
   Usage bookkeeping (`ITaskService.MarkUsedAsync`) deliberately bypasses it via `ExecuteUpdate`.
 - Name uniqueness (clients, lookups) is checked in .NET with `Text.SameName` (case- and accent-insensitive);
   SQLite `NOCASE` only folds ASCII.
+- Tracking is owned by `TrackingEngine` (Infrastructure): one timer, state changes serialised by a gate,
+  popups shown via `ICheckInPresenter` without holding the gate. Segments end at the moment tracking stops
+  (pause/sleep/shutdown/clock jump); crash recovery closes them at the last heartbeat. Prompts are never
+  replayed (next slot computed from now); unanswered prompts are stored Missed/Dismissed/Suppressed.
+  Pause state lives in settings (`Tracking.Enabled`, `PausedUntilUtc`) so it survives restarts.
+- Engine tests use `FakeTimeProvider` + a separate monotonic clock; `TrackingEngine.IdleAsync` makes them deterministic.
 - Services throw `DomainValidationException` (field errors), `OperationNotAllowedException`
   (e.g. deleting a referenced record) or `EntityNotFoundException`; view models map these to inline
   errors / notifications via `ViewModelBase.RunAsync`.
@@ -90,6 +96,7 @@ resource URIs are assembly-qualified (`pack://application:,,,/WorkTrace;componen
 
 ## Current phase
 - Phase 1 — Foundation: complete.
-- **Phase 2 — Clients and tasks: complete** (management services, validation, search, change log,
-  Tasks/Clients/Lists pages, WPF smoke tests). **Next: Phase 3 — check-in popup, scheduler, tracking segments.**
-  Phase 3 should reuse `ITaskService.SearchAsync` (ranking) and `MarkUsedAsync` (recency) for the popup.
+- Phase 2 — Clients and tasks: complete.
+- **Phase 3 — Check-ins: complete** (tracking engine, popup in focused/unobtrusive mode, global shortcut,
+  pause/resume, sleep/lock/clock handling, Settings page, Today timeline). **Next: Phase 4 — estimation
+  engine and activity log** (inputs: segments, lock periods, observations, prompts, manual allocations).

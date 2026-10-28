@@ -152,15 +152,48 @@ historical edits are reflected automatically and manual allocations are never lo
 `BaselineMinutes`, the cell is flagged "underlying data changed"; the adjusted value stays in effect
 until the user accepts the new value or re-confirms.
 
-## Scheduling design (implemented in Phase 3)
-- No polling. The scheduler computes the next due instant (aligned to wall-clock multiples of the
-  interval) and waits with a `TimeProvider` timer; it is re-evaluated on resume, unlock, time change
-  and settings change.
-- No backlog: after sleep/restart, overdue prompts are not replayed; at most one prompt is shown on resume.
-- One prompt window at a time; a due prompt while one is open is recorded, not shown.
-- TrackingSegments: opened on start/resume/unpause; closed on pause/suspend/shutdown. A heartbeat
-  (every 5 min, a single UPDATE) bounds the end of a segment left open by a crash. Clock jumps are
-  detected by comparing wall-clock and `Stopwatch` elapsed time and split the segment.
+## Tracking and scheduling (Phase 3)
+
+```
+SystemEvents (power, session, clock) ─► SystemEventsBridge ─┐
+Tray / Overview / Settings ─► TrackingController ───────────┤
+                                                            ▼
+                        TrackingEngine (Infrastructure) ──► ITrackingStore (SQLite)
+                                 │  ▲
+             ShowPromptAsync     ▼  │ outcome
+                        CheckInPresenter (App) ─► CheckInWindow + CheckInViewModel ─► ICheckInService
+GlobalHotkey ─► CheckInPresenter.ShowManual
+```
+
+**Engine.** One `ITimer` armed for the earliest of: next check-in slot, an extra prompt (start/resume/
+welcome back), the next heartbeat (5 min), the end of a timed pause. No polling. Every state change runs
+under one async gate; popups are awaited outside it, and their outcome is written when they close.
+
+**Schedule.** `CheckInSchedule.NextSlotUtc` returns the earliest wall-clock-aligned slot after a moment
+(local time, slots restart at midnight, DST gaps skipped, repeated hours in real-time order). The next slot
+is always computed from *now*, so nothing is replayed after sleep or a restart. Prompts are kept at least
+half an interval apart (a start-up prompt at 09:28 skips 09:30).
+
+**Prompts.** Due prompt → `CheckInPrompts` row (Pending) → popup. Answer → the check-in service stores the
+observation and marks the prompt Answered (also when answered late). Esc → Dismissed; timeout or app exit →
+Missed; due while locked → Suppressed (not shown) and one "welcome back" prompt after unlock; due while a
+popup is open → skipped (no duplicates). All three unanswered outcomes create uncertainty from the prompt's
+*scheduled* time.
+
+**Segments.** Opened on start, resume from sleep and unpause; closed at the moment of pause, sleep,
+shutdown or a detected clock jump. Clock jumps are detected by comparing wall-clock progress with monotonic
+elapsed time (tolerance 2 min); the old segment ends at the last moment known on the old clock. After an
+unclean exit, `RecoverAsync` closes open segments at their last heartbeat (reason Crash), turns pending
+prompts into Missed and closes open lock periods. Lock periods are recorded only while tracking.
+A backward clock jump can produce segments that overlap in UTC; the Phase 4 estimator must flatten them.
+
+**Pause.** Stored in settings (`Tracking.Enabled = false` for "until resumed", `PausedUntilUtc` for a timed
+pause) so it survives restarts; the engine resumes by itself when a timed pause ends.
+
+**Popup.** Unobtrusive mode shows the window without activation (`ShowActivated = false`); clicking it or the
+global shortcut activates it. Focused mode activates it and uses the attach-thread-input technique when Windows
+blocks `SetForegroundWindow`. The window is a tool window (not in Alt+Tab), topmost, Windows 11 rounded
+corners, positioned in the work area. The auto-dismiss countdown pauses on hover and stops on any input.
 
 ## Logging
 `ILogger<T>` everywhere, Serilog daily rolling files (14 retained, 10 MB cap) in the logs folder.

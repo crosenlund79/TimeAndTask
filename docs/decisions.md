@@ -112,3 +112,30 @@ and fails on WPF binding errors; also drives view-model flows. Skipped on non-Wi
 ComboBoxes are ignored.
 **Reason:** a ComboBox cannot display a selected null value, and it writes null back transiently while
 its items are replaced, which would otherwise mark editors dirty.
+
+## ADR-022 — Single-timer tracking engine in Infrastructure
+**Decision:** `TrackingEngine` (net10.0) owns segments, schedule, pause and system-event reactions with one
+`TimeProvider` timer and an async gate; the UI only presents popups through `ICheckInPresenter`.
+**Alternatives:** DispatcherTimer logic in the App; polling every minute.
+**Reason:** deterministic tests with a fake clock on any OS, no polling, one place for the invariants.
+
+## ADR-023 — Clock-aligned check-ins with no backlog
+**Decision:** slots aligned to the local clock (e.g. :00/:30), always computed from "now", at least half an
+interval apart; one prompt after start/resume/unlock.
+**Reason:** predictable for the user and for timesheets; never a burst of stale popups after sleep.
+
+## ADR-024 — Pause state stored in settings
+**Decision:** `Tracking.Enabled` / `PausedUntilUtc` in settings.json.
+**Reason:** a pause must survive a restart (otherwise rebooting during a break would fabricate tracking),
+and it is machine-local state, like other settings.
+
+## ADR-025 — Unanswered prompts by kind
+**Decision:** Missed (timeout, app exit), Dismissed (Esc), Suppressed (due while locked) are all stored;
+late answers upgrade a prompt to Answered.
+**Reason:** the estimator needs to know where uncertainty starts; the user's explicit answer always wins.
+
+## ADR-026 — Popup interaction model
+**Decision:** one search box over title/ID/client, Enter-to-repeat the previous task, Alt+1–4 recent tasks,
+unknown text creates a task (client defaults to the chosen one, else the previous task's), details collapsed.
+Countdown stops on interaction. Manual check-ins always take focus; scheduled ones honour the popup mode.
+**Reason:** owner feedback — minimal keystrokes, reuse of the previous task must be fastest, no focus stealing.

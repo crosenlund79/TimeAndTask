@@ -5,8 +5,8 @@ working time from periodic check-ins, and preparing weekly timesheets. Everythin
 locally; nothing is uploaded.
 
 - Repository: `crosenlund79/TimeAndTask` · Product: **WorkTrace**
-- Status: **Phase 2** — tray app with management of clients, tasks, task systems and communication
-  channels. Check-ins, activity log, screenshots and timesheets arrive in later phases
+- Status: **Phase 3** — tray app with periodic check-ins, pause/resume, and management of clients, tasks,
+  task systems and communication channels. Activity log, screenshots and timesheets arrive in later phases
   (see [docs/requirements.md](docs/requirements.md)).
 
 ## Requirements
@@ -32,15 +32,25 @@ WorkTrace starts in the notification area. Double-click the tray icon to open th
 closing the window returns to the tray; use **Exit** in the tray menu to quit. Starting a second
 instance brings the running instance's window to the front. `--show` opens the window on start.
 
+## Check-ins
+Every 30 minutes (on the hour and half hour; configurable) a small popup asks what you are working on.
+- **Enter** on an empty search repeats the previous task · **Alt+1…4** records a recent task
+- Type to search (title, ticket ID or client), **↑/↓** to choose, **Enter** to record; unknown text creates a task
+- **Esc** skips; an unanswered check-in closes itself and the time after it is marked uncertain
+- **Ctrl+Alt+Space** (configurable) opens a check-in at any time
+- Pause from the tray (15 min … until resumed). Sleep, shutdown and pauses are never counted as work;
+  locked time is uncertain by default.
+
 ## Using WorkTrace
 | Page | What it's for |
 |---|---|
-| **Overview** | Counts, quick actions, data folder |
+| **Overview** | Tracking status, record/pause, today's check-ins and gaps, data folder |
 | **Tasks** | Search-as-you-type by title, ticket ID (`42` finds `BUG-0042`) or client; edit on the right; archive tasks you no longer use |
 | **Clients** | Customers and internal work; deactivate instead of delete once tasks exist |
 | **Lists** | Task systems and communication channels: rename inline, hide, reorder, add |
+| **Settings** | Check-in interval, popup mode (focused/unobtrusive), position, auto-close, shortcut, theme |
 
-Keyboard: `Ctrl+1…4` switch pages · `Ctrl+F` search · `↓` from search into the list · `Enter` edit ·
+Keyboard: `Ctrl+1…5` switch pages · `Ctrl+F` search · `↓` from search into the list · `Enter` edit ·
 `Ctrl+N` new · `Ctrl+S` save · `Esc` discard/clear · `Del` delete (offers archive/deactivate when in use).
 
 ## Publish
