@@ -5,9 +5,11 @@ using WorkTrace.Core.Management;
 using WorkTrace.Core.Services;
 using WorkTrace.Infrastructure.Management;
 using WorkTrace.Core.Settings;
+using WorkTrace.Core.Tracking;
 using WorkTrace.Infrastructure.Persistence;
 using WorkTrace.Infrastructure.Settings;
 using WorkTrace.Infrastructure.Storage;
+using WorkTrace.Infrastructure.Tracking;
 
 namespace WorkTrace.Infrastructure;
 
@@ -31,6 +33,16 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IClientService, ClientService>();
         services.AddSingleton<ITaskService, TaskService>();
         services.AddSingleton<ILookupService, LookupService>();
+        services.AddSingleton<ICheckInService, CheckInService>();
+        services.AddSingleton<ITrackingStore, TrackingStore>();
+
+        // Requires an ICheckInPresenter registration from the host (the WPF app or tests).
+        services.AddSingleton(sp => new TrackingEngine(
+            sp.GetRequiredService<ITrackingStore>(),
+            sp.GetRequiredService<ISettingsStore>(),
+            sp.GetRequiredService<ICheckInPresenter>(),
+            sp.GetRequiredService<TimeProvider>(),
+            sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<TrackingEngine>>()));
 
         return services;
     }
