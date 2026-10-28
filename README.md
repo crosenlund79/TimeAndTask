@@ -5,8 +5,8 @@ working time from periodic check-ins, and preparing weekly timesheets. Everythin
 locally; nothing is uploaded.
 
 - Repository: `crosenlund79/TimeAndTask` · Product: **WorkTrace**
-- Status: **Phase 1 (foundation)** — the app starts in the tray, creates its database and shows a
-  status window. Check-ins, activity log, screenshots and timesheets arrive in later phases
+- Status: **Phase 2** — tray app with management of clients, tasks, task systems and communication
+  channels. Check-ins, activity log, screenshots and timesheets arrive in later phases
   (see [docs/requirements.md](docs/requirements.md)).
 
 ## Requirements
@@ -20,8 +20,9 @@ locally; nothing is uploaded.
 dotnet build TimeAndTask.slnx
 dotnet test --solution TimeAndTask.slnx
 ```
-The test project uses xUnit v3 on Microsoft.Testing.Platform (configured in `global.json`).
-Core and Infrastructure tests also run on Linux/macOS; the WPF app compiles there but runs only on Windows.
+The test projects use xUnit v3 on Microsoft.Testing.Platform (configured in `global.json`).
+`WorkTrace.Tests` (Core/Infrastructure) runs anywhere; `WorkTrace.App.Tests` (WPF rendering and
+view-model flows) runs on Windows only and is skipped elsewhere.
 
 ## Run
 ```powershell
@@ -30,6 +31,17 @@ dotnet run --project src/WorkTrace.App
 WorkTrace starts in the notification area. Double-click the tray icon to open the main window;
 closing the window returns to the tray; use **Exit** in the tray menu to quit. Starting a second
 instance brings the running instance's window to the front. `--show` opens the window on start.
+
+## Using WorkTrace
+| Page | What it's for |
+|---|---|
+| **Overview** | Counts, quick actions, data folder |
+| **Tasks** | Search-as-you-type by title, ticket ID (`42` finds `BUG-0042`) or client; edit on the right; archive tasks you no longer use |
+| **Clients** | Customers and internal work; deactivate instead of delete once tasks exist |
+| **Lists** | Task systems and communication channels: rename inline, hide, reorder, add |
+
+Keyboard: `Ctrl+1…4` switch pages · `Ctrl+F` search · `↓` from search into the list · `Enter` edit ·
+`Ctrl+N` new · `Ctrl+S` save · `Esc` discard/clear · `Del` delete (offers archive/deactivate when in use).
 
 ## Publish
 ```powershell

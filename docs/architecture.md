@@ -8,13 +8,16 @@ and lifecycle management for background services; WPF owns the UI thread and mes
 ```
 WorkTrace.App (net10.0-windows)
   App.xaml.cs        startup/shutdown orchestration, single instance, global exception handling
-  Shell/             WindowManager, IAppLifetime, SingleInstanceGuard
+  AppServices.cs     DI registrations for shell, view models and windows (shared with UI tests)
+  Shell/             WindowManager, IAppLifetime, SingleInstanceGuard, Navigation/Notification/Dialog services
   Tray/              TrayIconService (WinForms NotifyIcon)
-  Views/ ViewModels/ MVVM (CommunityToolkit.Mvvm)
+  Themes/Styles.xaml shared typography, cards, pills, icon buttons, list rows (on top of Fluent)
+  Views/ ViewModels/ MVVM (CommunityToolkit.Mvvm): Home, Tasks, Clients, Lists pages
   Interop/           P/Invoke (LibraryImport)
         │
         ├──► WorkTrace.Infrastructure (net10.0)
-        │      Persistence/   WorkTraceDbContext, configurations, migrations, initializer, seeder
+        │      Management/    ClientService, TaskService, LookupService
+        │      Persistence/   WorkTraceDbContext (+ ChangeLogWriter), configurations, migrations, initializer, seeder
         │      Settings/      JsonSettingsStore
         │      Storage/       AppPaths
         │      Logging/       Serilog file sink setup
@@ -22,8 +25,10 @@ WorkTrace.App (net10.0-windows)
         └───────────┴──► WorkTrace.Core (net10.0)
                            Common/    UtcTime, UtcInterval
                            Entities/  domain entities (POCOs)
+                           Management/ service contracts, inputs/read models, validator, TaskSearch ranking
+                           Validation/ ValidationErrors + domain exceptions, Text (normalisation, comparison)
                            Settings/  WorkTraceSettings (+ validation), ISettingsStore
-                           Services/  service interfaces consumed by ViewModels
+                           Services/  IAppStatusService
 ```
 
 **Dependency rules**
@@ -68,6 +73,42 @@ SQLite via EF Core 10. Connection: `Foreign Keys=True`, pooling, WAL. All foreig
 | ChangeLog | Append-only audit / undo log | BatchId groups one user action |
 
 Seeding fills each reference table only while it is empty, so renamed or deactivated seed rows are respected.
+
+## Management layer (Phase 2)
+
+**Services** (`IClientService`, `ITaskService`, `ILookupService`) are singletons that create a short-lived
+`DbContext` per call and return immutable read models (`ClientSummary`, `TaskSummary`, `LookupSummary`).
+View models never see EF entities.
+
+**Rules**
+- Input is trimmed; empty optional text becomes null; external IDs keep case and leading zeros.
+- Client and lookup names are unique per list, compared case- and accent-insensitively in .NET.
+- New tasks need an existing, *active* client / task system / channel. Editing a task may keep a
+  reference that has since been deactivated, so old tasks stay editable.
+- Referenced records are never deleted: clients with tasks are deactivated, tasks with time records
+  (current or original observation task, allocations, adjustments) are archived, used/built-in lookup items
+  are hidden. Unreferenced records can be deleted (fixing typos).
+- Deactivated clients' tasks drop out of default search and pickers; restoring an archived task under an
+  inactive client is refused. The last active internal client cannot be deleted.
+- Duplicate external IDs are allowed (`FindSimilarAsync` only warns).
+
+**Search** (`TaskSearch.Rank`, pure and deterministic). All terms must match some field, ignoring case
+and accents. Per-term score: external ID exact 1000 / normalised exact 900 (`42` = `0042` = `BUG-0042`) /
+prefix 600 / contains 400; title prefix 300 / word start 200 / contains 100; client 150/120/60; task system
+80/60/30. Recency boost (≤1 d 40, ≤7 d 25, ≤30 d 10), archived −50. Ties: last used, modified, title, id.
+Empty query = most recently used first. Candidates are filtered in SQL (client, archived, active client)
+and ranked in memory — a personal task list is small, and SQLite `LIKE` cannot do accent-insensitive matching.
+
+**Change log.** `WorkTraceDbContext.SaveChangesAsync` snapshots added/modified/deleted `IChangeTracked`
+entities, saves, then writes one `ChangeLog` batch (before/after JSON) inside the same transaction
+(or the caller's). Usage bookkeeping (`LastUsedAtUtc`) uses `ExecuteUpdate` and is not logged.
+
+**UI pattern.** Each management page is a list + editor ("master-detail"). The editor edits a copy and
+tracks `IsDirty` against a snapshot; while dirty, the list is disabled so a selection change can never
+discard edits; Save (Ctrl+S) / Discard (Esc) are explicit. Reversible actions (archive, deactivate) are
+immediate with an Undo toast; irreversible deletes use a themed confirmation dialog with Cancel focused.
+Lookup lists are edited inline and saved immediately. Navigation between pages keeps page state
+(view models are singletons).
 
 ## Time-estimation algorithm (implemented in Phase 4)
 The engine is a pure, deterministic function in Core:

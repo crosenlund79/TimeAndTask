@@ -17,7 +17,7 @@ Legend: ✅ implemented & verified · 🟡 implemented, Windows manual verificat
 | Pre-migration backup | 🟡 | code path only runs with a second migration |
 | Per-user data directory, never the exe folder | ✅ | `AppPathsTests` |
 | Strongly typed, validated settings (JSON, atomic write) | ✅ | `SettingsValidationTests`, `JsonSettingsStoreTests` |
-| Basic WPF window (Fluent theme, status) | 🟡 | manual checklist |
+| Basic WPF window (Fluent theme, status) | ✅ | owner verified start on Windows |
 | Tray icon, menu, double-click, close-to-tray, Exit | 🟡 | manual checklist |
 | Single-instance operation with activation | 🟡 | manual checklist |
 | Windows CI | ✅ | `.github/workflows/ci.yml` |
@@ -25,9 +25,25 @@ Legend: ✅ implemented & verified · 🟡 implemented, Windows manual verificat
 **Acceptance:** project builds ✅, starts 🟡, creates its database ✅ (tests) / 🟡 (app), operates from
 the tray 🟡, passes tests ✅.
 
-## Phase 2 — Clients and tasks ⬜
-Client CRUD/deactivate, task systems & channels configuration, task CRUD/archive, search, autocomplete,
-recent items, validation. Acceptance: entities created, edited, reused and persisted across restarts.
+## Phase 2 — Clients and tasks
+| Requirement | Status | Verification |
+|---|---|---|
+| Client create / edit / rename / deactivate; delete only when unreferenced | ✅ | `ClientServiceTests`, `ViewModelFlowTests` |
+| Default "Internal" client; multiple internal clients; keep ≥1 active internal | ✅ | `DatabaseInitializerTests`, `ClientServiceTests` |
+| Recent-client selection (recently used first) and autocomplete (editable picker, type-ahead) | ✅ / 🟡 | `ClientServiceTests` (ordering); manual (type-ahead) |
+| Configurable task systems and communication channels (add, rename, hide, reorder, delete unused) | ✅ | `LookupServiceTests`, `ViewModelFlowTests` |
+| Task create / edit / archive / restore; delete only when unreferenced | ✅ | `TaskServiceTests`, `ViewModelFlowTests` |
+| External task IDs as free strings, not unique (duplicate warning) | ✅ | `TaskServiceTests` |
+| Task search, autocomplete ranking, recent-task reuse | ✅ | `TaskSearchTests`, `TaskServiceTests` |
+| Validation with inline field errors; nothing persisted on failure | ✅ | `ManagementValidatorTests`, service + VM tests |
+| Relationship integrity (no orphaned/broken history) | ✅ | FK + service tests |
+| Persistence across restarts | ✅ | `Tasks_PersistAcrossRestart`, Phase 1 tests |
+| Change history for edits (basis for Phase 4 undo) | ✅ | `Edits_AreWrittenToChangeLog_AsOneBatchPerSave` |
+| Management UI renders without binding/XAML errors | ✅ (CI) | `UiSmokeTests` on windows-latest |
+| Usability (keyboard flow, look & feel) | 🟡 | manual checklist |
+| Create tasks from the check-in popup | ⬜ | Phase 3 (service + create-client flow are ready) |
+
+**Acceptance:** entities can be created, edited, reused and persisted across restarts ✅.
 
 ## Phase 3 — Check-ins ⬜
 Popup (focused/unobtrusive), keyboard handling, scheduler, manual check-ins, auto-dismiss, missed

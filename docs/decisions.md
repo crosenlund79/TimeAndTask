@@ -82,3 +82,33 @@ CA1848/CA1873 suppressed: log volume is low.
 ## ADR-016 — Single time zone for reporting
 **Decision:** UTC storage, reporting in the current system time zone.
 **Reason:** simple and correct for a stationary user; travelling re-labels earlier days (accepted limitation).
+
+## ADR-017 — Management services return read models; search ranks in memory
+**Decision:** services return immutable summaries; task search filters in SQL and ranks in .NET with
+`TaskSearch` (accent-insensitive, external-ID-first, deterministic).
+**Alternatives:** SQLite `LIKE`/FTS5; returning EF entities to view models.
+**Reason:** accent/case-insensitive matching (Danish letters, é) and ID normalisation are not possible
+with `LIKE`; personal task lists are small; read models keep EF out of the UI.
+
+## ADR-018 — Deactivate/archive/hide instead of delete for referenced data
+**Decision:** referenced clients are deactivated, tasks archived, lookup items hidden; deletion is
+offered only for unreferenced records, with confirmation.
+**Reason:** history must stay reproducible; typos still need a clean way out.
+
+## ADR-019 — Master-detail editing with explicit save and a locked list while dirty
+**Decision:** edit a copy, explicit Save/Discard, list disabled while there are unsaved changes;
+reversible operations act immediately with an Undo toast; lookup lists save inline immediately.
+**Alternatives:** auto-save on selection change; modal edit dialogs; editable DataGrid.
+**Reason:** never lose or silently persist half-typed edits, keep the UI calm and keyboard-friendly, and
+avoid the "admin database" feel of grids and modal forms.
+
+## ADR-020 — Windows-only WPF test project
+**Decision:** `WorkTrace.App.Tests` (net10.0-windows) renders the real window/pages with the Fluent theme
+and fails on WPF binding errors; also drives view-model flows. Skipped on non-Windows hosts, run in CI.
+**Reason:** the development container cannot run WPF; binding errors are otherwise silent.
+
+## ADR-021 — "None" is key 0 in pickers
+**Decision:** ComboBox selections use `PickerOption.NoneKey` (0) for "none"/"all"; null writes from
+ComboBoxes are ignored.
+**Reason:** a ComboBox cannot display a selected null value, and it writes null back transiently while
+its items are replaced, which would otherwise mark editors dirty.

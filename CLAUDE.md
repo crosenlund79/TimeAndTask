@@ -22,6 +22,7 @@ src/WorkTrace.Core            net10.0          entities, settings model, pure lo
 src/WorkTrace.Infrastructure  net10.0          EF Core/SQLite, migrations, paths, JSON settings store, logging, DI
 src/WorkTrace.App             net10.0-windows  WPF + tray, ViewModels, Windows-only code (Interop/, P/Invoke)
 tests/WorkTrace.Tests         net10.0          unit + SQLite integration tests (run on Linux and Windows)
+tests/WorkTrace.App.Tests     net10.0-windows  WPF smoke (binding errors) + view-model flow tests; Windows only
 assets/icons                  SVG/ICO + generate_icons.py (Pillow)
 docs/                         architecture.md, requirements.md, decisions.md
 ```
@@ -36,6 +37,9 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
 ```
 - `EnableWindowsTargeting=true` lets the WPF project compile on Linux; it only **runs** on Windows.
 - Test runner is Microsoft.Testing.Platform (`global.json` → `test.runner`); use `--project`/`--solution`.
+- `WorkTrace.App.Tests` is skipped automatically on non-Windows hosts (its `Directory.Build.targets`);
+  it runs in CI. It renders every page with the real theme and fails on WPF binding errors — keep it green
+  and extend it whenever a view is added.
 - CI: `.github/workflows/ci.yml` on `windows-latest` (build, test, publish artifact).
 - `WORKTRACE_DATA_DIR` overrides the data directory (default `%LocalAppData%\WorkTrace`).
 
@@ -49,6 +53,13 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
 - External task IDs are free-form strings and not unique.
 - Settings live in `settings.json` (not the DB) so DB restore never rolls back settings.
 - Never log task titles, notes or screenshot content.
+- Saves of `IChangeTracked` entities append a `ChangeLog` batch automatically (same transaction).
+  Usage bookkeeping (`ITaskService.MarkUsedAsync`) deliberately bypasses it via `ExecuteUpdate`.
+- Name uniqueness (clients, lookups) is checked in .NET with `Text.SameName` (case- and accent-insensitive);
+  SQLite `NOCASE` only folds ASCII.
+- Services throw `DomainValidationException` (field errors), `OperationNotAllowedException`
+  (e.g. deleting a referenced record) or `EntityNotFoundException`; view models map these to inline
+  errors / notifications via `ViewModelBase.RunAsync`.
 
 ## Time-estimation invariants (Phase 4 engine; see docs/architecture.md)
 1. Output is a flat, ordered, non-overlapping list of periods: Manual / Estimated / Unclassified / NotTracking.
@@ -65,6 +76,8 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
 Nullable enabled (nullable warnings are errors) · file-scoped namespaces · `_camelCase` private fields ·
 async + `CancellationToken` · `IDbContextFactory` with short-lived contexts (no generic repositories) ·
 no business logic in code-behind (window behaviour only) · ViewModels never touch EF directly ·
+never assign `Style` to standard controls without `BasedOn` a Fluent style (it drops the theme); use
+`DynamicResource` for theme brushes · ComboBox keys use `PickerOption.NoneKey` (0) for "none", never null ·
 `TimeProvider` for all clock access · central package versions in `Directory.Packages.props`.
 
 ## Known limitations
@@ -74,5 +87,7 @@ no business logic in code-behind (window behaviour only) · ViewModels never tou
 - Fluent `ThemeMode` is experimental in .NET 10 (WPF0001 suppressed).
 
 ## Current phase
-**Phase 1 — Foundation: complete** (solution, DI, logging, domain model, SQLite + migrations,
-tray shell, single instance, tests, CI). **Next: Phase 2 — clients, tasks, task systems, channels.**
+- Phase 1 — Foundation: complete.
+- **Phase 2 — Clients and tasks: complete** (management services, validation, search, change log,
+  Tasks/Clients/Lists pages, WPF smoke tests). **Next: Phase 3 — check-in popup, scheduler, tracking segments.**
+  Phase 3 should reuse `ITaskService.SearchAsync` (ranking) and `MarkUsedAsync` (recency) for the popup.
