@@ -21,6 +21,9 @@ public class UiSmokeTests
         var client = await ctx.Get<IClientService>().CreateAsync(new ClientInput("Contoso", "ERP customer", false));
         await ctx.Get<ITaskService>().CreateAsync(new TaskInput(client.Id, null, "BUG-0042", "Invoice posting error", "Notes", null));
         var archived = await ctx.Get<ITaskService>().CreateAsync(new TaskInput(client.Id, null, null, "Old work", null, null));
+        await ctx.Get<WorkTrace.Core.Tracking.ICheckInService>().RecordAsync(new WorkTrace.Core.Tracking.CheckInRequest(null, archived.Id, "a note"));
+        var missed = await ctx.Get<WorkTrace.Core.Tracking.ITrackingStore>().CreatePromptAsync(ctx.Time.GetUtcNow().UtcDateTime, ctx.Time.GetUtcNow().UtcDateTime, WorkTrace.Core.Entities.CheckInOutcome.Pending);
+        await ctx.Get<WorkTrace.Core.Tracking.ITrackingStore>().ResolvePromptAsync(missed, WorkTrace.Core.Entities.CheckInOutcome.Missed, ctx.Time.GetUtcNow().UtcDateTime);
         await ctx.Get<ITaskService>().SetArchivedAsync(archived.Id, true);
 
         WpfTestHost.BindingErrors.Take();
@@ -73,6 +76,10 @@ public class UiSmokeTests
             clients.SelectedItem = clients.Items[0];
             await WpfTestHost.SettleAsync();
             Assert.False(clients.HasUnsavedChanges);
+
+            window.ViewModel.NavigateTo(AppSection.Home);
+            await WpfTestHost.SettleAsync(10);
+            Assert.NotEmpty(ctx.Get<HomeViewModel>().Today);
 
             ctx.Get<INotificationService>().Show("Toast with action", NotificationKind.Success, "Undo", () => Task.CompletedTask);
             await WpfTestHost.SettleAsync();
