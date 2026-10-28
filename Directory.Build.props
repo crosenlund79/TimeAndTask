@@ -6,6 +6,8 @@
     <WarningsAsErrors>$(WarningsAsErrors);nullable</WarningsAsErrors>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <!-- CA1848/CA1873: LoggerMessage source generation is not worth the ceremony for this app's low log volume. -->
+    <NoWarn>$(NoWarn);CA1848;CA1873</NoWarn>
     <!-- Allows building the WPF project on non-Windows hosts (CI/dev containers). Running still requires Windows. -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <Company>WorkTrace</Company>
