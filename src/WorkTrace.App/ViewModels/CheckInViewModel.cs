@@ -235,6 +235,10 @@ public sealed partial class CheckInViewModel(
                 ChannelOptions.Add(new PickerOption(channel.Id, channel.Name));
             }
 
+            // The window is already showing while options load: re-assert the selections so the
+            // ComboBoxes display them (a selection set before its items exist may stay blank).
+            ReassertSelections();
+
             if (settings.Current.Tracking.RememberLastTask
                 && await checkIns.GetLastObservationAsync() is { TaskId: { } lastTaskId })
             {
@@ -256,6 +260,19 @@ public sealed partial class CheckInViewModel(
             logger.LogError(ex, "Loading the check-in popup failed");
             ErrorMessage = "Could not load your tasks. You can still write a note.";
         }
+    }
+
+    private void ReassertSelections()
+    {
+        var client = ClientKey ?? PickerOption.NoneKey;
+        var system = TaskSystemKey ?? PickerOption.NoneKey;
+        var channel = ChannelKey ?? PickerOption.NoneKey;
+        ClientKey = null;
+        TaskSystemKey = null;
+        ChannelKey = null;
+        ClientKey = client;
+        TaskSystemKey = system;
+        ChannelKey = channel;
     }
 
     /// <summary>Called once per second by the window.</summary>

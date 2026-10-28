@@ -56,6 +56,11 @@ public class CheckInTests
             vm.IsExpanded = true;
             await WpfTestHost.SettleAsync();
 
+            // Every picker shows a selection ("Any client", "None", "Not specified" by default).
+            var combos = FindAll<System.Windows.Controls.ComboBox>(window);
+            Assert.Equal(3, combos.Count);
+            Assert.All(combos, c => Assert.NotNull(c.SelectedItem));
+
             var area = SystemParameters.WorkArea;
             Assert.InRange(window.Left + window.ActualWidth, area.Left, area.Right + 1);
             Assert.InRange(window.Top + window.ActualHeight, area.Top, area.Bottom + 1);
@@ -267,4 +272,22 @@ public class CheckInTests
 
         Assert.Equal(PromptOutcome.Closed, await outcomeTask);
     });
+
+    private static List<T> FindAll<T>(DependencyObject root)
+        where T : DependencyObject
+    {
+        var found = new List<T>();
+        for (var i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = System.Windows.Media.VisualTreeHelper.GetChild(root, i);
+            if (child is T match)
+            {
+                found.Add(match);
+            }
+
+            found.AddRange(FindAll<T>(child));
+        }
+
+        return found;
+    }
 }
