@@ -62,6 +62,9 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
   (pause/sleep/shutdown/clock jump); crash recovery closes them at the last heartbeat. Prompts are never
   replayed (next slot computed from now); unanswered prompts are stored Missed/Dismissed/Suppressed.
   Pause state lives in settings (`Tracking.Enabled`, `PausedUntilUtc`) so it survives restarts.
+- Manual check-ins always activate the popup (escalating `ForceForeground`, focus the search box explicitly);
+  scheduled popups in Unobtrusive mode must never take focus. `FocusTests` (incl. a real-keystroke test from
+  another process) guard both — keep them green.
 - Engine tests use `FakeTimeProvider` + a separate monotonic clock; `TrackingEngine.IdleAsync` makes them deterministic.
 - Services throw `DomainValidationException` (field errors), `OperationNotAllowedException`
   (e.g. deleting a referenced record) or `EntityNotFoundException`; view models map these to inline
@@ -98,5 +101,6 @@ resource URIs are assembly-qualified (`pack://application:,,,/WorkTrace;componen
 - Phase 1 — Foundation: complete.
 - Phase 2 — Clients and tasks: complete.
 - **Phase 3 — Check-ins: complete** (tracking engine, popup in focused/unobtrusive mode, global shortcut,
-  pause/resume, sleep/lock/clock handling, Settings page, Today timeline). **Next: Phase 4 — estimation
+  pause/resume, sleep/lock/clock handling, Settings page, Today timeline; refinements: 1–240 min interval,
+  reliable shortcut focus, Alt+1–4 clarity, "show check-in now"). **Next: Phase 4 — estimation
   engine and activity log** (inputs: segments, lock periods, observations, prompts, manual allocations).

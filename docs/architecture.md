@@ -191,8 +191,17 @@ A backward clock jump can produce segments that overlap in UTC; the Phase 4 esti
 pause) so it survives restarts; the engine resumes by itself when a timed pause ends.
 
 **Popup.** Unobtrusive mode shows the window without activation (`ShowActivated = false`); clicking it or the
-global shortcut activates it. Focused mode activates it and uses the attach-thread-input technique when Windows
-blocks `SetForegroundWindow`. The window is a tool window (not in Alt+Tab), topmost, Windows 11 rounded
+global shortcut activates it. Manual check-ins (tray, shortcut) always activate, whatever the mode.
+
+*Activation* (`CheckInWindow.ActivateForInput` → `NativeMethods.ForceForeground`): Windows only lets the
+process that produced the latest input take the foreground. Steps, each verified with `GetForegroundWindow`:
+`SetForegroundWindow`; attach to the foreground thread's input queue; a zero-movement synthetic mouse input
+(no visible effect) followed by `SetForegroundWindow`; `SwitchToThisWindow`. The attempt is repeated once
+after the window settles and the outcome is logged ("Check-in popup activation: …").
+
+*Keyboard focus:* after activation WPF focuses the window itself, not a control, so the search box is focused
+explicitly unless the user already clicked into another input of the popup. (Phase 3 shipped with a check that
+treated "window focused" as "input focused", so typing went nowhere — fixed.) The window is a tool window (not in Alt+Tab), topmost, Windows 11 rounded
 corners, positioned in the work area. The auto-dismiss countdown pauses on hover and stops on any input.
 
 ## Logging

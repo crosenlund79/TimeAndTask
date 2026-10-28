@@ -139,3 +139,19 @@ late answers upgrade a prompt to Answered.
 unknown text creates a task (client defaults to the chosen one, else the previous task's), details collapsed.
 Countdown stops on interaction. Manual check-ins always take focus; scheduled ones honour the popup mode.
 **Reason:** owner feedback — minimal keystrokes, reuse of the previous task must be fastest, no focus stealing.
+
+## ADR-027 — Check-in interval 1–240 minutes
+**Decision:** presets 1, 5, 10, 15, 30, 60 and a custom whole-minute value (1–240); default 30.
+**Reason:** short intervals make scheduled behaviour testable; the engine already guarantees no backlog
+and no duplicate popups, so short intervals are safe.
+
+## ADR-028 — Escalating foreground activation for manual check-ins
+**Decision:** see architecture "Popup → Activation". The synthetic-input step is a zero mouse event, never
+key input (a synthetic Alt could trigger menus in the previously active application).
+**Reason:** owner reported the shortcut popup not receiving focus; an end-to-end CI test with real keystrokes
+from another application reproduced it and now guards the fix.
+
+## ADR-029 — WPF UI tests isolate their own windows
+**Decision:** tests identify the popup they opened (difference against a snapshot) and the test context closes
+all windows on dispose.
+**Reason:** one shared Application per process; a stray window from one test broke unrelated tests.

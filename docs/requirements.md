@@ -52,8 +52,11 @@ the tray 🟡, passes tests ✅.
 | Keyboard: Enter saves, Esc dismisses, Tab/Shift+Tab, arrows through suggestions, Alt+1–4 recent, Ctrl+Enter | ✅ / 🟡 | VM tests; manual keyboard pass |
 | Fast reuse of the previous task (Enter on empty search / one click) | ✅ | `Enter_OnEmptySearch_RepeatsThePreviousTask` |
 | Create tasks from the popup | ✅ | `UnknownText_CreatesTheTask_ForThePreviousClient` |
-| Focused and unobtrusive (no focus stealing) modes | ✅ / 🟡 | render test in both modes; manual focus check |
-| Configurable global shortcut | ✅ / 🟡 | `SettingsTests`; manual (RegisterHotKey) |
+| Focused and unobtrusive (no focus stealing) modes | ✅ | `ScheduledPopup_InUnobtrusiveMode_DoesNotTakeFocus`, `…InFocusedMode_TakesFocus` |
+| Configurable global shortcut | ✅ | `SettingsTests`; `GlobalShortcut_FromAnotherApplication_…` (real keystrokes, CI) |
+| Manual check-ins always receive keyboard focus (main window active, minimized, hidden; other app active) | ✅ | `FocusTests` (CI on windows-latest) |
+| Recent tasks via Alt+1–4, safe no-op without recents or while searching | ✅ | `FocusTests` (bindings, no-op, real Alt+1) |
+| Interval presets 1/5/10/15/30/60 min + custom 1–240, applied live without backlog/duplicates | ✅ | `Interval_…` (validation, settings), engine interval tests |
 | Scheduler aligned to interval (default 30 min), DST-safe | ✅ | `CheckInScheduleTests`, engine tests |
 | Auto-dismiss after timeout; missed check-in stored; time after it uncertain | ✅ | `UnansweredPrompt_IsStoredAsMissed_FromItsScheduledTime` |
 | No duplicate popups; no backlog after sleep/restart | ✅ | `OpenPopup_PreventsDuplicatePrompts`, `SleepEndsTheSegment_AndNoBacklogIsShownAfterResume` |

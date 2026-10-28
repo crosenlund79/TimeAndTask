@@ -33,11 +33,16 @@ closing the window returns to the tray; use **Exit** in the tray menu to quit. S
 instance brings the running instance's window to the front. `--show` opens the window on start.
 
 ## Check-ins
-Every 30 minutes (on the hour and half hour; configurable) a small popup asks what you are working on.
-- **Enter** on an empty search repeats the previous task · **Alt+1…4** records a recent task
+Every 30 minutes (on the hour and half hour) a small popup asks what you are working on. The interval
+can be 1, 5, 10, 15, 30 or 60 minutes, or any whole number of minutes from 1 to 240 (Settings → Check-in
+interval → Custom). Changes apply immediately; missed slots are never replayed. Settings → "Show a scheduled
+check-in now" triggers a real scheduled check-in for testing.
+- **Enter** on an empty search repeats the previous task · **Alt+1…4** records the numbered recent task
+  (shown with its key while the search box is empty; does nothing when there are no recent tasks)
 - Type to search (title, ticket ID or client), **↑/↓** to choose, **Enter** to record; unknown text creates a task
 - **Esc** skips; an unanswered check-in closes itself and the time after it is marked uncertain
-- **Ctrl+Alt+Space** (configurable) opens a check-in at any time
+- **Ctrl+Alt+Space** (configurable) opens a check-in at any time, with the cursor in the search box, even
+  when another application is active. The popup border turns accent-coloured while it has keyboard focus.
 - Pause from the tray (15 min … until resumed). Sleep, shutdown and pauses are never counted as work;
   locked time is uncertain by default.
 
