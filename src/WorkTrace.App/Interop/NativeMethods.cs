@@ -68,35 +68,88 @@ internal static partial class NativeMethods
     [LibraryImport("dwmapi.dll")]
     internal static partial int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
-    /// <summary>
-    /// Brings a window to the foreground even when another process owns it. Windows restricts
-    /// SetForegroundWindow for background processes; briefly attaching to the foreground thread's
-    /// input queue is the documented-behaviour workaround used by launchers and tray utilities.
-    /// </summary>
-    internal static void ForceForeground(IntPtr hwnd)
+    [LibraryImport("user32.dll")]
+    internal static partial void SwitchToThisWindow(IntPtr hWnd, [MarshalAs(UnmanagedType.Bool)] bool fUnknown);
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    private static partial uint SendInput(uint nInputs, [In] MouseInputRecord[] pInputs, int cbSize);
+
+    /// <summary>INPUT with a MOUSEINPUT payload (the largest member of the native union).</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MouseInputRecord
     {
-        var foreground = GetForegroundWindow();
-        if (foreground == hwnd)
+        public uint Type;
+        public int Dx;
+        public int Dy;
+        public uint MouseData;
+        public uint Flags;
+        public uint Time;
+        public IntPtr ExtraInfo;
+    }
+
+    /// <summary>How <see cref="ForceForeground"/> succeeded (for diagnostics), or <see cref="Failed"/>.</summary>
+    internal enum ForegroundResult
+    {
+        AlreadyForeground,
+        SetForegroundWindow,
+        AttachThreadInput,
+        SyntheticInput,
+        SwitchToThisWindow,
+        Failed,
+    }
+
+    /// <summary>
+    /// Brings a window to the foreground even when another process is active. Windows only lets a process
+    /// take the foreground if it produced the latest input (foreground lock). Steps, each verified:
+    /// plain SetForegroundWindow; attach to the foreground thread's input queue; send a zero-movement mouse
+    /// input so this process owns the latest input (no visible effect; the technique used by launchers and
+    /// tray utilities); finally SwitchToThisWindow.
+    /// </summary>
+    internal static ForegroundResult ForceForeground(IntPtr hwnd)
+    {
+        if (GetForegroundWindow() == hwnd)
         {
-            return;
+            return ForegroundResult.AlreadyForeground;
         }
 
-        var foregroundThread = GetWindowThreadProcessId(foreground, IntPtr.Zero);
-        var currentThread = GetCurrentThreadId();
-        var attached = foregroundThread != 0 && foregroundThread != currentThread && AttachThreadInput(currentThread, foregroundThread, true);
-        try
+        ShowWindow(hwnd, SW_SHOW);
+        if (SetForegroundWindow(hwnd) && GetForegroundWindow() == hwnd)
         {
-            ShowWindow(hwnd, SW_SHOW);
-            BringWindowToTop(hwnd);
-            SetForegroundWindow(hwnd);
+            return ForegroundResult.SetForegroundWindow;
         }
-        finally
+
+        var foregroundThread = GetWindowThreadProcessId(GetForegroundWindow(), IntPtr.Zero);
+        var currentThread = GetCurrentThreadId();
+        if (foregroundThread != 0 && foregroundThread != currentThread && AttachThreadInput(currentThread, foregroundThread, true))
         {
-            if (attached)
+            try
+            {
+                BringWindowToTop(hwnd);
+                SetForegroundWindow(hwnd);
+            }
+            finally
             {
                 AttachThreadInput(currentThread, foregroundThread, false);
             }
+
+            if (GetForegroundWindow() == hwnd)
+            {
+                return ForegroundResult.AttachThreadInput;
+            }
         }
+
+        var dummy = new[] { new MouseInputRecord { Type = 0 /* INPUT_MOUSE */ } };
+        if (SendInput(1, dummy, Marshal.SizeOf<MouseInputRecord>()) == 1)
+        {
+            SetForegroundWindow(hwnd);
+            if (GetForegroundWindow() == hwnd)
+            {
+                return ForegroundResult.SyntheticInput;
+            }
+        }
+
+        SwitchToThisWindow(hwnd, true);
+        return GetForegroundWindow() == hwnd ? ForegroundResult.SwitchToThisWindow : ForegroundResult.Failed;
     }
 
     /// <summary>Hides a window from Alt+Tab and gives it rounded corners on Windows 11 (no-op elsewhere).</summary>

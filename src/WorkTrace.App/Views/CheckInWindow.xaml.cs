@@ -73,27 +73,29 @@ public partial class CheckInWindow : Window
             WindowState = WindowState.Normal;
         }
 
-        TryActivate();
+        var first = TryActivate();
         FocusSearchBox();
         Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () =>
         {
-            if (!IsActive)
-            {
-                TryActivate();
-            }
-
+            var second = IsActive ? NativeMethods.ForegroundResult.AlreadyForeground : TryActivate();
             FocusSearchBox();
-            _logger?.LogInformation("Check-in popup activation: active={Active}, foreground={Foreground}",
-                IsActive, NativeMethods.GetForegroundWindow() == Handle);
+            LastActivation = second;
+            _logger?.LogInformation(
+                "Check-in popup activation: first={First}, retry={Retry}, active={Active}",
+                first, second, IsActive);
         });
     }
 
+    /// <summary>Outcome of the most recent activation attempt (diagnostics and tests).</summary>
+    internal NativeMethods.ForegroundResult? LastActivation { get; private set; }
+
     private IntPtr Handle => new WindowInteropHelper(this).Handle;
 
-    private void TryActivate()
+    private NativeMethods.ForegroundResult TryActivate()
     {
-        NativeMethods.ForceForeground(Handle);
+        var result = NativeMethods.ForceForeground(Handle);
         Activate();
+        return result;
     }
 
     /// <summary>Closes with a specific outcome (application exit).</summary>

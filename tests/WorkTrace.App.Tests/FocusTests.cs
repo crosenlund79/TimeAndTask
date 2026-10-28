@@ -238,7 +238,11 @@ public class FocusTests
             }
 
             await WpfTestHost.SettleAsync(10);
-            Assert.True(popup.IsActive, "The popup opened by the global shortcut must be the active window.");
+            var foreground = Win32Input.GetForegroundWindow();
+            var who = foreground == new WindowInteropHelper(popup).Handle ? "popup"
+                : foreground == otherWindow ? "other application"
+                : foreground == IntPtr.Zero ? "none" : $"0x{foreground:X}";
+            Assert.True(popup.IsActive, $"The popup opened by the global shortcut must be the active window (foreground: {who}, activation: {popup.LastActivation}).");
             Assert.Equal(new WindowInteropHelper(popup).Handle, Win32Input.GetForegroundWindow());
             Assert.Same(popup.SearchBox, Keyboard.FocusedElement);
 
