@@ -78,6 +78,8 @@ async + `CancellationToken` · `IDbContextFactory` with short-lived contexts (no
 no business logic in code-behind (window behaviour only) · ViewModels never touch EF directly ·
 never assign `Style` to standard controls without `BasedOn` a Fluent style (it drops the theme); use
 `DynamicResource` for theme brushes · ComboBox keys use `PickerOption.NoneKey` (0) for "none", never null ·
+editable ComboBoxes binding `SelectedValue` + `Text` must initialise the text (else type-ahead clears the selection) ·
+resource URIs are assembly-qualified (`pack://application:,,,/WorkTrace;component/...`) ·
 `TimeProvider` for all clock access · central package versions in `Directory.Packages.props`.
 
 ## Known limitations
