@@ -115,7 +115,7 @@ public class TrackingEngineTests : TrackingTestBase
 
         await Engine.NotifySuspendAsync();
         Assert.Equal(TrackingState.Suspended, Engine.Status.State);
-        await AdvanceAsync(TimeSpan.FromHours(3)); // 12:40 – six slots passed while asleep
+        Sleep(TimeSpan.FromHours(3)); // 12:40 – six slots passed while asleep
         await Engine.NotifyResumeAsync();
         await AdvanceAsync(TimeSpan.FromSeconds(30));
 
@@ -128,6 +128,45 @@ public class TrackingEngineTests : TrackingTestBase
         // 09:30 before sleeping, then exactly one prompt after resume. Nothing for 10:00 … 12:30.
         Assert.Equal([PromptReason.Scheduled, PromptReason.Resumed], Presenter.Shown.Select(s => s.Reason));
         Assert.Equal(2, (await PromptsAsync()).Count);
+    }
+
+    [Fact]
+    public async Task MissingResumeNotification_TrackingResumesOnceTheComputerRunsAgain()
+    {
+        await StartWithoutStartupPromptAsync();
+        await AdvanceToAsync(9, 40);
+        Presenter.Complete(PromptOutcome.TimedOut); // the 09:30 check-in
+        await Engine.IdleAsync();
+
+        await Engine.NotifySuspendAsync();
+        Assert.Equal(TrackingState.Suspended, Engine.Status.State);
+
+        // Windows never says "resumed"; the engine's timer running is proof that the computer is awake.
+        await AdvanceAsync(WorkTrace.Infrastructure.Tracking.TrackingEngine.MissedResumeCheck);
+        Assert.Equal(TrackingState.Tracking, Engine.Status.State);
+        Assert.NotNull(Engine.Status.NextCheckInUtc);
+        var segments = await SegmentsAsync();
+        Assert.Equal(2, segments.Count);
+        Assert.Equal(TrackingEndReason.Sleep, segments[0].EndReason);
+        Assert.Null(segments[1].EndUtc);
+
+        await AdvanceToAsync(10, 0, 5);
+        Assert.Equal([PromptReason.Scheduled, PromptReason.Scheduled], Presenter.Shown.Select(s => s.Reason));
+        Assert.Equal(CheckInAttemptResult.Shown, Engine.Status.LastAttempt?.Result);
+    }
+
+    [Fact]
+    public async Task UnlockWhileMarkedAsleep_ResumesTracking()
+    {
+        await StartWithoutStartupPromptAsync();
+        await Engine.NotifySessionLockedAsync();
+        await Engine.NotifySuspendAsync();
+
+        await Engine.NotifySessionUnlockedAsync();
+
+        Assert.Equal(TrackingState.Tracking, Engine.Status.State);
+        Assert.False(Engine.Status.IsSessionLocked);
+        Assert.Null((await SegmentsAsync()).Last().EndUtc);
     }
 
     [Fact]

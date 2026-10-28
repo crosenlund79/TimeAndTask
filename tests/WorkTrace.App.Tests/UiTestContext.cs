@@ -60,6 +60,10 @@ internal sealed class UiTestContext : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        // As the app does on exit: stop tracking while its services still exist (a started engine would
+        // otherwise be stopped during container disposal, when the database factory is already unusable).
+        await Get<WorkTrace.Infrastructure.Tracking.TrackingEngine>().StopAsync();
+
         // Never leave windows behind for the next test (they share one Application).
         foreach (var window in System.Windows.Application.Current.Windows.OfType<System.Windows.Window>().ToList())
         {

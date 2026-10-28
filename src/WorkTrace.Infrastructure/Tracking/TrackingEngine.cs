@@ -27,6 +27,12 @@ public sealed class TrackingEngine : IAsyncDisposable
     internal static readonly TimeSpan StartPromptDelay = TimeSpan.FromSeconds(20);
     internal static readonly TimeSpan WelcomeBackDelay = TimeSpan.FromSeconds(5);
 
+    /// <summary>
+    /// After a suspend notification the timer is armed this far ahead. A timer can only fire while the computer
+    /// is awake, so if it fires and no resume notification arrived, the resume was missed and tracking resumes.
+    /// </summary>
+    internal static readonly TimeSpan MissedResumeCheck = TimeSpan.FromMinutes(1);
+
     private readonly ITrackingStore _store;
     private readonly ISettingsStore _settings;
     private readonly ICheckInPresenter _presenter;
@@ -183,15 +189,7 @@ public sealed class TrackingEngine : IAsyncDisposable
     });
 
     /// <summary>The computer woke up: start a new segment; never replay prompts that were due while asleep.</summary>
-    public Task NotifyResumeAsync() => WithGateAsync(async ct =>
-    {
-        _suspended = false;
-        var now = Now;
-        if (!_paused && _segmentId is null)
-        {
-            await BeginSegmentAsync(now, PromptReason.Resumed, ct);
-        }
-    });
+    public Task NotifyResumeAsync() => WithGateAsync(ct => ResumeFromSleepAsync(Now, ct));
 
     public Task NotifySessionLockedAsync() => WithGateAsync(async ct =>
     {
@@ -204,6 +202,13 @@ public sealed class TrackingEngine : IAsyncDisposable
 
     public Task NotifySessionUnlockedAsync() => WithGateAsync(async ct =>
     {
+        if (_suspended)
+        {
+            // Someone unlocked the computer, so it is awake even if the resume notification never came.
+            _logger.LogWarning("Session unlocked while marked asleep; resuming tracking");
+            await ResumeFromSleepAsync(Now, ct);
+        }
+
         _locked = false;
         await EndLockAsync(Now, ct);
 
@@ -280,6 +285,14 @@ public sealed class TrackingEngine : IAsyncDisposable
             {
                 var now = Now;
                 _lastError = null;
+                if (_suspended)
+                {
+                    // Windows does not always deliver a resume notification (e.g. a wake reported only as
+                    // PBT_APMRESUMEAUTOMATIC); without this, tracking and check-ins would stay off until restart.
+                    _logger.LogWarning("No resume notification after sleep; resuming tracking");
+                    await ResumeFromSleepAsync(now, ct);
+                }
+
                 await DetectClockJumpAsync(now, ct);
 
                 if (_paused && Tracking.PausedUntilUtc is { } until && until <= now && Tracking.Enabled)
@@ -458,6 +471,16 @@ public sealed class TrackingEngine : IAsyncDisposable
         }
     }
 
+    private async Task ResumeFromSleepAsync(DateTime now, CancellationToken ct)
+    {
+        _suspended = false;
+        if (!_paused && _segmentId is null)
+        {
+            await BeginSegmentAsync(now, PromptReason.Resumed, ct);
+            _logger.LogInformation("Tracking resumed after sleep");
+        }
+    }
+
     private async Task ResumeCoreAsync(DateTime now, CancellationToken ct)
     {
         if (!_paused)
@@ -550,7 +573,11 @@ public sealed class TrackingEngine : IAsyncDisposable
             }
         }
 
-        if (_segmentId is not null)
+        if (_suspended)
+        {
+            Consider(now + MissedResumeCheck);
+        }
+        else if (_segmentId is not null)
         {
             Consider(_nextPromptUtc);
             Consider(_extraPrompt?.DueUtc);

@@ -79,6 +79,16 @@ public abstract class TrackingTestBase : IAsyncLifetime
     }
 
     /// <summary>Moves real time forward (wall clock and elapsed time) and lets the engine catch up.</summary>
+    /// <summary>
+    /// The computer sleeps: both clocks move on but no timer fires (nothing runs while asleep). Timers that
+    /// came due fire on the next <see cref="AdvanceAsync"/>, as overdue timers do after waking.
+    /// </summary>
+    protected void Sleep(TimeSpan duration)
+    {
+        Monotonic.AdjustTime(Monotonic.GetUtcNow() + duration);
+        Clock.AdjustTime(Clock.GetUtcNow() + duration);
+    }
+
     protected async Task AdvanceAsync(TimeSpan by)
     {
         // Step in small increments so timers fire at their due times, as they would in reality.
