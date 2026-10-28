@@ -36,7 +36,7 @@ public class SettingsValidationTests
     public void InvalidValues_AreReported()
     {
         var s = new WorkTraceSettings();
-        s.Tracking.CheckInIntervalMinutes = 1;
+        s.Tracking.CheckInIntervalMinutes = 0;
         s.Screenshots.JpegQuality = 0;
         s.Screenshots.Format = (ScreenshotFormat)42;
 
@@ -54,5 +54,20 @@ public class SettingsValidationTests
         s.Tracking.CheckInIntervalMinutes = 60;
         s.Tracking.MaxEstimationHorizonMinutes = 30;
         Assert.Contains(s.Validate(), e => e.Contains("MaxEstimationHorizonMinutes", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData(1, true)]
+    [InlineData(5, true)]
+    [InlineData(37, true)]
+    [InlineData(240, true)]
+    [InlineData(0, false)]
+    [InlineData(-5, false)]
+    [InlineData(241, false)]
+    public void Interval_AcceptsWholeMinutesFromOneTo240(int minutes, bool valid)
+    {
+        var s = new WorkTraceSettings();
+        s.Tracking.CheckInIntervalMinutes = minutes;
+        Assert.Equal(valid, !s.Validate().Any(e => e.Contains("CheckInIntervalMinutes", StringComparison.Ordinal)));
     }
 }

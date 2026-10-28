@@ -210,6 +210,22 @@ public sealed class TrackingEngine : IAsyncDisposable
         _suppressedWhileLocked = false;
     });
 
+    /// <summary>
+    /// Shows a real scheduled check-in immediately (Settings "show now"), honouring the popup mode and
+    /// auto-dismiss, so behaviour can be tried without waiting for the next slot. Ignored when not tracking.
+    /// </summary>
+    public Task TriggerCheckInNowAsync() => WithGateAsync(async ct =>
+    {
+        if (_segmentId is null)
+        {
+            return;
+        }
+
+        var now = Now;
+        await TriggerPromptAsync(now, PromptReason.Scheduled, now, ct);
+        _nextPromptUtc = ComputeNextPrompt(now);
+    });
+
     /// <summary>The system clock was changed; split the segment if the wall clock jumped.</summary>
     public Task NotifyTimeChangedAsync() => WithGateAsync(ct => DetectClockJumpAsync(Now, ct));
 

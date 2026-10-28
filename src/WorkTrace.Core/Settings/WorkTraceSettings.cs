@@ -33,7 +33,7 @@ public sealed class WorkTraceSettings
             return errors;
         }
 
-        Range(errors, "Tracking.CheckInIntervalMinutes", Tracking.CheckInIntervalMinutes, 5, 240);
+        Range(errors, "Tracking.CheckInIntervalMinutes", Tracking.CheckInIntervalMinutes, TrackingSettings.MinIntervalMinutes, TrackingSettings.MaxIntervalMinutes);
         Range(errors, "Tracking.AutoDismissSeconds", Tracking.AutoDismissSeconds, 10, 3600);
         Range(errors, "Tracking.MaxEstimationHorizonMinutes", Tracking.MaxEstimationHorizonMinutes, 5, 24 * 60);
         Range(errors, "Tracking.LockGraceMinutes", Tracking.LockGraceMinutes, 0, 120);
@@ -128,6 +128,9 @@ public enum LockedTimeHandling
 
 public sealed class TrackingSettings
 {
+    public const int MinIntervalMinutes = 1;
+    public const int MaxIntervalMinutes = 240;
+
     /// <summary>False while tracking is paused until the user resumes it.</summary>
     public bool Enabled { get; set; } = true;
 

@@ -296,4 +296,99 @@ public class TrackingEngineTests : TrackingTestBase
         Assert.Equal(TrackingState.Paused, Engine.Status.State);
         Assert.Equal(TrackingEndReason.Paused, Assert.Single(await SegmentsAsync()).EndReason);
     }
+
+    [Fact]
+    public async Task OneMinuteInterval_PromptsEveryMinute_WithoutDuplicates()
+    {
+        await ConfigureAsync(t =>
+        {
+            t.PromptOnStart = false;
+            t.CheckInIntervalMinutes = 1;
+        });
+        await StartEngineAsync();
+        Assert.Equal(At(9, 8), Engine.Status.NextCheckInUtc);
+
+        for (var minute = 8; minute <= 10; minute++)
+        {
+            await AdvanceToAsync(9, minute, 5);
+            Presenter.Complete(PromptOutcome.TimedOut);
+            await Engine.IdleAsync();
+        }
+
+        Assert.Equal([At(9, 8), At(9, 9), At(9, 10)], Presenter.Shown.Select(s => s.ScheduledUtc));
+        Assert.Equal(3, (await PromptsAsync()).Count);
+    }
+
+    [Fact]
+    public async Task ShorterInterval_TakesEffectImmediately_WithoutBacklog()
+    {
+        await StartWithoutStartupPromptAsync();
+        await AdvanceToAsync(9, 20);
+
+        await ConfigureAsync(t => t.CheckInIntervalMinutes = 1);
+        await Engine.IdleAsync();
+
+        // The slots 09:08 … 09:20 that "would have" existed are not replayed: the next one is 09:21.
+        Assert.Equal(At(9, 21), Engine.Status.NextCheckInUtc);
+        await AdvanceToAsync(9, 21, 5);
+        var shown = Assert.Single(Presenter.Shown);
+        Assert.Equal(At(9, 21), shown.ScheduledUtc);
+    }
+
+    [Fact]
+    public async Task ChangingIntervalWhilePopupIsOpen_DoesNotOpenASecondPopup()
+    {
+        await StartWithoutStartupPromptAsync();
+        await AdvanceToAsync(9, 30, 5); // popup open
+
+        await ConfigureAsync(t => t.CheckInIntervalMinutes = 1);
+        await Engine.IdleAsync();
+        await AdvanceToAsync(9, 33, 5);
+
+        Assert.Single(Presenter.Shown);
+        Assert.Single(await PromptsAsync());
+    }
+
+    [Fact]
+    public async Task LongerInterval_MovesTheNextPromptOut()
+    {
+        await ConfigureAsync(t =>
+        {
+            t.PromptOnStart = false;
+            t.CheckInIntervalMinutes = 1;
+        });
+        await StartEngineAsync();
+
+        await ConfigureAsync(t => t.CheckInIntervalMinutes = 60);
+        await Engine.IdleAsync();
+
+        Assert.Equal(At(10, 0), Engine.Status.NextCheckInUtc);
+        await AdvanceToAsync(9, 59);
+        Assert.Empty(Presenter.Shown);
+    }
+
+    [Fact]
+    public async Task TriggerNow_ShowsARealScheduledPrompt_AndKeepsTheSchedule()
+    {
+        await StartWithoutStartupPromptAsync();
+
+        await Engine.TriggerCheckInNowAsync();
+        Presenter.Complete(PromptOutcome.TimedOut);
+        await Engine.IdleAsync();
+
+        Assert.Equal(Start, Assert.Single(Presenter.Shown).ScheduledUtc);
+        Assert.Equal(CheckInOutcome.Missed, Assert.Single(await PromptsAsync()).Outcome);
+        Assert.Equal(At(9, 30), Engine.Status.NextCheckInUtc);
+    }
+
+    [Fact]
+    public async Task TriggerNow_DoesNothingWhilePaused()
+    {
+        await StartWithoutStartupPromptAsync();
+        await Engine.PauseAsync(null);
+
+        await Engine.TriggerCheckInNowAsync();
+
+        Assert.Empty(Presenter.Shown);
+    }
 }
