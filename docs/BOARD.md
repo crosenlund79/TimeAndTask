@@ -29,6 +29,10 @@ Owner request 2026-10-29: no separate website. Kanban, Inbox, Archive, screensho
 - Complete/all/month/selected ZIP backups; restore shows a preview and never deletes
 - Works without internet, GitHub token or Pages; time tracking unaffected
 
+**Evidence**
+
+Phase A (data, service, import): commit 0b2f544, CI run 25 green
+
 ## Review / Test
 
 ### WT-010 · Scheduled check-ins appear reliably
