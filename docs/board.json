@@ -14,7 +14,7 @@
       "archivedAt": null,
       "description": "Disposable card for the real GitHub sync tests.",
       "acceptance": [],
-      "notes": "",
+      "notes": "A: real race note",
       "evidence": "",
       "blockedBy": [],
       "links": [],
@@ -29,8 +29,8 @@
         }
       ],
       "createdAt": "2026-10-29T01:30:00Z",
-      "updatedAt": "2026-10-29T01:30:00Z",
-      "rev": 1
+      "updatedAt": "2026-10-29T01:14:54Z",
+      "rev": 2
     },
     {
       "id": "WT-002",
