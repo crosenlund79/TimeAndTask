@@ -23,6 +23,8 @@ internal sealed class UiTestContext : IAsyncDisposable
 
     public FakeDialogService Dialogs { get; } = new();
 
+    public FakeFileDialogService Files { get; } = new();
+
     public FakeTimeProvider Time { get; } = new(new DateTimeOffset(2026, 10, 28, 9, 0, 0, TimeSpan.Zero));
 
     public T Get<T>()
@@ -39,6 +41,7 @@ internal sealed class UiTestContext : IAsyncDisposable
         services.AddWorkTraceInfrastructure(new AppPaths(context._root));
         services.AddWorkTraceApp(new FakeLifetime());
         services.AddSingleton<IDialogService>(context.Dialogs);
+        services.AddSingleton<IFileDialogService>(context.Files);
         context.Services = services.BuildServiceProvider();
 
         await context.Get<DatabaseInitializer>().InitializeAsync();
@@ -102,4 +105,23 @@ internal sealed class FakeDialogService : IDialogService
         Asked.Add(title);
         return Answer;
     }
+}
+
+internal sealed class FakeFileDialogService : IFileDialogService
+{
+    public List<string> FilesToOpen { get; } = [];
+
+    public List<string> Opened { get; } = [];
+
+    public string? SavePath { get; set; }
+
+    public IReadOnlyList<string> OpenFiles(string title, string filter, bool multiselect = true) => [.. FilesToOpen];
+
+    public string? SaveFile(string title, string filter, string defaultFileName) => SavePath;
+
+    public void OpenUrl(string url) => Opened.Add(url);
+
+    public void OpenFile(string path) => Opened.Add(path);
+
+    public void CopyText(string text) => Opened.Add("copied:" + text);
 }

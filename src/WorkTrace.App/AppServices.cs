@@ -37,6 +37,19 @@ public static class AppServices
         services.AddSingleton<ClientsViewModel>();
         services.AddSingleton<ListsViewModel>();
         services.AddSingleton<SettingsViewModel>();
+        services.AddSingleton<BoardSession>();
+        services.AddSingleton<IFileDialogService, FileDialogService>();
+        services.AddSingleton(sp => new CardPanelServices(
+            sp.GetRequiredService<WorkTrace.Core.Board.IBoardService>(),
+            sp.GetRequiredService<BoardSession>(),
+            sp.GetRequiredService<WorkTrace.Core.Management.ITaskService>(),
+            sp.GetRequiredService<WorkTrace.Core.Management.IClientService>(),
+            sp.GetRequiredService<IDialogService>(),
+            sp.GetRequiredService<IFileDialogService>(),
+            sp.GetRequiredService<INotificationService>(),
+            sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CardDetailViewModel>>()));
+        services.AddSingleton<BoardViewModel>();
+        services.AddSingleton<InboxViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddTransient<MainWindow>();
 

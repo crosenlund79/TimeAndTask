@@ -17,6 +17,8 @@ public sealed partial class MainViewModel : ObservableObject
         ClientsViewModel clients,
         ListsViewModel lists,
         SettingsViewModel settings,
+        BoardViewModel board,
+        InboxViewModel inbox,
         INavigationService navigation,
         NotificationService notifications)
     {
@@ -27,6 +29,8 @@ public sealed partial class MainViewModel : ObservableObject
             new(AppSection.Tasks, "Tasks", "", "Ctrl+2", tasks),
             new(AppSection.Clients, "Clients", "", "Ctrl+3", clients),
             new(AppSection.Lists, "Lists", "", "Ctrl+4", lists),
+            new(AppSection.Board, "Board", "\uE8A9", "Ctrl+6", board),
+            new(AppSection.Inbox, "Inbox", "\uE70B", "Ctrl+7", inbox),
             new(AppSection.Settings, "Settings", "\uE713", "Ctrl+5", settings),
         ];
         navigation.NavigationRequested += (_, request) => NavigateTo(request.Section, request.Parameter);

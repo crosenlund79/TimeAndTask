@@ -26,6 +26,26 @@ public class UiSmokeTests
         await ctx.Get<WorkTrace.Core.Tracking.ITrackingStore>().ResolvePromptAsync(missed, WorkTrace.Core.Entities.CheckInOutcome.Missed, ctx.Time.GetUtcNow().UtcDateTime);
         await ctx.Get<ITaskService>().SetArchivedAsync(archived.Id, true);
 
+        // Board: cards in every column, a blocked card with links, comments and a screenshot, an archived card and Inbox items.
+        var board = ctx.Get<WorkTrace.Core.Board.IBoardService>();
+        var cards = new List<WorkTrace.Core.Board.CardDetail>();
+        foreach (var status in WorkTrace.Core.Board.BoardRules.Columns)
+        {
+            cards.Add(await board.CreateAsync(new WorkTrace.Core.Board.CardFields($"Card in {status}", WorkTrace.Core.Entities.BoardCategory.Testing,
+                WorkTrace.Core.Entities.BoardPriority.High, "Description", "One\nTwo", "Notes", "CI run 1"), status));
+        }
+
+        await board.SetBlockedByAsync(cards[1].Id, [cards[0].Id]);
+        await board.SetLinksAsync(cards[1].Id, [new WorkTrace.Core.Board.LinkInput("Spec", "https://example.com/spec")]);
+        await board.AddCommentAsync(cards[1].Id, "A comment");
+        await board.AddAttachmentAsync(cards[1].Id, "shot.png", "image/png", TinyPng());
+        await board.AddAttachmentAsync(cards[1].Id, "notes.txt", "text/plain", [65, 66]);
+        await board.SetWorkTaskAsync(cards[1].Id, archived.Id);
+        var archivedCard = await board.CreateAsync(new WorkTrace.Core.Board.CardFields("Archived card", null, WorkTrace.Core.Entities.BoardPriority.Low, null, null, null, null), WorkTrace.Core.Entities.BoardStatus.Done);
+        await board.SetArchivedAsync(archivedCard.Id, true);
+        await board.CaptureAsync("Inbox thought");
+        await board.CaptureAsync("https://example.com/captured");
+
         WpfTestHost.BindingErrors.Take();
         WpfTestHost.UnhandledExceptions.Clear();
 
@@ -77,6 +97,29 @@ public class UiSmokeTests
             await WpfTestHost.SettleAsync();
             Assert.False(clients.HasUnsavedChanges);
 
+            // Board: open a rich card, the archive, then the Inbox with an open item.
+            window.ViewModel.NavigateTo(AppSection.Board);
+            await WpfTestHost.SettleAsync(10);
+            var boardPage = ctx.Get<BoardViewModel>();
+            Assert.All(boardPage.Columns, c => Assert.Single(c.Cards));
+            boardPage.SelectedCard = boardPage.Columns[1].Cards[0];
+            await WpfTestHost.SettleAsync(10);
+            Assert.Equal(2, boardPage.Detail!.Attachments.Count);
+            boardPage.ShowArchive = true;
+            await WpfTestHost.SettleAsync(10);
+            Assert.Single(boardPage.ArchiveItems);
+            boardPage.ShowArchive = false;
+            await boardPage.CloseCardCommand.ExecuteAsync(null);
+            await WpfTestHost.SettleAsync();
+
+            window.ViewModel.NavigateTo(AppSection.Inbox);
+            await WpfTestHost.SettleAsync(10);
+            var inboxPage = ctx.Get<InboxViewModel>();
+            Assert.Equal(2, inboxPage.Items.Count);
+            inboxPage.SelectedItem = inboxPage.Items[0];
+            await WpfTestHost.SettleAsync(10);
+            Assert.NotNull(inboxPage.Detail);
+
             window.ViewModel.NavigateTo(AppSection.Home);
             await WpfTestHost.SettleAsync(10);
             Assert.NotEmpty(ctx.Get<HomeViewModel>().Today);
@@ -102,6 +145,10 @@ public class UiSmokeTests
         dialog.Close();
         return Task.CompletedTask;
     });
+
+    /// <summary>A valid 1×1 PNG.</summary>
+    private static byte[] TinyPng() => Convert.FromBase64String(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
 
     private static T? FindDescendant<T>(DependencyObject root)
         where T : DependencyObject

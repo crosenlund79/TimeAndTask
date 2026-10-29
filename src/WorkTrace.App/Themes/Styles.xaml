@@ -11,6 +11,8 @@
   <views:NullToCollapsedConverter x:Key="NullToCollapsed" />
   <views:BoolToVisibilityConverter x:Key="BoolToVisibility" />
   <views:InverseBoolConverter x:Key="InverseBool" />
+  <views:ThumbnailConverter x:Key="Thumbnail" />
+  <views:CountToVisibilityConverter x:Key="CountToVisibility" />
 
   <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
   <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas</FontFamily>
@@ -282,6 +284,38 @@
         <Setter Property="Opacity" Value="0.55" />
       </Trigger>
     </Style.Triggers>
+  </Style>
+
+  <!-- Board cards: a raised tile per item; selection and keyboard focus use the accent outline. -->
+  <Style x:Key="BoardCardItem" TargetType="ListBoxItem">
+    <Setter Property="Padding" Value="10,8" />
+    <Setter Property="Margin" Value="0,0,0,6" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ListBoxItem">
+          <Border x:Name="Bd" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="6"
+                  Padding="{TemplateBinding Padding}" BorderThickness="1" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+            <ContentPresenter />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+              <Setter TargetName="Bd" Property="BorderThickness" Value="2" />
+              <Setter TargetName="Bd" Property="Padding" Value="9,7" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <!-- Navigation rail entries. -->

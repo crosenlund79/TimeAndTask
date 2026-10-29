@@ -1,0 +1,212 @@
+<UserControl x:Class="WorkTrace.App.Views.BoardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:WorkTrace.App.ViewModels"
+             xmlns:views="clr-namespace:WorkTrace.App.Views"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
+             PreviewKeyDown="OnPagePreviewKeyDown"
+             d:DataContext="{d:DesignInstance Type=vm:BoardViewModel}">
+
+  <UserControl.InputBindings>
+    <KeyBinding Modifiers="Ctrl" Key="Z" Command="{Binding UndoCommand}" />
+    <KeyBinding Key="Escape" Command="{Binding CloseCardCommand}" />
+  </UserControl.InputBindings>
+
+  <UserControl.CommandBindings>
+    <CommandBinding Command="ApplicationCommands.Find" Executed="OnFind" />
+  </UserControl.CommandBindings>
+
+  <UserControl.Resources>
+    <!-- One card tile; used by the columns and the archive list. -->
+    <DataTemplate x:Key="CardTile" DataType="{x:Type vm:CardItemViewModel}">
+      <StackPanel x:Name="Tile">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+            <TextBlock Text="&#xE72E;" Style="{StaticResource IconText}" FontSize="12" Margin="6,0,0,0"
+                       Foreground="{DynamicResource SystemFillColorCautionBrush}" ToolTip="{Binding BlockedText}"
+                       Visibility="{Binding IsBlocked, Converter={StaticResource BoolToVisibility}}" />
+            <Border Margin="6,0,0,0" Padding="6,0" CornerRadius="8" Visibility="{Binding ShowPriority, Converter={StaticResource BoolToVisibility}}">
+              <Border.Style>
+                <Style TargetType="Border">
+                  <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsUrgent}" Value="True">
+                      <Setter Property="Background" Value="{DynamicResource SystemFillColorCriticalBackgroundBrush}" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </Border.Style>
+              <TextBlock Text="{Binding PriorityText}" FontSize="11" />
+            </Border>
+          </StackPanel>
+          <TextBlock Text="{Binding Key}" FontFamily="{StaticResource MonoFont}" FontSize="11"
+                     Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+        </DockPanel>
+        <TextBlock Text="{Binding Title}" TextWrapping="Wrap" MaxHeight="60" TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
+        <WrapPanel Margin="0,4,0,0">
+          <Border Style="{StaticResource Pill}" Margin="0,0,6,0" Visibility="{Binding HasCategory, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Text="{Binding CategoryText}" Style="{StaticResource PillText}" />
+          </Border>
+          <TextBlock Style="{StaticResource CaptionText}" Margin="0,0,8,0" ToolTip="Comments"
+                     Visibility="{Binding CommentCount, Converter={StaticResource CountToVisibility}}">
+            <Run Text="&#xE8BD;" FontFamily="{StaticResource IconFont}" /> <Run Text="{Binding CommentCount, Mode=OneWay}" />
+          </TextBlock>
+          <TextBlock Style="{StaticResource CaptionText}" Margin="0,0,8,0" ToolTip="Screenshots"
+                     Visibility="{Binding AttachmentCount, Converter={StaticResource CountToVisibility}}">
+            <Run Text="&#xE722;" FontFamily="{StaticResource IconFont}" /> <Run Text="{Binding AttachmentCount, Mode=OneWay}" />
+          </TextBlock>
+          <TextBlock Style="{StaticResource CaptionText}" Margin="0,0,8,0" ToolTip="Links"
+                     Visibility="{Binding LinkCount, Converter={StaticResource CountToVisibility}}">
+            <Run Text="&#xE71B;" FontFamily="{StaticResource IconFont}" /> <Run Text="{Binding LinkCount, Mode=OneWay}" />
+          </TextBlock>
+          <TextBlock Text="&#xE916;" Style="{StaticResource IconText}" FontSize="12" ToolTip="Linked to a task for time tracking"
+                     Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Visibility="{Binding HasTask, Converter={StaticResource BoolToVisibility}}" />
+        </WrapPanel>
+      </StackPanel>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <!-- Header -->
+    <DockPanel>
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+        <Button Style="{StaticResource IconButton}" Content="&#xE7A7;" Command="{Binding UndoCommand}"
+                ToolTip="{Binding Session.UndoToolTip}" IsEnabled="{Binding Session.CanUndo}" AutomationProperties.Name="Undo" />
+      </StackPanel>
+      <StackPanel>
+        <TextBlock Text="Board" Style="{StaticResource PageTitleText}" />
+        <TextBlock Style="{StaticResource PageSubtitleText}"
+                   Text="Drag cards between columns, or select one and press Alt+arrow keys. Everything saves at once; Ctrl+Z undoes." />
+      </StackPanel>
+    </DockPanel>
+
+    <views:CaptureBar x:Name="Capture" Grid.Row="1" Margin="0,14,0,0" />
+
+    <!-- Search and filters -->
+    <Grid Grid.Row="2" Margin="0,10,0,12">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" MaxWidth="360" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <Grid>
+        <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Padding="32,6,32,6"
+                 VerticalContentAlignment="Center" AutomationProperties.Name="Search cards">
+          <TextBox.InputBindings>
+            <KeyBinding Key="Escape" Command="{Binding ClearSearchCommand}" />
+          </TextBox.InputBindings>
+        </TextBox>
+        <TextBlock Text="&#xE721;" Style="{StaticResource IconText}" Margin="11,0,0,0" IsHitTestVisible="False" HorizontalAlignment="Left"
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+        <TextBlock Text="Search cards and comments   (Ctrl+F)" Margin="33,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                   Visibility="{Binding Text, ElementName=SearchBox, Converter={StaticResource NullToCollapsed}, ConverterParameter=invert}" />
+      </Grid>
+      <ComboBox Grid.Column="1" Width="150" Margin="10,0,0,0" ItemsSource="{Binding CategoryFilterOptions}" DisplayMemberPath="Name"
+                SelectedValuePath="Id" SelectedValue="{Binding CategoryFilterKey}" AutomationProperties.Name="Filter by category" />
+      <ComboBox Grid.Column="2" Width="140" Margin="8,0,0,0" ItemsSource="{Binding PriorityFilterOptions}" DisplayMemberPath="Name"
+                SelectedValuePath="Id" SelectedValue="{Binding PriorityFilterKey}" AutomationProperties.Name="Filter by priority" />
+      <TextBlock Grid.Column="3" Text="{Binding Summary}" Style="{StaticResource CaptionText}" Margin="12,0,0,0" VerticalAlignment="Center" />
+      <ToggleButton Grid.Column="5" Padding="12,5" IsChecked="{Binding ShowArchive}" ToolTip="Show archived cards (search, open, restore)">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Text="&#xE7B8;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
+          <TextBlock Text="Archive" />
+        </StackPanel>
+      </ToggleButton>
+    </Grid>
+
+    <Grid Grid.Row="3">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+
+      <!-- Columns -->
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                    Visibility="{Binding ShowArchive, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+        <ItemsControl ItemsSource="{Binding Columns}" MinWidth="1000" Focusable="False">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <UniformGrid Rows="1" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:BoardColumnViewModel}">
+              <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,8,0" Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+                <DockPanel>
+                  <DockPanel DockPanel.Dock="Top" Margin="4,0,0,8">
+                    <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Width="26" Height="26" Content="&#xE7B8;" FontSize="12"
+                            ToolTip="Archive all Done cards" Command="{Binding DataContext.ArchiveDoneCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Visibility="{Binding IsDone, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock VerticalAlignment="Center">
+                      <Run Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold" />
+                      <Run Text="{Binding Count, Mode=OneWay}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </TextBlock>
+                  </DockPanel>
+                  <ListBox ItemsSource="{Binding Cards}" Tag="{Binding Status}" Style="{StaticResource RowListBox}"
+                           ItemContainerStyle="{StaticResource BoardCardItem}" ItemTemplate="{StaticResource CardTile}"
+                           AllowDrop="True" AutomationProperties.Name="{Binding Title}"
+                           VirtualizingPanel.IsVirtualizing="False"
+                           SelectionChanged="OnColumnSelectionChanged" PreviewKeyDown="OnColumnPreviewKeyDown"
+                           PreviewMouseLeftButtonDown="OnCardMouseDown" PreviewMouseMove="OnCardMouseMove"
+                           DragOver="OnColumnDragOver" DragLeave="OnColumnDragLeave" Drop="OnColumnDrop"
+                           Loaded="OnColumnLoaded" />
+                </DockPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+
+      <!-- Archive -->
+      <Border Style="{StaticResource Card}" Padding="6" Visibility="{Binding ShowArchive, Converter={StaticResource BoolToVisibility}}">
+        <Grid>
+          <ListBox x:Name="ArchiveList" Style="{StaticResource RowListBox}" ItemsSource="{Binding ArchiveItems}"
+                   SelectedItem="{Binding SelectedCard}" AutomationProperties.Name="Archived cards">
+            <ListBox.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:CardItemViewModel}">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Text="{Binding Key}" FontFamily="{StaticResource MonoFont}" Margin="4,0,12,0" VerticalAlignment="Center" />
+                  <StackPanel Grid.Column="1">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding Meta}" Style="{StaticResource CaptionText}" Margin="0,2,0,0" />
+                  </StackPanel>
+                  <Button Grid.Column="2" Style="{StaticResource SubtleButton}" Content="Restore" Margin="12,0,0,0"
+                          Command="{Binding DataContext.RestoreCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                          CommandParameter="{Binding}" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <TextBlock Text="{Binding EmptyMessage}" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"
+                     Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Visibility="{Binding EmptyMessage, Converter={StaticResource NullToCollapsed}}" />
+        </Grid>
+      </Border>
+
+      <!-- Open card -->
+      <Border Grid.Column="1" Width="420" Margin="12,0,0,0" Style="{StaticResource Card}" Padding="0"
+              Visibility="{Binding HasDetail, Converter={StaticResource BoolToVisibility}}">
+        <views:CardDetailView x:Name="DetailView" DataContext="{Binding Detail}" />
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

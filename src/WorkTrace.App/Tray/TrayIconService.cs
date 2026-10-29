@@ -54,6 +54,8 @@ internal sealed class TrayIconService(
         menu.Items.Add(_resumeItem);
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add(Item("Open WorkTrace", windows.ShowMainWindow));
+        menu.Items.Add(Item("Board", () => windows.ShowMainWindow(AppSection.Board)));
+        menu.Items.Add(Item("Inbox – capture", () => windows.ShowMainWindow(AppSection.Inbox)));
         menu.Items.Add(Item("Tasks and clients", () => windows.ShowMainWindow(AppSection.Tasks)));
         menu.Items.Add(Item("Settings", () => windows.ShowMainWindow(AppSection.Settings)));
         menu.Items.Add(new Forms.ToolStripSeparator());

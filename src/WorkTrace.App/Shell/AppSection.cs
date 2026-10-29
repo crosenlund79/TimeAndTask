@@ -7,4 +7,6 @@ public enum AppSection
     Clients,
     Lists,
     Settings,
+    Board,
+    Inbox,
 }
