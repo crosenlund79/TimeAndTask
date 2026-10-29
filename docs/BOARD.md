@@ -302,6 +302,10 @@ Owner decision needed. See docs/proposals/2026-10-29-screenshots-and-email-backu
 
 - [Proposal: screenshots and email backup](https://github.com/crosenlund79/TimeAndTask/blob/board/docs/proposals/2026-10-29-screenshots-and-email-backup.md)
 
+**Comments (1)**
+
+- 2026-10-29 14:01 · claude: Recommendation: private GitHub repository for screenshots (token extended to it), daily GitHub Actions job in that repository, transactional email API (Resend) with a send-only key in an Actions secret, 10 MB per email part. Open question: also move board data to the private repository? Details in the linked proposal.
+
 ### WT-048 · Screenshot storage that syncs between devices
 
 `feature` · priority High · blocked by WT-047

@@ -945,7 +945,14 @@
           "url": "https://github.com/crosenlund79/TimeAndTask/blob/board/docs/proposals/2026-10-29-screenshots-and-email-backup.md"
         }
       ],
-      "comments": [],
+      "comments": [
+        {
+          "id": "5131d88c-eda4-4116-b1e0-88985e399a9c",
+          "author": "claude",
+          "at": "2026-10-29T14:01:27Z",
+          "text": "Recommendation: private GitHub repository for screenshots (token extended to it), daily GitHub Actions job in that repository, transactional email API (Resend) with a send-only key in an Actions secret, 10 MB per email part. Open question: also move board data to the private repository? Details in the linked proposal."
+        }
+      ],
       "history": [
         {
           "id": "93ac73a6-4320-4d74-bfea-359e280c5258",
@@ -956,8 +963,8 @@
         }
       ],
       "createdAt": "2026-10-29T13:41:26Z",
-      "updatedAt": "2026-10-29T14:01:21Z",
-      "rev": 2
+      "updatedAt": "2026-10-29T14:01:27Z",
+      "rev": 3
     },
     {
       "id": "WT-048",
