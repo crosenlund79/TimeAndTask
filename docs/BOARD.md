@@ -5,7 +5,7 @@
 
 | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|
-| 2 | 7 | 0 | 11 | 5 | 0 |
+| 2 | 8 | 0 | 11 | 5 | 0 |
 
 ## In progress
 
@@ -237,6 +237,17 @@ Ctrl+V, drag-and-drop and file picker in Quick Capture and on cards. Several ima
 - Thumbnails, enlarge, caption and remove work
 - Nothing is uploaded to GitHub; the card says the images are on this device only
 - Large base64 images are never written to board.json
+
+### WT-045 · Links: multiple per card, quick copy and open
+
+`feature` · priority Normal
+
+Several external links per card, each with Open and Copy. Paste a URL; the label is optional. Bare URLs in notes become links.
+
+**Acceptance criteria**
+
+- Add a link by pasting just the URL
+- Each link can be opened or copied with one click
 
 ## Backlog
 

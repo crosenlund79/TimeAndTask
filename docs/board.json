@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "nextId": 45,
+  "nextId": 46,
   "cards": [
     {
       "id": "WT-001",
@@ -810,6 +810,39 @@
       ],
       "createdAt": "2026-10-29T13:41:19Z",
       "updatedAt": "2026-10-29T13:41:19Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-045",
+      "uid": "f9e35ca7-94d5-4b28-87ce-bb0fe0e01fa7",
+      "title": "Links: multiple per card, quick copy and open",
+      "category": "feature",
+      "priority": "normal",
+      "status": "todo",
+      "rank": "zw",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Several external links per card, each with Open and Copy. Paste a URL; the label is optional. Bare URLs in notes become links.",
+      "acceptance": [
+        "Add a link by pasting just the URL",
+        "Each link can be opened or copied with one click"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "afcb3e85-b866-4962-97fa-3ed498dfdde0",
+          "type": "created",
+          "at": "2026-10-29T13:41:21Z",
+          "by": "claude",
+          "to": "todo"
+        }
+      ],
+      "createdAt": "2026-10-29T13:41:21Z",
+      "updatedAt": "2026-10-29T13:41:21Z",
       "rev": 1
     }
   ]
