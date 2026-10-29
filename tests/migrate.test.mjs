@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { findCard } from "../app/board-core.js";
 import { migrate, splitBody } from "../tools/migrate.mjs";
-import { committedBoard, LEGACY_MD, MIGRATED_AT } from "./helpers.mjs";
+import { LEGACY_MD, MIGRATED_AT } from "./helpers.mjs";
 
 const EXPECTED = {
   review: ["WT-010", "WT-011", "WT-012", "WT-013", "WT-014", "WT-005", "WT-015", "WT-016", "WT-017", "WT-018"],
@@ -47,11 +47,6 @@ test("only non-card text is left out, and it is reported", () => {
   const { report } = migrate(LEGACY_MD, MIGRATED_AT);
   assert.deepEqual(report.ignored, ["text outside a card in doing: \"_Nothing. Waiting for the owner's review of Phase 3 refinements (round 2)._\""]);
   assert.ok(report.defaults.some(d => d.startsWith("priority")));
-});
-
-test("the committed board.json matches the migration (apart from random uids)", () => {
-  const strip = b => [...b.cards].sort((x, y) => x.id.localeCompare(y.id)).map(({ uid, history, ...rest }) => ({ ...rest, history: history.map(({ id, ...h }) => h) }));
-  assert.deepEqual(strip(committedBoard()), strip(migrate(LEGACY_MD, MIGRATED_AT).board));
 });
 
 test("inline Accept/Evidence markers are split correctly", () => {

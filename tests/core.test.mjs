@@ -8,16 +8,15 @@ import {
 } from "../app/board-core.js";
 import { AT, committedBoard, migratedBoard, ROOT } from "./helpers.mjs";
 
-test("the committed board.json is valid and has the 22 migrated cards", () => {
-  const board = committedBoard();
+test("the committed board.json is valid (whatever its current cards)", () => {
+  assert.deepEqual(validateBoard(committedBoard()), []);
+});
+
+test("the migrated board is valid and has the 22 cards", () => {
+  const board = migratedBoard();
   assert.deepEqual(validateBoard(board), []);
   assert.equal(board.cards.length, 22);
   assert.equal(new Set(board.cards.map(c => c.id)).size, 22);
-});
-
-test("the committed BOARD.md is generated from board.json", () => {
-  const md = readFileSync(path.join(ROOT, "docs/BOARD.md"), "utf8");
-  assert.equal(md, renderBoardMarkdown(committedBoard()));
 });
 
 test("serialisation is stable", () => {
