@@ -5,7 +5,7 @@
 
 | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|
-| 2 | 6 | 0 | 11 | 5 | 0 |
+| 2 | 7 | 0 | 11 | 5 | 0 |
 
 ## In progress
 
@@ -224,6 +224,19 @@ Capture a thought in seconds: title only, Enter saves into a separate Inbox (not
 - An Inbox item can be moved to a board column or archived
 - No category or other field is required
 - Existing cards and the five columns are unchanged
+
+### WT-044 · Screenshots on cards (paste, drop, browse)
+
+`feature` · priority High
+
+Ctrl+V, drag-and-drop and file picker in Quick Capture and on cards. Several images per card, thumbnails, enlarge, optional caption, remove. Until a storage decision is made, images stay in this browser only and are never uploaded to the public repository.
+
+**Acceptance criteria**
+
+- Ctrl+V, drag-and-drop and Browse each attach an image
+- Thumbnails, enlarge, caption and remove work
+- Nothing is uploaded to GitHub; the card says the images are on this device only
+- Large base64 images are never written to board.json
 
 ## Backlog
 

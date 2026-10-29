@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "nextId": 44,
+  "nextId": 45,
   "cards": [
     {
       "id": "WT-001",
@@ -775,6 +775,41 @@
       ],
       "createdAt": "2026-10-29T13:41:16Z",
       "updatedAt": "2026-10-29T13:41:16Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-044",
+      "uid": "02d45827-d905-46c9-83d4-7ec20560ff52",
+      "title": "Screenshots on cards (paste, drop, browse)",
+      "category": "feature",
+      "priority": "high",
+      "status": "todo",
+      "rank": "zr",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Ctrl+V, drag-and-drop and file picker in Quick Capture and on cards. Several images per card, thumbnails, enlarge, optional caption, remove. Until a storage decision is made, images stay in this browser only and are never uploaded to the public repository.",
+      "acceptance": [
+        "Ctrl+V, drag-and-drop and Browse each attach an image",
+        "Thumbnails, enlarge, caption and remove work",
+        "Nothing is uploaded to GitHub; the card says the images are on this device only",
+        "Large base64 images are never written to board.json"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "e3942d9d-c256-48ec-8523-620996393a7f",
+          "type": "created",
+          "at": "2026-10-29T13:41:19Z",
+          "by": "claude",
+          "to": "todo"
+        }
+      ],
+      "createdAt": "2026-10-29T13:41:19Z",
+      "updatedAt": "2026-10-29T13:41:19Z",
       "rev": 1
     }
   ]
