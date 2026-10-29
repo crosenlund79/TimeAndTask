@@ -951,6 +951,12 @@
           "author": "claude",
           "at": "2026-10-29T14:01:27Z",
           "text": "Recommendation: private GitHub repository for screenshots (token extended to it), daily GitHub Actions job in that repository, transactional email API (Resend) with a send-only key in an Actions secret, 10 MB per email part. Open question: also move board data to the private repository? Details in the linked proposal."
+        },
+        {
+          "id": "326898a3-14c4-44bd-8d32-b68a85b9d7b0",
+          "author": "claude",
+          "at": "2026-10-29T15:22:09Z",
+          "text": "Update after WT-050: screenshot storage is decided by the move into WorkTrace (local files, in backups). Still open: email delivery for daily backups. WorkTrace already records a content hash per month, so a daily job can send only changed months; nothing is sent and no credentials are stored until you choose a method. My recommendation is unchanged for the sender (transactional email API, send-only key); with the board now local, the job would run inside WorkTrace (Windows Credential Manager for the key) instead of GitHub Actions."
         }
       ],
       "history": [
@@ -963,8 +969,8 @@
         }
       ],
       "createdAt": "2026-10-29T13:41:26Z",
-      "updatedAt": "2026-10-29T14:01:27Z",
-      "rev": 3
+      "updatedAt": "2026-10-29T15:22:09Z",
+      "rev": 4
     },
     {
       "id": "WT-048",
