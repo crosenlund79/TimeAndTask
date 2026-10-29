@@ -81,8 +81,8 @@
       "title": "Title from B",
       "category": "testing",
       "priority": "normal",
-      "status": "review",
-      "rank": "i",
+      "status": "done",
+      "rank": "r",
       "archived": false,
       "archivedAt": null,
       "description": "Disposable card for the real GitHub sync tests.",
@@ -99,11 +99,19 @@
           "at": "2026-10-29T01:30:00Z",
           "by": "claude",
           "to": "review"
+        },
+        {
+          "id": "1557d8f7-33a4-42ef-8e2b-68f19752f8f7",
+          "type": "status",
+          "at": "2026-10-29T01:15:16Z",
+          "by": "claude",
+          "from": "review",
+          "to": "done"
         }
       ],
       "createdAt": "2026-10-29T01:30:00Z",
-      "updatedAt": "2026-10-29T01:15:07Z",
-      "rev": 2
+      "updatedAt": "2026-10-29T01:15:16Z",
+      "rev": 3
     },
     {
       "id": "WT-004",

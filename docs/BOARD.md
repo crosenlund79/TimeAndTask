@@ -5,7 +5,7 @@
 
 | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|
-| 0 | 2 | 0 | 1 | 1 | 0 |
+| 0 | 2 | 0 | 0 | 2 | 0 |
 
 ## In progress
 
@@ -13,11 +13,7 @@ _None._
 
 ## Review / Test
 
-### WT-003 · Title from B
-
-`testing` · priority Normal
-
-Disposable card for the real GitHub sync tests.
+_None._
 
 ## To do
 
@@ -53,6 +49,7 @@ _None._
 ## Done
 
 - **WT-004** · Test card D · `testing`
+- **WT-003** · Title from B · `testing`
 
 ## Archived (0)
 
