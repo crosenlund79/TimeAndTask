@@ -125,7 +125,7 @@
       "archivedAt": null,
       "description": "Disposable card for the real GitHub sync tests.",
       "acceptance": [],
-      "notes": "",
+      "notes": "Claude changed this while the browser was editing",
       "evidence": "",
       "blockedBy": [],
       "links": [],
@@ -140,8 +140,8 @@
         }
       ],
       "createdAt": "2026-10-29T01:30:00Z",
-      "updatedAt": "2026-10-29T01:30:00Z",
-      "rev": 1
+      "updatedAt": "2026-10-29T01:15:45Z",
+      "rev": 2
     }
   ]
 }
