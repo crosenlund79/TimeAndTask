@@ -8,7 +8,7 @@
       "title": "Test card A",
       "category": "testing",
       "priority": "normal",
-      "status": "todo",
+      "status": "doing",
       "rank": "i",
       "archived": false,
       "archivedAt": null,
@@ -39,11 +39,19 @@
           "at": "2026-10-29T01:30:00Z",
           "by": "claude",
           "to": "todo"
+        },
+        {
+          "id": "31c174f6-5ee8-4092-9ab9-d059c2017deb",
+          "type": "status",
+          "at": "2026-10-29T01:20:00Z",
+          "by": "crosenlund79",
+          "from": "todo",
+          "to": "doing"
         }
       ],
       "createdAt": "2026-10-29T01:30:00Z",
-      "updatedAt": "2026-10-29T01:15:11Z",
-      "rev": 4
+      "updatedAt": "2026-10-29T01:20:00Z",
+      "rev": 5
     },
     {
       "id": "WT-002",
@@ -129,7 +137,14 @@
       "evidence": "",
       "blockedBy": [],
       "links": [],
-      "comments": [],
+      "comments": [
+        {
+          "id": "0f60efb0-a323-4908-affb-c902291bea89",
+          "author": "crosenlund79",
+          "at": "2026-10-29T01:20:00Z",
+          "text": "comment from the browser path"
+        }
+      ],
       "history": [
         {
           "id": "1c80dc42-098b-4f0c-b7f7-ba163a4e9130",
@@ -140,8 +155,8 @@
         }
       ],
       "createdAt": "2026-10-29T01:30:00Z",
-      "updatedAt": "2026-10-29T01:15:45Z",
-      "rev": 2
+      "updatedAt": "2026-10-29T01:20:00Z",
+      "rev": 3
     }
   ]
 }
