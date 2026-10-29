@@ -5,33 +5,11 @@
 
 | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|
-| 2 | 5 | 1 | 10 | 5 | 0 |
+| 2 | 5 | 0 | 11 | 5 | 0 |
 
 ## In progress
 
-### WT-042 · Interactive Kanban board with GitHub sync
-
-`feature` · priority High
-
-Browser board (GitHub Pages) backed by docs/board.json on the board branch, with version-checked saves, conflict handling, undo, archive and a CLI for Claude Code.
-
-**Acceptance criteria**
-
-- Drag a card to another column; the status persists after refreshing and Claude Code sees it
-- Edit notes and add timestamped comments; they persist after refresh
-- Archive a Done card, find it in the Archive and restore it
-- Undo works for moves and edits
-- Conflicting edits never silently overwrite each other; save failures are clearly visible
-- Works in desktop and phone layouts
-- No token or secret in committed code or public files
-
-**Evidence**
-
-Unit, sync and CLI tests (47) and browser tests (19, 3 runs) green; real GitHub tests on branch board-synctest (concurrent edits, same-field conflict, concurrent comments, stale save refused, retry no-op, browser sees CLI changes).
-
-**Links**
-
-- [Board app](https://crosenlund79.github.io/TimeAndTask/)
+_None._
 
 ## Review / Test
 
@@ -168,6 +146,30 @@ Small vector logo.
 **Acceptance criteria**
 
 - looks right in light and dark themes.
+
+### WT-042 · Interactive Kanban board with GitHub sync
+
+`feature` · priority High
+
+Browser board (GitHub Pages) backed by docs/board.json on the board branch, with version-checked saves, conflict handling, undo, archive and a CLI for Claude Code.
+
+**Acceptance criteria**
+
+- Drag a card to another column; the status persists after refreshing and Claude Code sees it
+- Edit notes and add timestamped comments; they persist after refresh
+- Archive a Done card, find it in the Archive and restore it
+- Undo works for moves and edits
+- Conflicting edits never silently overwrite each other; save failures are clearly visible
+- Works in desktop and phone layouts
+- No token or secret in committed code or public files
+
+**Evidence**
+
+Unit, sync and CLI tests (47) and browser tests (19, 3 runs) green; real GitHub tests on branch board-synctest (concurrent edits, same-field conflict, concurrent comments, stale save refused, retry no-op, browser sees CLI changes).
+
+**Links**
+
+- [Board app](https://crosenlund79.github.io/TimeAndTask/)
 
 ## To do
 

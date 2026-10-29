@@ -696,8 +696,8 @@
       "title": "Interactive Kanban board with GitHub sync",
       "category": "feature",
       "priority": "high",
-      "status": "doing",
-      "rank": "i",
+      "status": "review",
+      "rank": "zzi",
       "archived": false,
       "archivedAt": null,
       "description": "Browser board (GitHub Pages) backed by docs/board.json on the board branch, with version-checked saves, conflict handling, undo, archive and a CLI for Claude Code.",
@@ -727,11 +727,19 @@
           "at": "2026-10-29T01:19:20Z",
           "by": "claude",
           "to": "doing"
+        },
+        {
+          "id": "80abb1d8-61c8-4c4f-88f7-097cae33d62e",
+          "type": "status",
+          "at": "2026-10-29T01:19:27Z",
+          "by": "claude",
+          "from": "doing",
+          "to": "review"
         }
       ],
       "createdAt": "2026-10-29T01:19:20Z",
-      "updatedAt": "2026-10-29T01:19:25Z",
-      "rev": 3
+      "updatedAt": "2026-10-29T01:19:27Z",
+      "rev": 4
     }
   ]
 }
