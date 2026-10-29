@@ -1111,8 +1111,8 @@
       "title": "One application: Board, Inbox, screenshots and backups inside WorkTrace.exe",
       "category": "feature",
       "priority": "high",
-      "status": "doing",
-      "rank": "i",
+      "status": "review",
+      "rank": "zzzi",
       "archived": false,
       "archivedAt": null,
       "description": "Owner request 2026-10-29: no separate website. Kanban, Inbox, Archive, screenshots, Undo and backup/restore inside the WPF app, in worktrace.db (ADR-033..036). Import from the browser board (board.json or backup ZIP) preserving ids, comments and history. Email backup prepared but not sent (WT-047).",
@@ -1150,11 +1150,19 @@
           "at": "2026-10-29T15:21:30Z",
           "by": "claude",
           "to": "doing"
+        },
+        {
+          "id": "0635a9c7-3992-4b3c-9966-2c0e2a454fad",
+          "type": "status",
+          "at": "2026-10-29T15:28:27Z",
+          "by": "claude",
+          "from": "doing",
+          "to": "review"
         }
       ],
       "createdAt": "2026-10-29T15:21:30Z",
-      "updatedAt": "2026-10-29T15:28:25Z",
-      "rev": 7
+      "updatedAt": "2026-10-29T15:28:27Z",
+      "rev": 8
     }
   ]
 }

@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 1 | 15 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 16 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,33 +13,7 @@ _Empty._
 
 ## In progress
 
-### WT-050 · One application: Board, Inbox, screenshots and backups inside WorkTrace.exe
-
-`feature` · priority High
-
-Owner request 2026-10-29: no separate website. Kanban, Inbox, Archive, screenshots, Undo and backup/restore inside the WPF app, in worktrace.db (ADR-033..036). Import from the browser board (board.json or backup ZIP) preserving ids, comments and history. Email backup prepared but not sent (WT-047).
-
-**Acceptance criteria**
-
-- Board page: five columns, drag-and-drop between and within columns, Alt+arrows, Undo (Ctrl+Z)
-- Card panel auto-saves; links, dependencies, comments, history, priorities, optional tracked task
-- Inbox with quick capture (text, link, pasted screenshot); Archive with search and restore
-- Screenshots: Ctrl+V, drop, Browse, thumbnails, captions; stored under %LocalAppData%\WorkTrace\Attachments only
-- Import of docs/board.json keeps every card, id, status, order, comment and history entry
-- Complete/all/month/selected ZIP backups; restore shows a preview and never deletes
-- Works without internet, GitHub token or Pages; time tracking unaffected
-
-**Evidence**
-
-Phase A (data, service, import): commit 0b2f544, CI run 25 green
-Phase B (Board/Inbox pages, screenshots): commit a6c4add, CI run 26 green on windows-latest, 247 tests incl. BoardFlowTests and UiSmokeTests
-Phase D (backup/restore, docs): commit 3ad2687, CI run 27 green on windows-latest; WorkTrace ZIPs also parse in the browser board's parseBackup
-
-**Links**
-
-- [Acceptance checklist](https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/acceptance/board-in-worktrace.md)
-- [Backups and restore](https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/backup.md)
-- [CI run 27](https://github.com/crosenlund79/TimeAndTask/actions/runs/40900681188)
+_None._
 
 ## Review / Test
 
@@ -291,6 +265,34 @@ Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 br
 **Comments (1)**
 
 - 2026-10-29 15:22 · claude: The browser implementation is frozen (owner decision 2026-10-29); the same capability is now in WorkTrace (WT-050). Your call whether to accept this card for the browser board or archive it after WT-050 is verified.
+
+### WT-050 · One application: Board, Inbox, screenshots and backups inside WorkTrace.exe
+
+`feature` · priority High
+
+Owner request 2026-10-29: no separate website. Kanban, Inbox, Archive, screenshots, Undo and backup/restore inside the WPF app, in worktrace.db (ADR-033..036). Import from the browser board (board.json or backup ZIP) preserving ids, comments and history. Email backup prepared but not sent (WT-047).
+
+**Acceptance criteria**
+
+- Board page: five columns, drag-and-drop between and within columns, Alt+arrows, Undo (Ctrl+Z)
+- Card panel auto-saves; links, dependencies, comments, history, priorities, optional tracked task
+- Inbox with quick capture (text, link, pasted screenshot); Archive with search and restore
+- Screenshots: Ctrl+V, drop, Browse, thumbnails, captions; stored under %LocalAppData%\WorkTrace\Attachments only
+- Import of docs/board.json keeps every card, id, status, order, comment and history entry
+- Complete/all/month/selected ZIP backups; restore shows a preview and never deletes
+- Works without internet, GitHub token or Pages; time tracking unaffected
+
+**Evidence**
+
+Phase A (data, service, import): commit 0b2f544, CI run 25 green
+Phase B (Board/Inbox pages, screenshots): commit a6c4add, CI run 26 green on windows-latest, 247 tests incl. BoardFlowTests and UiSmokeTests
+Phase D (backup/restore, docs): commit 3ad2687, CI run 27 green on windows-latest; WorkTrace ZIPs also parse in the browser board's parseBackup
+
+**Links**
+
+- [Acceptance checklist](https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/acceptance/board-in-worktrace.md)
+- [Backups and restore](https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/backup.md)
+- [CI run 27](https://github.com/crosenlund79/TimeAndTask/actions/runs/40900681188)
 
 ## To do
 
