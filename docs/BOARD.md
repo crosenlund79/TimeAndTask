@@ -39,6 +39,7 @@ Phase D (backup/restore, docs): commit 3ad2687, CI run 27 green on windows-lates
 
 - [Acceptance checklist](https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/acceptance/board-in-worktrace.md)
 - [Backups and restore](https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/backup.md)
+- [CI run 27](https://github.com/crosenlund79/TimeAndTask/actions/runs/40900681188)
 
 ## Review / Test
 

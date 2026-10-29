@@ -1136,6 +1136,10 @@
         {
           "label": "Backups and restore",
           "url": "https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/backup.md"
+        },
+        {
+          "label": "CI run 27",
+          "url": "https://github.com/crosenlund79/TimeAndTask/actions/runs/40900681188"
         }
       ],
       "comments": [],
@@ -1149,8 +1153,8 @@
         }
       ],
       "createdAt": "2026-10-29T15:21:30Z",
-      "updatedAt": "2026-10-29T15:28:21Z",
-      "rev": 6
+      "updatedAt": "2026-10-29T15:28:25Z",
+      "rev": 7
     }
   ]
 }
