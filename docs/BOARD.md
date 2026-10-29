@@ -5,7 +5,7 @@
 
 | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|
-| 2 | 11 | 0 | 11 | 5 | 0 |
+| 2 | 12 | 0 | 11 | 5 | 0 |
 
 ## In progress
 
@@ -285,6 +285,19 @@ Store screenshots privately (not in the public repository) so they appear on eve
 - Screenshots added on one device appear on another
 - No screenshot is publicly readable
 - Images that existed only on this device can be uploaded once storage exists
+
+### WT-049 · Automatic daily email backup to Outlook
+
+`feature` · priority High · blocked by WT-047, WT-048
+
+Daily check; send only when board data or screenshots changed since the last successful backup. One archive per creation month with the complete latest state of its tasks (incl. archived tasks, notes, comments, links, history, all screenshots); changed months are resent. Backup & Export gains Send now, recipient, test email, last success, pending changes, failures and retry. Predictable subjects for Outlook rules; oversized archives are split, never trimmed.
+
+**Acceptance criteria**
+
+- Only changed months are sent, each independently restorable
+- A backup counts as successful only when the sending service accepted it
+- Oversized archives are split into numbered parts; nothing is omitted
+- Recipient, test email, send now, last success and retry are available
 
 ## Backlog
 

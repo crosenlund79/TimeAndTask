@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "nextId": 49,
+  "nextId": 50,
   "cards": [
     {
       "id": "WT-001",
@@ -948,6 +948,44 @@
       ],
       "createdAt": "2026-10-29T13:41:29Z",
       "updatedAt": "2026-10-29T13:41:29Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-049",
+      "uid": "5c95d5c9-8217-4c75-9800-c9ad731ce1ff",
+      "title": "Automatic daily email backup to Outlook",
+      "category": "feature",
+      "priority": "high",
+      "status": "todo",
+      "rank": "zzr",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Daily check; send only when board data or screenshots changed since the last successful backup. One archive per creation month with the complete latest state of its tasks (incl. archived tasks, notes, comments, links, history, all screenshots); changed months are resent. Backup & Export gains Send now, recipient, test email, last success, pending changes, failures and retry. Predictable subjects for Outlook rules; oversized archives are split, never trimmed.",
+      "acceptance": [
+        "Only changed months are sent, each independently restorable",
+        "A backup counts as successful only when the sending service accepted it",
+        "Oversized archives are split into numbered parts; nothing is omitted",
+        "Recipient, test email, send now, last success and retry are available"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [
+        "WT-047",
+        "WT-048"
+      ],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "578d293c-629c-4599-bf32-3a7160a127ec",
+          "type": "created",
+          "at": "2026-10-29T13:41:31Z",
+          "by": "claude",
+          "to": "todo"
+        }
+      ],
+      "createdAt": "2026-10-29T13:41:31Z",
+      "updatedAt": "2026-10-29T13:41:31Z",
       "rev": 1
     }
   ]
