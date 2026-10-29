@@ -993,7 +993,14 @@
           "url": "https://github.com/crosenlund79/TimeAndTask/blob/board/docs/proposals/2026-10-29-screenshots-and-email-backup.md"
         }
       ],
-      "comments": [],
+      "comments": [
+        {
+          "id": "9ccfaa1e-8518-4902-81bf-328cf36a3128",
+          "author": "claude",
+          "at": "2026-10-29T15:22:05Z",
+          "text": "Superseded by WT-050 if you accept it: screenshots now live as local files inside WorkTrace (%LocalAppData%\\WorkTrace\\Attachments), included in backup ZIPs; no sync between devices. Recommendation: archive this card once WT-050 is accepted. Left as is for your decision."
+        }
+      ],
       "history": [
         {
           "id": "bd99911e-c628-4615-a900-9caf709ac95f",
@@ -1004,8 +1011,8 @@
         }
       ],
       "createdAt": "2026-10-29T13:41:29Z",
-      "updatedAt": "2026-10-29T14:01:23Z",
-      "rev": 2
+      "updatedAt": "2026-10-29T15:22:05Z",
+      "rev": 3
     },
     {
       "id": "WT-049",

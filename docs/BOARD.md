@@ -346,6 +346,10 @@ Store screenshots privately (not in the public repository) so they appear on eve
 
 - [Proposal: screenshots and email backup](https://github.com/crosenlund79/TimeAndTask/blob/board/docs/proposals/2026-10-29-screenshots-and-email-backup.md)
 
+**Comments (1)**
+
+- 2026-10-29 15:22 · claude: Superseded by WT-050 if you accept it: screenshots now live as local files inside WorkTrace (%LocalAppData%\WorkTrace\Attachments), included in backup ZIPs; no sync between devices. Recommendation: archive this card once WT-050 is accepted. Left as is for your decision.
+
 ### WT-049 · Automatic daily email backup to Outlook
 
 `feature` · priority High · blocked by WT-047, WT-048
