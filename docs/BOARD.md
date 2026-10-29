@@ -33,6 +33,10 @@ Disposable card for the real GitHub sync tests.
 
 Disposable card for the real GitHub sync tests.
 
+**Notes**
+
+B: real race note
+
 ## Backlog
 
 _None._
