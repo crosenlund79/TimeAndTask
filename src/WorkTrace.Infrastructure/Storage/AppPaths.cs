@@ -30,6 +30,9 @@ public sealed class AppPaths
 
     public string ScreenshotsDirectory => Path.Combine(DataDirectory, "Screenshots");
 
+    /// <summary>Board card attachments (screenshots, files): <c>Attachments/yyyy/MM/{uid}.ext</c>.</summary>
+    public string AttachmentsDirectory => Path.Combine(DataDirectory, "Attachments");
+
     /// <summary>
     /// Resolves the data directory from (in order) an explicit override, the environment variable,
     /// and the per-user local application data folder.

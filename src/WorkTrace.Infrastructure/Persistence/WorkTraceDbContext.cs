@@ -33,6 +33,20 @@ public sealed class WorkTraceDbContext(DbContextOptions<WorkTraceDbContext> opti
 
     public DbSet<ChangeLogEntry> ChangeLog => Set<ChangeLogEntry>();
 
+    public DbSet<BoardCard> BoardCards => Set<BoardCard>();
+
+    public DbSet<BoardLink> BoardLinks => Set<BoardLink>();
+
+    public DbSet<BoardComment> BoardComments => Set<BoardComment>();
+
+    public DbSet<BoardCardEvent> BoardCardEvents => Set<BoardCardEvent>();
+
+    public DbSet<BoardDependency> BoardDependencies => Set<BoardDependency>();
+
+    public DbSet<BoardAttachment> BoardAttachments => Set<BoardAttachment>();
+
+    public DbSet<BoardState> BoardState => Set<BoardState>();
+
     public override int SaveChanges(bool acceptAllChangesOnSuccess) =>
         SaveChangesAsync(acceptAllChangesOnSuccess).GetAwaiter().GetResult();
 

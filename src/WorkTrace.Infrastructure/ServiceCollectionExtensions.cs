@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using WorkTrace.Core.Board;
 using WorkTrace.Core.Management;
 using WorkTrace.Core.Services;
+using WorkTrace.Infrastructure.Board;
 using WorkTrace.Infrastructure.Management;
 using WorkTrace.Core.Settings;
 using WorkTrace.Core.Tracking;
@@ -33,6 +35,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IClientService, ClientService>();
         services.AddSingleton<ITaskService, TaskService>();
         services.AddSingleton<ILookupService, LookupService>();
+        services.AddSingleton<IBoardService, BoardService>();
         services.AddSingleton<ICheckInService, CheckInService>();
         services.AddSingleton<ITrackingStore, TrackingStore>();
 

@@ -181,3 +181,39 @@ desktop state before a prompt is suppressed. Both log a warning.
 **Reason:** an unpaired notification silently switched off scheduled check-ins until restart while manual check-ins
 kept working — the symptom the owner reported after Phase 3 refinements; CI (clean machine) showed the scheduler and
 popup path itself working.
+
+## ADR-033 — The board lives inside WorkTrace, in the same database
+**Decision:** the Kanban board, Inbox, Archive, screenshots and backups move into WorkTrace.exe (pages *Board* and
+*Inbox*). Cards are rows in `worktrace.db` (`BoardCards` plus `BoardLinks`, `BoardComments`, `BoardCardEvents`,
+`BoardDependencies`, `BoardAttachments`, `BoardState`; migration `AddBoard`). Attachment files are stored under
+`{data dir}\Attachments\yyyy\MM\{uid}.ext`, never in the database and never in Git. The browser board on the `board`
+branch is frozen (no new features) and stays available until the owner has verified the import.
+**Reason:** owner decision 2026-10-29: one application, one interface, one local data store; no token, internet or
+hosting needed. A second database would split backups and restore for no benefit; the existing initializer already
+backs up the database before every migration.
+**Consequences:** Claude Code cannot read or update the board in WorkTrace's local database. Until the owner decides
+otherwise, Claude keeps proposing card changes in its summaries (and may still use the `board` branch CLI as an
+exchange file that the owner imports with the preview, see ADR-035).
+
+## ADR-034 — Board cards and work tasks stay separate, with an optional link
+**Decision:** a card may reference one `WorkTask` (`BoardCards.WorkTaskId`, nullable). Cards never create tasks
+automatically; the card offers "Track time" (pick an existing task or create one for a client).
+**Reason:** most cards (ideas, bugs, captured notes) never get tracked time, and most tasks (client work) never
+appear on the board. Merging them would force a client onto every captured note and Kanban fields onto every task.
+The link avoids duplicate task records where both are needed.
+
+## ADR-035 — One exchange format for board import, backup and restore
+**Decision:** WorkTrace reads the web board's `board.json` (schema 1–2) and its backup ZIP
+(`worktrace-board-backup` v1) and writes the same ZIP format. Import and restore share one plan: cards are
+matched by `uid`; identical cards are skipped; cards edited here after the imported version are kept unless ticked;
+cards whose number is taken get a new number; comments, history and attachments are merged by id and never deleted.
+Card numbers (`WT-042`), uids, comments and history keep their original ids and timestamps.
+**Reason:** lossless one-time migration, and backups that remain readable by either implementation.
+
+## ADR-036 — Undo is a per-session list of card edits with preconditions
+**Decision:** every undoable service call returns a `CardEdit` (card state before and after). Undo restores the
+before-state only if the card still equals the after-state, otherwise it refuses. Consecutive auto-saves of the
+same card's fields merge into one step. Comments, new cards and attachment removal are not undoable (removal asks
+first).
+**Reason:** the same guarantees as the browser board's Undo, without a command framework: changes are saved at once
+and Undo never overwrites a later edit.

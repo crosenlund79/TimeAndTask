@@ -17,6 +17,296 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.14");
 
+            modelBuilder.Entity("WorkTrace.Core.Entities.BoardAttachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Caption")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CardId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalName")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RelativePath")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Uid")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CardId");
+
+                    b.HasIndex("Uid")
+                        .IsUnique();
+
+                    b.ToTable("BoardAttachments", (string)null);
+                });
+
+            modelBuilder.Entity("WorkTrace.Core.Entities.BoardCard", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Acceptance")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ArchivedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Category")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Evidence")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ModifiedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("SortOrder")
+                        .HasColumnType("REAL");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Uid")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("WorkTaskId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("Uid")
+                        .IsUnique();
+
+                    b.HasIndex("WorkTaskId");
+
+                    b.HasIndex("Status", "SortOrder");
+
+                    b.ToTable("BoardCards", (string)null);
+                });
+
+            modelBuilder.Entity("WorkTrace.Core.Entities.BoardCardEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("By")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CardId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("From")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("To")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Uid")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CardId");
+
+                    b.HasIndex("Uid")
+                        .IsUnique();
+
+                    b.ToTable("BoardCardEvents", (string)null);
+                });
+
+            modelBuilder.Entity("WorkTrace.Core.Entities.BoardComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CardId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Uid")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CardId");
+
+                    b.HasIndex("Uid")
+                        .IsUnique();
+
+                    b.ToTable("BoardComments", (string)null);
+                });
+
+            modelBuilder.Entity("WorkTrace.Core.Entities.BoardDependency", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BlockedByCardId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CardId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlockedByCardId");
+
+                    b.HasIndex("CardId", "BlockedByCardId")
+                        .IsUnique();
+
+                    b.ToTable("BoardDependencies", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_BoardDependencies_NotSelf", "CardId <> BlockedByCardId");
+                        });
+                });
+
+            modelBuilder.Entity("WorkTrace.Core.Entities.BoardLink", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CardId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CardId");
+
+                    b.ToTable("BoardLinks", (string)null);
+                });
+
+            modelBuilder.Entity("WorkTrace.Core.Entities.BoardState", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("NextNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BoardState", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            NextNumber = 1
+                        });
+                });
+
             modelBuilder.Entity("WorkTrace.Core.Entities.ChangeLogEntry", b =>
                 {
                     b.Property<long>("Id")
@@ -469,6 +759,69 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                     b.ToTable("Tasks", (string)null);
                 });
 
+            modelBuilder.Entity("WorkTrace.Core.Entities.BoardAttachment", b =>
+                {
+                    b.HasOne("WorkTrace.Core.Entities.BoardCard", null)
+                        .WithMany("Attachments")
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("WorkTrace.Core.Entities.BoardCard", b =>
+                {
+                    b.HasOne("WorkTrace.Core.Entities.WorkTask", "WorkTask")
+                        .WithMany()
+                        .HasForeignKey("WorkTaskId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("WorkTask");
+                });
+
+            modelBuilder.Entity("WorkTrace.Core.Entities.BoardCardEvent", b =>
+                {
+                    b.HasOne("WorkTrace.Core.Entities.BoardCard", null)
+                        .WithMany("Events")
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("WorkTrace.Core.Entities.BoardComment", b =>
+                {
+                    b.HasOne("WorkTrace.Core.Entities.BoardCard", null)
+                        .WithMany("Comments")
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("WorkTrace.Core.Entities.BoardDependency", b =>
+                {
+                    b.HasOne("WorkTrace.Core.Entities.BoardCard", "BlockedByCard")
+                        .WithMany()
+                        .HasForeignKey("BlockedByCardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WorkTrace.Core.Entities.BoardCard", null)
+                        .WithMany("BlockedBy")
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BlockedByCard");
+                });
+
+            modelBuilder.Entity("WorkTrace.Core.Entities.BoardLink", b =>
+                {
+                    b.HasOne("WorkTrace.Core.Entities.BoardCard", null)
+                        .WithMany("Links")
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("WorkTrace.Core.Entities.CheckInPrompt", b =>
                 {
                     b.HasOne("WorkTrace.Core.Entities.Observation", "Observation")
@@ -552,6 +905,19 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                     b.Navigation("DefaultChannel");
 
                     b.Navigation("TaskSystem");
+                });
+
+            modelBuilder.Entity("WorkTrace.Core.Entities.BoardCard", b =>
+                {
+                    b.Navigation("Attachments");
+
+                    b.Navigation("BlockedBy");
+
+                    b.Navigation("Comments");
+
+                    b.Navigation("Events");
+
+                    b.Navigation("Links");
                 });
 
             modelBuilder.Entity("WorkTrace.Core.Entities.Client", b =>
