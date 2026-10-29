@@ -298,6 +298,10 @@ Owner decision needed. See docs/proposals/2026-10-29-screenshots-and-email-backu
 - Email sending service and credential handling chosen
 - Recurring cost confirmed (expected: none)
 
+**Links**
+
+- [Proposal: screenshots and email backup](https://github.com/crosenlund79/TimeAndTask/blob/board/docs/proposals/2026-10-29-screenshots-and-email-backup.md)
+
 ### WT-048 · Screenshot storage that syncs between devices
 
 `feature` · priority High · blocked by WT-047
