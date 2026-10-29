@@ -221,6 +221,10 @@ Capture a thought in seconds: title only, Enter saves into a separate Inbox (not
 
 Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
 
+**Comments (1)**
+
+- 2026-10-29 15:22 · claude: The browser implementation is frozen (owner decision 2026-10-29); the same capability is now in WorkTrace (WT-050). Your call whether to accept this card for the browser board or archive it after WT-050 is verified.
+
 ### WT-044 · Screenshots on cards (paste, drop, browse)
 
 `feature` · priority High
