@@ -34,7 +34,7 @@ A: real race note
 
 ### WT-002 · Test card B
 
-`testing` · priority Normal
+`feature` · priority Normal
 
 Disposable card for the real GitHub sync tests.
 

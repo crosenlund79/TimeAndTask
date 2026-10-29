@@ -49,7 +49,7 @@
       "id": "WT-002",
       "uid": "83983987-e15a-4bd1-8ef6-c33f7877747b",
       "title": "Test card B",
-      "category": "testing",
+      "category": "feature",
       "priority": "normal",
       "status": "todo",
       "rank": "r",
@@ -72,8 +72,8 @@
         }
       ],
       "createdAt": "2026-10-29T01:30:00Z",
-      "updatedAt": "2026-10-29T01:14:54Z",
-      "rev": 2
+      "updatedAt": "2026-10-29T01:15:25Z",
+      "rev": 3
     },
     {
       "id": "WT-003",
