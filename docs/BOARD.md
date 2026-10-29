@@ -206,6 +206,10 @@ Ctrl+V, drag-and-drop and file picker in Quick Capture and on cards. Several ima
 - Nothing is uploaded to GitHub; the card says the images are on this device only
 - Large base64 images are never written to board.json
 
+**Notes**
+
+Screenshots stay in the browser that captured them (IndexedDB), never uploaded. Syncing them between devices is WT-048, after the decision in WT-047.
+
 **Evidence**
 
 Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
