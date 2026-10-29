@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "nextId": 43,
+  "nextId": 44,
   "cards": [
     {
       "id": "WT-001",
@@ -740,6 +740,42 @@
       "createdAt": "2026-10-29T01:19:20Z",
       "updatedAt": "2026-10-29T01:19:27Z",
       "rev": 4
+    },
+    {
+      "id": "WT-043",
+      "uid": "e7030a1b-2868-4521-b564-a6a6e372e6f7",
+      "title": "Inbox and quick capture",
+      "category": "feature",
+      "priority": "high",
+      "status": "todo",
+      "rank": "zi",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Capture a thought in seconds: title only, Enter saves into a separate Inbox (not a sixth Kanban column). Optional notes, links and screenshots. Inbox counter; move items onto the board when ready.",
+      "acceptance": [
+        "Typing a title and pressing Enter captures it into the Inbox",
+        "The Inbox shows a counter and lists captured items, newest first",
+        "An Inbox item can be moved to a board column or archived",
+        "No category or other field is required",
+        "Existing cards and the five columns are unchanged"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "a6f73ca2-8ae5-4189-94a7-572ccaadb3e7",
+          "type": "created",
+          "at": "2026-10-29T13:41:16Z",
+          "by": "claude",
+          "to": "todo"
+        }
+      ],
+      "createdAt": "2026-10-29T13:41:16Z",
+      "updatedAt": "2026-10-29T13:41:16Z",
+      "rev": 1
     }
   ]
 }
