@@ -24,7 +24,7 @@ src/WorkTrace.App             net10.0-windows  WPF + tray, ViewModels, Windows-o
 tests/WorkTrace.Tests         net10.0          unit + SQLite integration tests (run on Linux and Windows)
 tests/WorkTrace.App.Tests     net10.0-windows  WPF smoke (binding errors) + view-model flow tests; Windows only
 assets/icons                  SVG/ICO + generate_icons.py (Pillow)
-docs/                         architecture.md, requirements.md, decisions.md, BOARD.md
+docs/                         architecture.md, requirements.md, decisions.md (board: see `board` branch)
 ```
 Windows-only capabilities (screen capture, power/lock events, hotkeys, Run key) live in the App
 project behind Core interfaces so Core/Infrastructure stay testable cross-platform (ADR-003).
@@ -104,16 +104,29 @@ resource URIs are assembly-qualified (`pack://application:,,,/WorkTrace;componen
 - Tray icon art is provisional (Phase 7 will hand-tune small frames).
 - Fluent `ThemeMode` is experimental in .NET 10 (WPF0001 suppressed).
 
-## Board (`docs/BOARD.md`)
-The project's mini Scrum board: Backlog → To do → In progress → Review / Test → Done. Cards have an ID (`WT-nnn`),
-title, category (feature, bug, architecture, testing, idea), description and acceptance criteria where relevant.
-- Move a card to In progress when you start it; update the board in the same commit as the work.
-- User-facing work goes to **Review / Test** when implemented and CI is green, never straight to Done. Only the owner
-  moves it to Done (or tells you to). Internal work (tests, refactoring, docs) may go to Done on green CI.
-- Turn owner feedback, bugs and test results into new cards or updates; a failed review moves the card back to
-  In progress with the finding. New ideas go to Backlog, not To do, until the owner agrees.
-- Record evidence (test names, CI run) on the card. Keep edits small; no history logs, estimates or ceremonies.
-- In the final report of each work round, list the cards that moved and what the owner should review next.
+## Board (`board` branch → `docs/board.json`)
+The project board lives only on the **`board` branch** (never merged into `main` or feature branches):
+`docs/board.json` is authoritative, `docs/BOARD.md` is generated, and the owner edits it in the browser at
+https://crosenlund79.github.io/TimeAndTask/. Columns: Backlog → To do → In progress → Review / Test → Done, plus an
+Archive. Use the CLI; never edit `board.json` or `BOARD.md` by hand, and never keep a second status file.
+```
+git fetch origin board && git worktree add --detach /tmp/worktrace-board origin/board   # once per session
+node /tmp/worktrace-board/tools/board.mjs show            # read before relevant work
+node /tmp/worktrace-board/tools/board.mjs get WT-010      # notes, comments, history
+node /tmp/worktrace-board/tools/board.mjs move WT-010 doing
+node /tmp/worktrace-board/tools/board.mjs evidence WT-010 "RealAppTests green, CI run 22"
+node /tmp/worktrace-board/tools/board.mjs add --title "…" --category bug --priority high --status todo --accept "…"
+```
+- Read the board before relevant work; update existing cards instead of creating duplicates; create cards for newly
+  found bugs or requirements (ideas go to Backlog until the owner agrees).
+- Move a card to In progress when work starts. User-facing work (feature, bug) goes to **Review / Test** once
+  implemented and CI is green, **never to Done**: only the owner accepts it. Use `move … done --owner-accepted "<their
+  words>"` only after explicit acceptance. Internal work (testing, architecture) may go to Done on green CI.
+- Add evidence (tests, CI runs, commits) and links; use comments for findings. Never remove or rewrite the owner's
+  notes or comments.
+- Every command fetches first and pushes without force. Exit code 3 means a conflict (someone changed the same thing):
+  read the card again and decide; never retry blindly. The CLI pushes to `board`, which is authorised for this repo.
+- List the cards you moved or created in each development summary, and what the owner should review next.
 
 ## Current phase
 - Phase 1 — Foundation: complete.

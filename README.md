@@ -84,4 +84,4 @@ None of these files are ever committed to Git.
 - [docs/architecture.md](docs/architecture.md) — structure, database model, estimation algorithm, scheduling
 - [docs/requirements.md](docs/requirements.md) — requirements, acceptance criteria, coverage
 - [docs/decisions.md](docs/decisions.md) — architectural decisions
-- [docs/BOARD.md](docs/BOARD.md) — mini Scrum board: what is planned, in progress, awaiting review and accepted
+- [Development board](https://crosenlund79.github.io/TimeAndTask/) — Kanban board on the `board` branch (`docs/board.json`)
