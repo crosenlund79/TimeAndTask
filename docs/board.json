@@ -876,7 +876,14 @@
       "evidence": "Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.",
       "blockedBy": [],
       "links": [],
-      "comments": [],
+      "comments": [
+        {
+          "id": "ffb1e7b6-0a8e-4fda-8e93-1a35e80b0cf5",
+          "author": "claude",
+          "at": "2026-10-29T15:22:24Z",
+          "text": "The browser implementation is frozen (owner decision 2026-10-29); the same capability is now in WorkTrace (WT-050). Your call whether to accept this card for the browser board or archive it after WT-050 is verified."
+        }
+      ],
       "history": [
         {
           "id": "afcb3e85-b866-4962-97fa-3ed498dfdde0",
@@ -895,8 +902,8 @@
         }
       ],
       "createdAt": "2026-10-29T13:41:21Z",
-      "updatedAt": "2026-10-29T14:01:11Z",
-      "rev": 3
+      "updatedAt": "2026-10-29T15:22:24Z",
+      "rev": 4
     },
     {
       "id": "WT-046",
