@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "nextId": 50,
   "cards": [
     {
@@ -747,8 +747,8 @@
       "title": "Inbox and quick capture",
       "category": "feature",
       "priority": "high",
-      "status": "doing",
-      "rank": "i",
+      "status": "review",
+      "rank": "zzr",
       "archived": false,
       "archivedAt": null,
       "description": "Capture a thought in seconds: title only, Enter saves into a separate Inbox (not a sixth Kanban column). Optional notes, links and screenshots. Inbox counter; move items onto the board when ready.",
@@ -779,11 +779,19 @@
           "by": "claude",
           "from": "todo",
           "to": "doing"
+        },
+        {
+          "id": "f98f736b-a550-4970-b0cf-187af12965e9",
+          "type": "status",
+          "at": "2026-10-29T14:01:00Z",
+          "by": "claude",
+          "from": "doing",
+          "to": "review"
         }
       ],
       "createdAt": "2026-10-29T13:41:16Z",
-      "updatedAt": "2026-10-29T14:00:56Z",
-      "rev": 3
+      "updatedAt": "2026-10-29T14:01:00Z",
+      "rev": 4
     },
     {
       "id": "WT-044",
