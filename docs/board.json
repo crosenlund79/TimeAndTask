@@ -24,6 +24,12 @@
           "author": "claude",
           "at": "2026-10-29T01:15:11Z",
           "text": "comment from editor B"
+        },
+        {
+          "id": "8d2e6981-8eb3-4309-89e7-139275f93723",
+          "author": "claude",
+          "at": "2026-10-29T01:15:11Z",
+          "text": "comment from editor A"
         }
       ],
       "history": [
@@ -37,7 +43,7 @@
       ],
       "createdAt": "2026-10-29T01:30:00Z",
       "updatedAt": "2026-10-29T01:15:11Z",
-      "rev": 3
+      "rev": 4
     },
     {
       "id": "WT-002",
