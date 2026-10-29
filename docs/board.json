@@ -747,8 +747,8 @@
       "title": "Inbox and quick capture",
       "category": "feature",
       "priority": "high",
-      "status": "todo",
-      "rank": "zi",
+      "status": "doing",
+      "rank": "i",
       "archived": false,
       "archivedAt": null,
       "description": "Capture a thought in seconds: title only, Enter saves into a separate Inbox (not a sixth Kanban column). Optional notes, links and screenshots. Inbox counter; move items onto the board when ready.",
@@ -771,11 +771,19 @@
           "at": "2026-10-29T13:41:16Z",
           "by": "claude",
           "to": "todo"
+        },
+        {
+          "id": "976ecc37-5b0b-419e-b9f8-9b8c7c0244f5",
+          "type": "status",
+          "at": "2026-10-29T13:41:39Z",
+          "by": "claude",
+          "from": "todo",
+          "to": "doing"
         }
       ],
       "createdAt": "2026-10-29T13:41:16Z",
-      "updatedAt": "2026-10-29T13:41:16Z",
-      "rev": 1
+      "updatedAt": "2026-10-29T13:41:39Z",
+      "rev": 2
     },
     {
       "id": "WT-044",

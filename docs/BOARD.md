@@ -5,11 +5,23 @@
 
 | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|
-| 2 | 12 | 0 | 11 | 5 | 0 |
+| 2 | 11 | 1 | 11 | 5 | 0 |
 
 ## In progress
 
-_None._
+### WT-043 · Inbox and quick capture
+
+`feature` · priority High
+
+Capture a thought in seconds: title only, Enter saves into a separate Inbox (not a sixth Kanban column). Optional notes, links and screenshots. Inbox counter; move items onto the board when ready.
+
+**Acceptance criteria**
+
+- Typing a title and pressing Enter captures it into the Inbox
+- The Inbox shows a counter and lists captured items, newest first
+- An Inbox item can be moved to a board column or archived
+- No category or other field is required
+- Existing cards and the five columns are unchanged
 
 ## Review / Test
 
@@ -210,20 +222,6 @@ Phase 6. Week view, grouping and totals, unclassified time, adjustments with rec
 `feature` · priority Normal
 
 Phase 7. Start with Windows, theme, hand-tuned tray icons, backup/restore UI, packaging, user documentation.
-
-### WT-043 · Inbox and quick capture
-
-`feature` · priority High
-
-Capture a thought in seconds: title only, Enter saves into a separate Inbox (not a sixth Kanban column). Optional notes, links and screenshots. Inbox counter; move items onto the board when ready.
-
-**Acceptance criteria**
-
-- Typing a title and pressing Enter captures it into the Inbox
-- The Inbox shows a counter and lists captured items, newest first
-- An Inbox item can be moved to a board column or archived
-- No category or other field is required
-- Existing cards and the five columns are unchanged
 
 ### WT-044 · Screenshots on cards (paste, drop, browse)
 
