@@ -116,12 +116,17 @@ node /tmp/worktrace-board/tools/board.mjs get WT-010      # notes, comments, his
 node /tmp/worktrace-board/tools/board.mjs move WT-010 doing
 node /tmp/worktrace-board/tools/board.mjs evidence WT-010 "RealAppTests green, CI run 22"
 node /tmp/worktrace-board/tools/board.mjs add --title "…" --category bug --priority high --status todo --accept "…"
+node /tmp/worktrace-board/tools/board.mjs capture "…" [--link url]   # quick note into the owner's Inbox
+node /tmp/worktrace-board/tools/board.mjs inbox                      # captured items not yet on the board
 ```
+The Inbox (status `inbox`) is the owner's capture list, not a column: don't triage or move Inbox items unless asked.
+Screenshots are stored in the owner's browser only (never commit images to this public repository).
 - Read the board before relevant work; update existing cards instead of creating duplicates; create cards for newly
   found bugs or requirements (ideas go to Backlog until the owner agrees).
 - Move a card to In progress when work starts. User-facing work (feature, bug) goes to **Review / Test** once
   implemented and CI is green, **never to Done**: only the owner accepts it. Use `move … done --owner-accepted "<their
-  words>"` only after explicit acceptance. Internal work (testing, architecture) may go to Done on green CI.
+  words>"` only after explicit acceptance (uncategorised cards count as user-facing). Internal work (testing,
+  architecture) may go to Done on green CI.
 - Add evidence (tests, CI runs, commits) and links; use comments for findings. Never remove or rewrite the owner's
   notes or comments.
 - Every command fetches first and pushes without force. Exit code 3 means a conflict (someone changed the same thing):
