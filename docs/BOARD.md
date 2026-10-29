@@ -5,17 +5,9 @@
 
 | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|
-| 0 | 2 | 0 | 0 | 2 | 0 |
+| 0 | 0 | 1 | 1 | 2 | 0 |
 
 ## In progress
-
-_None._
-
-## Review / Test
-
-_None._
-
-## To do
 
 ### WT-001 · Test card A
 
@@ -32,6 +24,8 @@ A: real race note
 - 2026-10-29 01:15 · claude: comment from editor B
 - 2026-10-29 01:15 · claude: comment from editor A
 
+## Review / Test
+
 ### WT-002 · Test card B
 
 `feature` · priority Normal
@@ -41,6 +35,10 @@ Disposable card for the real GitHub sync tests.
 **Notes**
 
 B: real race note
+
+## To do
+
+_None._
 
 ## Backlog
 
