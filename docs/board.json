@@ -842,8 +842,8 @@
       "title": "Links: multiple per card, quick copy and open",
       "category": "feature",
       "priority": "normal",
-      "status": "todo",
-      "rank": "zw",
+      "status": "review",
+      "rank": "zzy",
       "archived": false,
       "archivedAt": null,
       "description": "Several external links per card, each with Open and Copy. Paste a URL; the label is optional. Bare URLs in notes become links.",
@@ -863,11 +863,19 @@
           "at": "2026-10-29T13:41:21Z",
           "by": "claude",
           "to": "todo"
+        },
+        {
+          "id": "ae253958-d710-42e8-90ca-25a36a599b6e",
+          "type": "status",
+          "at": "2026-10-29T14:01:11Z",
+          "by": "claude",
+          "from": "todo",
+          "to": "review"
         }
       ],
       "createdAt": "2026-10-29T13:41:21Z",
-      "updatedAt": "2026-10-29T14:01:08Z",
-      "rev": 2
+      "updatedAt": "2026-10-29T14:01:11Z",
+      "rev": 3
     },
     {
       "id": "WT-046",

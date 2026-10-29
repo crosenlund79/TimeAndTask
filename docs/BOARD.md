@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 10 | 0 | 13 | 5 | 0 |
+| 0 | 2 | 9 | 0 | 14 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -210,6 +210,21 @@ Ctrl+V, drag-and-drop and file picker in Quick Capture and on cards. Several ima
 
 Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
 
+### WT-045 · Links: multiple per card, quick copy and open
+
+`feature` · priority Normal
+
+Several external links per card, each with Open and Copy. Paste a URL; the label is optional. Bare URLs in notes become links.
+
+**Acceptance criteria**
+
+- Add a link by pasting just the URL
+- Each link can be opened or copied with one click
+
+**Evidence**
+
+Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
+
 ## To do
 
 ### WT-030 · Estimation engine
@@ -249,21 +264,6 @@ Phase 6. Week view, grouping and totals, unclassified time, adjustments with rec
 `feature` · priority Normal
 
 Phase 7. Start with Windows, theme, hand-tuned tray icons, backup/restore UI, packaging, user documentation.
-
-### WT-045 · Links: multiple per card, quick copy and open
-
-`feature` · priority Normal
-
-Several external links per card, each with Open and Copy. Paste a URL; the label is optional. Bare URLs in notes become links.
-
-**Acceptance criteria**
-
-- Add a link by pasting just the URL
-- Each link can be opened or copied with one click
-
-**Evidence**
-
-Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
 
 ### WT-046 · Backup & Export: ZIP download and restore
 
