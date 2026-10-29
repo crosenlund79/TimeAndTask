@@ -261,6 +261,10 @@ Several external links per card, each with Open and Copy. Paste a URL; the label
 - Add a link by pasting just the URL
 - Each link can be opened or copied with one click
 
+**Evidence**
+
+Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
+
 ### WT-046 · Backup & Export: ZIP download and restore
 
 `feature` · priority High
