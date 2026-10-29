@@ -314,6 +314,10 @@ Store screenshots privately (not in the public repository) so they appear on eve
 - No screenshot is publicly readable
 - Images that existed only on this device can be uploaded once storage exists
 
+**Links**
+
+- [Proposal: screenshots and email backup](https://github.com/crosenlund79/TimeAndTask/blob/board/docs/proposals/2026-10-29-screenshots-and-email-backup.md)
+
 ### WT-049 · Automatic daily email backup to Outlook
 
 `feature` · priority High · blocked by WT-047, WT-048
