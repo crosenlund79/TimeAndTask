@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "nextId": 47,
+  "nextId": 48,
   "cards": [
     {
       "id": "WT-001",
@@ -878,6 +878,40 @@
       ],
       "createdAt": "2026-10-29T13:41:24Z",
       "updatedAt": "2026-10-29T13:41:24Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-047",
+      "uid": "f028aaa4-cccf-4c45-9666-e5a1c745d267",
+      "title": "Decide: screenshot storage and email delivery",
+      "category": "architecture",
+      "priority": "critical",
+      "status": "todo",
+      "rank": "zz",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Owner decision needed. See docs/proposals/2026-10-29-screenshots-and-email-backup.md on the board branch: where screenshots are stored privately (recommended: a private GitHub repository), and which service sends backup email (recommended: a transactional email API with its key in a GitHub Actions secret).",
+      "acceptance": [
+        "Storage location for screenshots chosen",
+        "Email sending service and credential handling chosen",
+        "Recurring cost confirmed (expected: none)"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "93ac73a6-4320-4d74-bfea-359e280c5258",
+          "type": "created",
+          "at": "2026-10-29T13:41:26Z",
+          "by": "claude",
+          "to": "todo"
+        }
+      ],
+      "createdAt": "2026-10-29T13:41:26Z",
+      "updatedAt": "2026-10-29T13:41:26Z",
       "rev": 1
     }
   ]

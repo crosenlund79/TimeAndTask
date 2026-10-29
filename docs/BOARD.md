@@ -5,7 +5,7 @@
 
 | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|
-| 2 | 9 | 0 | 11 | 5 | 0 |
+| 2 | 10 | 0 | 11 | 5 | 0 |
 
 ## In progress
 
@@ -261,6 +261,18 @@ Manual backup without any service: download a ZIP of the complete board, one cre
 - Each monthly ZIP restores on its own
 - Restore validates the file and previews new, changed and unchanged cards before applying
 - Restoring never deletes cards or comments
+
+### WT-047 · Decide: screenshot storage and email delivery
+
+`architecture` · priority Critical
+
+Owner decision needed. See docs/proposals/2026-10-29-screenshots-and-email-backup.md on the board branch: where screenshots are stored privately (recommended: a private GitHub repository), and which service sends backup email (recommended: a transactional email API with its key in a GitHub Actions secret).
+
+**Acceptance criteria**
+
+- Storage location for screenshots chosen
+- Email sending service and credential handling chosen
+- Recurring cost confirmed (expected: none)
 
 ## Backlog
 
