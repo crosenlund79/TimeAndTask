@@ -199,6 +199,10 @@ Unit, sync and CLI tests (47) and browser tests (19, 3 runs) green; real GitHub 
 
 - [Board app](https://crosenlund79.github.io/TimeAndTask/)
 
+**Comments (1)**
+
+- 2026-10-29 15:22 · claude: The browser implementation is frozen (owner decision 2026-10-29); the same capability is now in WorkTrace (WT-050). Your call whether to accept this card for the browser board or archive it after WT-050 is verified.
+
 ### WT-043 · Inbox and quick capture
 
 `feature` · priority High

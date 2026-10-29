@@ -719,7 +719,14 @@
           "url": "https://crosenlund79.github.io/TimeAndTask/"
         }
       ],
-      "comments": [],
+      "comments": [
+        {
+          "id": "9b3836a8-db00-42de-bb7d-4822a1aa82d5",
+          "author": "claude",
+          "at": "2026-10-29T15:22:14Z",
+          "text": "The browser implementation is frozen (owner decision 2026-10-29); the same capability is now in WorkTrace (WT-050). Your call whether to accept this card for the browser board or archive it after WT-050 is verified."
+        }
+      ],
       "history": [
         {
           "id": "ab06b193-0123-475e-875d-d1143a152ca6",
@@ -738,8 +745,8 @@
         }
       ],
       "createdAt": "2026-10-29T01:19:20Z",
-      "updatedAt": "2026-10-29T01:19:27Z",
-      "rev": 4
+      "updatedAt": "2026-10-29T15:22:14Z",
+      "rev": 5
     },
     {
       "id": "WT-043",
