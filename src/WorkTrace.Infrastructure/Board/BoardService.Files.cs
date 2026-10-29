@@ -171,7 +171,7 @@ internal sealed partial class BoardService
         var package = await BoardExchange.ReadAsync(path, cancellationToken);
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
         var plan = await PlanAsync(db, package, cancellationToken);
-        return new ImportPreview(package.Source, [.. plan.Select(p => p.Item)], package.Problems, package.Attachments.Count);
+        return new ImportPreview(package.Source, [.. plan.Select(p => p.Item)], package.Problems, package.Attachments.Count, package.IncludesDatabase);
     }
 
     public async Task<ImportResult> ImportAsync(string path, IReadOnlyCollection<string> overwriteUids, CancellationToken cancellationToken = default)

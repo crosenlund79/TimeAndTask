@@ -109,6 +109,16 @@ public class UiSmokeTests
             await WpfTestHost.SettleAsync(10);
             Assert.Single(boardPage.ArchiveItems);
             boardPage.ShowArchive = false;
+            boardPage.ShowBackup = true;
+            await WpfTestHost.SettleAsync(10);
+            var zip = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{Guid.NewGuid():N}.zip");
+            await ctx.Get<WorkTrace.Core.Board.IBackupService>().CreateAsync(new WorkTrace.Core.Board.BackupRequest(WorkTrace.Core.Board.BackupKind.AllCards), zip);
+            await boardPage.Backup.PreviewRestoreAsync(zip);
+            await WpfTestHost.SettleAsync(10);
+            Assert.NotEmpty(boardPage.Backup.RestoreItems);
+            boardPage.Backup.CancelRestoreCommand.Execute(null);
+            boardPage.ShowBackup = false;
+            System.IO.File.Delete(zip);
             await boardPage.CloseCardCommand.ExecuteAsync(null);
             await WpfTestHost.SettleAsync();
 

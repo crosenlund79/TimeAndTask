@@ -12,11 +12,12 @@ WorkTrace.App (net10.0-windows)
   Shell/             WindowManager, IAppLifetime, SingleInstanceGuard, Navigation/Notification/Dialog services
   Tray/              TrayIconService (WinForms NotifyIcon)
   Themes/Styles.xaml shared typography, cards, pills, icon buttons, list rows (on top of Fluent)
-  Views/ ViewModels/ MVVM (CommunityToolkit.Mvvm): Home, Tasks, Clients, Lists pages
+  Views/ ViewModels/ MVVM (CommunityToolkit.Mvvm): Home, Tasks, Clients, Lists, Settings, Board, Inbox pages
   Interop/           P/Invoke (LibraryImport)
         │
         ├──► WorkTrace.Infrastructure (net10.0)
         │      Management/    ClientService, TaskService, LookupService
+        │      Board/         BoardService (cards, undo, attachments, import), BackupService, BoardExchange (ZIP/JSON format)
         │      Persistence/   WorkTraceDbContext (+ ChangeLogWriter), configurations, migrations, initializer, seeder
         │      Settings/      JsonSettingsStore
         │      Storage/       AppPaths
@@ -234,3 +235,22 @@ swallowed. Alt with Ctrl (AltGr) is ignored, since it types characters such as @
 ## Logging
 `ILogger<T>` everywhere, Serilog daily rolling files (14 retained, 10 MB cap) in the logs folder.
 Microsoft/System categories at Warning. Task names, notes and screenshot content are never logged.
+
+## Board, Inbox and backups (ADR-033 – ADR-036)
+The development board and the owner's capture Inbox live inside WorkTrace, in `worktrace.db`:
+
+| Table | Holds |
+|---|---|
+| `BoardCards` | Number (`WT-042`, unique, never reused), uid, title, optional category, priority, status (Inbox or a column), sort order, archived state, description, acceptance criteria (one per line), notes, evidence, optional `WorkTaskId`, revision |
+| `BoardLinks`, `BoardDependencies` | Links in order; "blocked by" relations (no cycles, checked in `BoardRules.CreatesCycle`) |
+| `BoardComments`, `BoardCardEvents` | Append-only comments and history (created, status changes incl. owner acceptance, archived, restored, imported) |
+| `BoardAttachments` | Metadata of files under `{data}\Attachments\yyyy\MM\{uid}.ext` (SHA-256, size, caption) |
+| `BoardState`, `BackupRecords` | Next card number; per-month content hash of each written backup |
+
+- `IBoardService` saves every change at once. Undoable calls return a `CardEdit` (state before/after); the App's
+  `BoardSession` keeps the per-session Undo history and tells the Board, Inbox and open card to refresh.
+- Card order is a `double` per column; inserts take the midpoint and renumber the column when the gap is exhausted.
+- Moving a feature, bug or uncategorised card to Done asks for the owner's acceptance, recorded in its history.
+- Import and restore read the browser board's `board.json` and backup ZIPs; backups are written in the same ZIP
+  format (`worktrace-board-backup` v1), so both directions work. See [backup.md](backup.md).
+- Cards and `WorkTask`s are separate records; a card can link one task for time tracking (ADR-034).

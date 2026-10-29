@@ -48,6 +48,7 @@ public static class AppServices
             sp.GetRequiredService<IFileDialogService>(),
             sp.GetRequiredService<INotificationService>(),
             sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CardDetailViewModel>>()));
+        services.AddSingleton<BackupViewModel>();
         services.AddSingleton<BoardViewModel>();
         services.AddSingleton<InboxViewModel>();
         services.AddSingleton<MainViewModel>();

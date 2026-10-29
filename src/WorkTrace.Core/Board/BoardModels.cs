@@ -144,7 +144,8 @@ public sealed record ImportPreview(
     string Source,
     IReadOnlyList<ImportItem> Items,
     IReadOnlyList<string> Problems,
-    int AttachmentCount)
+    int AttachmentCount,
+    bool IncludesDatabase = false)
 {
     public int Count(ImportItemKind kind) => Items.Count(i => i.Kind == kind);
 }

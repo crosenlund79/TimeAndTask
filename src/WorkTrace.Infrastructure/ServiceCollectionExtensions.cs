@@ -36,6 +36,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITaskService, TaskService>();
         services.AddSingleton<ILookupService, LookupService>();
         services.AddSingleton<IBoardService, BoardService>();
+        services.AddSingleton<IBackupService, BackupService>();
         services.AddSingleton<ICheckInService, CheckInService>();
         services.AddSingleton<ITrackingStore, TrackingStore>();
 

@@ -239,6 +239,50 @@ public class BoardFlowTests
         Assert.Equal(["Done 2"], Titles(board, BoardStatus.Done));
     });
 
+    [Fact]
+    public Task Backup_ThenRestoreWithPreview_KeepsOrOverwritesLocalEdits() => WpfTestHost.RunAsync(async () =>
+    {
+        await using var ctx = await UiTestContext.CreateAsync();
+        var service = ctx.Get<IBoardService>();
+        var card = await service.CreateAsync(Fields("From backup"), BoardStatus.Todo);
+        var board = ctx.Get<BoardViewModel>();
+        await board.ActivateAsync(null);
+        board.ShowBackup = true;
+        await WpfTestHost.SettleAsync(10);
+        var backup = board.Backup;
+        Assert.False(board.ShowColumns);
+        Assert.Single(backup.Months);
+        Assert.True(backup.Months[0].Changed);
+
+        var zip = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.zip");
+        ctx.Files.SavePath = zip;
+        await backup.BackupCompleteCommand.ExecuteAsync(null);
+        Assert.True(File.Exists(zip));
+        Assert.False(backup.Months[0].Changed);
+        Assert.Contains("database", backup.LastResult, StringComparison.Ordinal);
+
+        ctx.Time.Advance(TimeSpan.FromMinutes(5));
+        await service.UpdateFieldsAsync(card.Id, Fields("Edited later"));
+        await backup.PreviewRestoreAsync(zip);
+        var item = Assert.Single(backup.RestoreItems);
+        Assert.True(item.CanOverwrite);
+        Assert.True(backup.HasRestorePreview);
+
+        await backup.ApplyRestoreCommand.ExecuteAsync(null); // not ticked: the later edit is kept
+        Assert.Equal("Edited later", (await service.GetCardAsync(card.Id)).Title);
+
+        await backup.PreviewRestoreAsync(zip);
+        backup.RestoreItems[0].Overwrite = true;
+        await backup.ApplyRestoreCommand.ExecuteAsync(null);
+        Assert.Equal("From backup", (await service.GetCardAsync(card.Id)).Title);
+        Assert.False(backup.HasRestorePreview);
+        await WpfTestHost.SettleAsync(10);
+        board.ShowBackup = false;
+        await WpfTestHost.SettleAsync(10);
+        Assert.Equal(["From backup"], Titles(board, BoardStatus.Todo));
+        File.Delete(zip);
+    });
+
     [Theory]
     [InlineData(-5, 0)]
     [InlineData(10, 0)]

@@ -24,7 +24,7 @@ src/WorkTrace.App             net10.0-windows  WPF + tray, ViewModels, Windows-o
 tests/WorkTrace.Tests         net10.0          unit + SQLite integration tests (run on Linux and Windows)
 tests/WorkTrace.App.Tests     net10.0-windows  WPF smoke (binding errors) + view-model flow tests; Windows only
 assets/icons                  SVG/ICO + generate_icons.py (Pillow)
-docs/                         architecture.md, requirements.md, decisions.md (board: see `board` branch)
+docs/                         architecture.md, requirements.md, decisions.md, backup.md, acceptance/ (board: see `board` branch)
 ```
 Windows-only capabilities (screen capture, power/lock events, hotkeys, Run key) live in the App
 project behind Core interfaces so Core/Infrastructure stay testable cross-platform (ADR-003).
@@ -105,6 +105,13 @@ resource URIs are assembly-qualified (`pack://application:,,,/WorkTrace;componen
 - Fluent `ThemeMode` is experimental in .NET 10 (WPF0001 suppressed).
 
 ## Board (`board` branch → `docs/board.json`)
+**Transition (ADR-033):** the board, Inbox, screenshots and backups now also live inside WorkTrace (Board/Inbox pages,
+tables `Board*` in `worktrace.db`, files under `{data}\Attachments`). Until the owner has imported `board.json` into
+WorkTrace and confirmed it, the `board` branch below stays authoritative for Claude Code and the browser board is frozen
+(no new features). Claude cannot read WorkTrace's local database: after the switch, propose card changes in summaries.
+Board rules for the app: cards archived, never deleted; comments/history append-only; Done for user-facing cards
+records the owner's acceptance; backup ZIPs use the browser board's format (`docs/backup.md`).
+
 The project board lives only on the **`board` branch** (never merged into `main` or feature branches):
 `docs/board.json` is authoritative, `docs/BOARD.md` is generated, and the owner edits it in the browser at
 https://crosenlund79.github.io/TimeAndTask/. Columns: Backlog → To do → In progress → Review / Test → Done, plus an
@@ -139,5 +146,8 @@ Screenshots are stored in the owner's browser only (never commit images to this 
 - **Phase 3 — Check-ins: complete** (tracking engine, popup in focused/unobtrusive mode, global shortcut,
   pause/resume, sleep/lock/clock handling, Settings page, Today timeline; refinements: 1–240 min interval,
   reliable shortcut focus, Alt+1–4 clarity, "show check-in now"; round 2: scheduling self-heal, status/last attempt in UI, countdown, Alt+number at window
-  level). Scheduled check-ins must be confirmed on the owner's machine before Phase 4. **Next: Phase 4 — estimation
+  level). Scheduled check-ins must be confirmed on the owner's machine before Phase 4.
+- **Board consolidation** (owner request 2026-10-29, ADR-033–036): Board, Inbox, Archive, screenshots, Undo and
+  backup/restore inside WorkTrace; import from the browser board. Awaiting the owner's acceptance
+  (`docs/acceptance/board-in-worktrace.md`). Email backups pending a delivery decision (WT-047). **Next: Phase 4 — estimation
   engine and activity log** (inputs: segments, lock periods, observations, prompts, manual allocations).

@@ -111,7 +111,11 @@ internal sealed record PackageAttachment(
 
 /// <summary>Cards (and attachments) read from a board.json or a backup ZIP, validated.</summary>
 internal sealed record BoardPackage(
-    string Source, int NextId, IReadOnlyList<WebCard> Cards, IReadOnlyList<PackageAttachment> Attachments, IReadOnlyList<string> Problems);
+    string Source, int NextId, IReadOnlyList<WebCard> Cards, IReadOnlyList<PackageAttachment> Attachments, IReadOnlyList<string> Problems)
+{
+    /// <summary>A complete WorkTrace backup: also holds a database snapshot (time tracking) and settings.</summary>
+    public bool IncludesDatabase { get; init; }
+}
 
 internal static class BoardExchange
 {
@@ -387,7 +391,8 @@ internal static class BoardExchange
                 }
             }
 
-            return ReadBoardJson(source, cardsBytes, problems, attachments);
+            var includesDatabase = root.TryGetProperty("database", out var database) && database.ValueKind == JsonValueKind.Object;
+            return ReadBoardJson(source, cardsBytes, problems, attachments) with { IncludesDatabase = includesDatabase };
         }
         catch (InvalidDataException)
         {

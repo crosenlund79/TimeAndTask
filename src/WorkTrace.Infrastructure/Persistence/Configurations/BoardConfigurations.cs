@@ -84,6 +84,18 @@ internal sealed class BoardAttachmentConfiguration : IEntityTypeConfiguration<Bo
     }
 }
 
+internal sealed class BackupRecordConfiguration : IEntityTypeConfiguration<BackupRecord>
+{
+    public void Configure(EntityTypeBuilder<BackupRecord> builder)
+    {
+        builder.ToTable("BackupRecords");
+        builder.Property(b => b.Scope).HasMaxLength(BackupRecord.ScopeMaxLength);
+        builder.Property(b => b.ContentHash).HasMaxLength(64);
+        builder.Property(b => b.FileName).HasMaxLength(BackupRecord.FileNameMaxLength);
+        builder.HasIndex(b => new { b.Scope, b.CreatedAtUtc });
+    }
+}
+
 internal sealed class BoardStateConfiguration : IEntityTypeConfiguration<BoardState>
 {
     public void Configure(EntityTypeBuilder<BoardState> builder)

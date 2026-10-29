@@ -18,9 +18,9 @@ public class BoardImportTests : ManagementTestBase
 
     private IBoardService Board => Services.GetRequiredService<IBoardService>();
 
-    private string TempFile(string name) => Path.Combine(Path.GetTempPath(), "worktrace-tests", $"{Guid.NewGuid():N}-{name}");
+    private static string TempFile(string name) => Path.Combine(Path.GetTempPath(), "worktrace-tests", $"{Guid.NewGuid():N}-{name}");
 
-    private string WriteJson(JsonNode node)
+    private static string WriteJson(JsonNode node)
     {
         var path = TempFile("board.json");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
@@ -61,7 +61,7 @@ public class BoardImportTests : ManagementTestBase
         // Column order follows the web board's ranks.
         foreach (var status in BoardRules.Columns)
         {
-            var expected = cards.Where(c => c!["status"]!.GetValue<string>() == status.ToString().ToLowerInvariant() && !c["archived"]!.GetValue<bool>())
+            var expected = cards.Where(c => string.Equals(c!["status"]!.GetValue<string>(), status.ToString(), StringComparison.OrdinalIgnoreCase) && !c["archived"]!.GetValue<bool>())
                 .OrderBy(c => c!["rank"]!.GetValue<string>(), StringComparer.Ordinal).Select(c => c!["id"]!.GetValue<string>());
             var actual = (await Board.GetCardsAsync(new CardFilter(Statuses: [status]), Ct)).Select(c => c.Key);
             Assert.Equal(expected, actual);

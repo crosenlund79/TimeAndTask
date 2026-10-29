@@ -56,8 +56,12 @@ check-in attempt with its outcome; scheduled popups show a small countdown (paus
 | **Clients** | Customers and internal work; deactivate instead of delete once tasks exist |
 | **Lists** | Task systems and communication channels: rename inline, hide, reorder, add |
 | **Settings** | Check-in interval, popup mode (focused/unobtrusive), position, auto-close, shortcut, theme |
+| **Board** | Kanban (Backlog, To do, In progress, Review / Test, Done): drag cards, open one to edit notes, links, dependencies, comments and screenshots; Archive; Backup & restore |
+| **Inbox** | Quick capture of thoughts, links and pasted screenshots; organise later ("To board", archive) |
 
-Keyboard: `Ctrl+1…5` switch pages · `Ctrl+F` search · `↓` from search into the list · `Enter` edit ·
+Keyboard: `Ctrl+1…7` switch pages · Board: `Alt+←/→/↑/↓` move the selected card · `Ctrl+Z` undo ·
+`Ctrl+Shift+C` capture · `Ctrl+V` pastes a screenshot into the open card · `Esc` closes it.
+Lists: `Ctrl+F` search · `↓` from search into the list · `Enter` edit ·
 `Ctrl+N` new · `Ctrl+S` save · `Esc` discard/clear · `Del` delete (offers archive/deactivate when in use).
 
 ## Publish
@@ -75,6 +79,7 @@ Run `publish/WorkTrace/WorkTrace.exe`. CI (`.github/workflows/ci.yml`) produces 
 | Logs (daily, 14 kept) | `%LocalAppData%\WorkTrace\logs\` |
 | Backups (incl. automatic pre-migration backups) | `%LocalAppData%\WorkTrace\backups\` |
 | Screenshots (Phase 5, opt-in) | `%LocalAppData%\WorkTrace\Screenshots\yyyy\MM\dd\` |
+| Board attachments (screenshots on cards) | `%LocalAppData%\WorkTrace\Attachments\yyyy\MM\` |
 
 Set `WORKTRACE_DATA_DIR` to use a different data directory (useful for development).
 None of these files are ever committed to Git.

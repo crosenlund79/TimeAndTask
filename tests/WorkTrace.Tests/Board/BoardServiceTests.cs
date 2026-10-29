@@ -68,7 +68,7 @@ public class BoardServiceTests : ManagementTestBase
         Assert.Equal(["C", "B"], await ColumnAsync(BoardStatus.Todo));
         Assert.Equal(["A"], await ColumnAsync(BoardStatus.Doing));
 
-        var history = (await Board.GetCardAsync(a.Id, Ct)).Events.Last();
+        var history = (await Board.GetCardAsync(a.Id, Ct)).Events[^1];
         Assert.Equal((BoardEventType.Status, BoardStatus.Todo, BoardStatus.Doing), (history.Type, history.From, history.To));
 
         // Dropping a card where it already is changes nothing.
@@ -110,7 +110,7 @@ public class BoardServiceTests : ManagementTestBase
         await Board.MoveAsync(feature.Id, BoardStatus.Done, null, "Works on my machine", Ct);
         await Board.MoveAsync(testing.Id, BoardStatus.Done, null, cancellationToken: Ct);
 
-        Assert.Equal("Works on my machine", (await Board.GetCardAsync(feature.Id, Ct)).Events.Last().Note);
+        Assert.Equal("Works on my machine", (await Board.GetCardAsync(feature.Id, Ct)).Events[^1].Note);
         Assert.Equal(["Feature", "Tests"], await ColumnAsync(BoardStatus.Done));
     }
 

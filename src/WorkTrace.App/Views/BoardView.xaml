@@ -120,12 +120,20 @@
       <ComboBox Grid.Column="2" Width="140" Margin="8,0,0,0" ItemsSource="{Binding PriorityFilterOptions}" DisplayMemberPath="Name"
                 SelectedValuePath="Id" SelectedValue="{Binding PriorityFilterKey}" AutomationProperties.Name="Filter by priority" />
       <TextBlock Grid.Column="3" Text="{Binding Summary}" Style="{StaticResource CaptionText}" Margin="12,0,0,0" VerticalAlignment="Center" />
-      <ToggleButton Grid.Column="5" Padding="12,5" IsChecked="{Binding ShowArchive}" ToolTip="Show archived cards (search, open, restore)">
-        <StackPanel Orientation="Horizontal">
-          <TextBlock Text="&#xE7B8;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
-          <TextBlock Text="Archive" />
-        </StackPanel>
-      </ToggleButton>
+      <StackPanel Grid.Column="5" Orientation="Horizontal">
+        <ToggleButton Padding="12,5" IsChecked="{Binding ShowArchive}" ToolTip="Show archived cards (search, open, restore)">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE7B8;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
+            <TextBlock Text="Archive" />
+          </StackPanel>
+        </ToggleButton>
+        <ToggleButton Padding="12,5" Margin="8,0,0,0" IsChecked="{Binding ShowBackup}" ToolTip="Back up to a ZIP file, or restore from one">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE896;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
+            <TextBlock Text="Backup" />
+          </StackPanel>
+        </ToggleButton>
+      </StackPanel>
     </Grid>
 
     <Grid Grid.Row="3">
@@ -136,7 +144,7 @@
 
       <!-- Columns -->
       <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
-                    Visibility="{Binding ShowArchive, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+                    Visibility="{Binding ShowColumns, Converter={StaticResource BoolToVisibility}}">
         <ItemsControl ItemsSource="{Binding Columns}" MinWidth="1000" Focusable="False">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
@@ -200,6 +208,11 @@
                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                      Visibility="{Binding EmptyMessage, Converter={StaticResource NullToCollapsed}}" />
         </Grid>
+      </Border>
+
+      <!-- Backup & restore -->
+      <Border Visibility="{Binding ShowBackup, Converter={StaticResource BoolToVisibility}}">
+        <views:BackupView DataContext="{Binding Backup}" />
       </Border>
 
       <!-- Open card -->
