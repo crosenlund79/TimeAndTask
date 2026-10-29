@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 11 | 0 | 12 | 5 | 0 |
+| 0 | 2 | 10 | 0 | 13 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -193,6 +193,23 @@ Capture a thought in seconds: title only, Enter saves into a separate Inbox (not
 
 Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
 
+### WT-044 · Screenshots on cards (paste, drop, browse)
+
+`feature` · priority High
+
+Ctrl+V, drag-and-drop and file picker in Quick Capture and on cards. Several images per card, thumbnails, enlarge, optional caption, remove. Until a storage decision is made, images stay in this browser only and are never uploaded to the public repository.
+
+**Acceptance criteria**
+
+- Ctrl+V, drag-and-drop and Browse each attach an image
+- Thumbnails, enlarge, caption and remove work
+- Nothing is uploaded to GitHub; the card says the images are on this device only
+- Large base64 images are never written to board.json
+
+**Evidence**
+
+Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
+
 ## To do
 
 ### WT-030 · Estimation engine
@@ -232,23 +249,6 @@ Phase 6. Week view, grouping and totals, unclassified time, adjustments with rec
 `feature` · priority Normal
 
 Phase 7. Start with Windows, theme, hand-tuned tray icons, backup/restore UI, packaging, user documentation.
-
-### WT-044 · Screenshots on cards (paste, drop, browse)
-
-`feature` · priority High
-
-Ctrl+V, drag-and-drop and file picker in Quick Capture and on cards. Several images per card, thumbnails, enlarge, optional caption, remove. Until a storage decision is made, images stay in this browser only and are never uploaded to the public repository.
-
-**Acceptance criteria**
-
-- Ctrl+V, drag-and-drop and Browse each attach an image
-- Thumbnails, enlarge, caption and remove work
-- Nothing is uploaded to GitHub; the card says the images are on this device only
-- Large base64 images are never written to board.json
-
-**Evidence**
-
-Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
 
 ### WT-045 · Links: multiple per card, quick copy and open
 

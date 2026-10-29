@@ -799,8 +799,8 @@
       "title": "Screenshots on cards (paste, drop, browse)",
       "category": "feature",
       "priority": "high",
-      "status": "todo",
-      "rank": "zr",
+      "status": "review",
+      "rank": "zzw",
       "archived": false,
       "archivedAt": null,
       "description": "Ctrl+V, drag-and-drop and file picker in Quick Capture and on cards. Several images per card, thumbnails, enlarge, optional caption, remove. Until a storage decision is made, images stay in this browser only and are never uploaded to the public repository.",
@@ -822,11 +822,19 @@
           "at": "2026-10-29T13:41:19Z",
           "by": "claude",
           "to": "todo"
+        },
+        {
+          "id": "67f446a3-1188-40e0-9598-7807094b6043",
+          "type": "status",
+          "at": "2026-10-29T14:01:06Z",
+          "by": "claude",
+          "from": "todo",
+          "to": "review"
         }
       ],
       "createdAt": "2026-10-29T13:41:19Z",
-      "updatedAt": "2026-10-29T14:01:03Z",
-      "rev": 2
+      "updatedAt": "2026-10-29T14:01:06Z",
+      "rev": 3
     },
     {
       "id": "WT-045",
