@@ -246,6 +246,10 @@ Screenshots stay in the browser that captured them (IndexedDB), never uploaded. 
 
 Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
 
+**Comments (1)**
+
+- 2026-10-29 15:22 · claude: The browser implementation is frozen (owner decision 2026-10-29); the same capability is now in WorkTrace (WT-050). Your call whether to accept this card for the browser board or archive it after WT-050 is verified.
+
 ### WT-045 · Links: multiple per card, quick copy and open
 
 `feature` · priority Normal
