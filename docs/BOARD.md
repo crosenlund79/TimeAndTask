@@ -5,7 +5,7 @@
 
 | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|
-| 2 | 8 | 0 | 11 | 5 | 0 |
+| 2 | 9 | 0 | 11 | 5 | 0 |
 
 ## In progress
 
@@ -248,6 +248,19 @@ Several external links per card, each with Open and Copy. Paste a URL; the label
 
 - Add a link by pasting just the URL
 - Each link can be opened or copied with one click
+
+### WT-046 · Backup & Export: ZIP download and restore
+
+`feature` · priority High
+
+Manual backup without any service: download a ZIP of the complete board, one creation month or selected cards (with this device's screenshots). Restore from such a ZIP with validation and a preview; nothing is overwritten without confirmation, comments are merged, never lost.
+
+**Acceptance criteria**
+
+- Download complete / month / selected cards as ZIP
+- Each monthly ZIP restores on its own
+- Restore validates the file and previews new, changed and unchanged cards before applying
+- Restoring never deletes cards or comments
 
 ## Backlog
 

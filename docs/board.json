@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "nextId": 46,
+  "nextId": 47,
   "cards": [
     {
       "id": "WT-001",
@@ -843,6 +843,41 @@
       ],
       "createdAt": "2026-10-29T13:41:21Z",
       "updatedAt": "2026-10-29T13:41:21Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-046",
+      "uid": "7527e076-b766-41da-9152-05ccea9026d3",
+      "title": "Backup & Export: ZIP download and restore",
+      "category": "feature",
+      "priority": "high",
+      "status": "todo",
+      "rank": "zy",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Manual backup without any service: download a ZIP of the complete board, one creation month or selected cards (with this device's screenshots). Restore from such a ZIP with validation and a preview; nothing is overwritten without confirmation, comments are merged, never lost.",
+      "acceptance": [
+        "Download complete / month / selected cards as ZIP",
+        "Each monthly ZIP restores on its own",
+        "Restore validates the file and previews new, changed and unchanged cards before applying",
+        "Restoring never deletes cards or comments"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "f7840e82-957d-4aee-a09c-3a76c45516e2",
+          "type": "created",
+          "at": "2026-10-29T13:41:24Z",
+          "by": "claude",
+          "to": "todo"
+        }
+      ],
+      "createdAt": "2026-10-29T13:41:24Z",
+      "updatedAt": "2026-10-29T13:41:24Z",
       "rev": 1
     }
   ]
