@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 15 | 5 | 0 |
+| 0 | 2 | 8 | 1 | 15 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,7 +13,21 @@ _Empty._
 
 ## In progress
 
-_None._
+### WT-050 · One application: Board, Inbox, screenshots and backups inside WorkTrace.exe
+
+`feature` · priority High
+
+Owner request 2026-10-29: no separate website. Kanban, Inbox, Archive, screenshots, Undo and backup/restore inside the WPF app, in worktrace.db (ADR-033..036). Import from the browser board (board.json or backup ZIP) preserving ids, comments and history. Email backup prepared but not sent (WT-047).
+
+**Acceptance criteria**
+
+- Board page: five columns, drag-and-drop between and within columns, Alt+arrows, Undo (Ctrl+Z)
+- Card panel auto-saves; links, dependencies, comments, history, priorities, optional tracked task
+- Inbox with quick capture (text, link, pasted screenshot); Archive with search and restore
+- Screenshots: Ctrl+V, drop, Browse, thumbnails, captions; stored under %LocalAppData%\WorkTrace\Attachments only
+- Import of docs/board.json keeps every card, id, status, order, comment and history entry
+- Complete/all/month/selected ZIP backups; restore shows a preview and never deletes
+- Works without internet, GitHub token or Pages; time tracking unaffected
 
 ## Review / Test
 

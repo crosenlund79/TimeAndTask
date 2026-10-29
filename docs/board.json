@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 50,
+  "nextId": 51,
   "cards": [
     {
       "id": "WT-001",
@@ -1049,6 +1049,44 @@
       "createdAt": "2026-10-29T13:41:31Z",
       "updatedAt": "2026-10-29T14:01:25Z",
       "rev": 2
+    },
+    {
+      "id": "WT-050",
+      "uid": "6547c392-52f5-4bf0-80d5-735f14eda6c4",
+      "title": "One application: Board, Inbox, screenshots and backups inside WorkTrace.exe",
+      "category": "feature",
+      "priority": "high",
+      "status": "doing",
+      "rank": "i",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Owner request 2026-10-29: no separate website. Kanban, Inbox, Archive, screenshots, Undo and backup/restore inside the WPF app, in worktrace.db (ADR-033..036). Import from the browser board (board.json or backup ZIP) preserving ids, comments and history. Email backup prepared but not sent (WT-047).",
+      "acceptance": [
+        "Board page: five columns, drag-and-drop between and within columns, Alt+arrows, Undo (Ctrl+Z)",
+        "Card panel auto-saves; links, dependencies, comments, history, priorities, optional tracked task",
+        "Inbox with quick capture (text, link, pasted screenshot); Archive with search and restore",
+        "Screenshots: Ctrl+V, drop, Browse, thumbnails, captions; stored under %LocalAppData%\\WorkTrace\\Attachments only",
+        "Import of docs/board.json keeps every card, id, status, order, comment and history entry",
+        "Complete/all/month/selected ZIP backups; restore shows a preview and never deletes",
+        "Works without internet, GitHub token or Pages; time tracking unaffected"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "d8b4d782-5b2a-4f20-bf27-da07f14cf3bd",
+          "type": "created",
+          "at": "2026-10-29T15:21:30Z",
+          "by": "claude",
+          "to": "doing"
+        }
+      ],
+      "createdAt": "2026-10-29T15:21:30Z",
+      "updatedAt": "2026-10-29T15:21:30Z",
+      "rev": 1
     }
   ]
 }
