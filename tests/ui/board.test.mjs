@@ -2,7 +2,7 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { applyOp, findCard, ops } from "../../app/board-core.js";
-import { committedBoard } from "../helpers.mjs";
+import { migratedBoard as committedBoard } from "../helpers.mjs";
 import { FakeApi, VALID_TOKEN } from "./fake-api.mjs";
 import { closeBrowser, getBrowser, openBoard, startServer } from "./harness.mjs";
 

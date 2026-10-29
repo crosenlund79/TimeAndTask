@@ -2,11 +2,11 @@
 import { test, before } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { cpSync, mkdtempSync, readFileSync } from "node:fs";
+import { cpSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { findCard, parseBoard, renderBoardMarkdown } from "../app/board-core.js";
-import { ROOT } from "./helpers.mjs";
+import { findCard, parseBoard, renderBoardMarkdown, serializeBoard } from "../app/board-core.js";
+import { migratedBoard, ROOT } from "./helpers.mjs";
 
 let remote;
 let a;
@@ -24,6 +24,9 @@ before(() => {
   execFileSync("git", ["init", "--quiet", "--bare", remote]);
   const seed = path.join(dir, "seed");
   cpSync(ROOT, seed, { recursive: true, filter: src => !/node_modules|\.git$|\/\.git\//.test(src) });
+  // Seed with the fixed migration fixture, not the live board (which changes as the board is used).
+  writeFileSync(path.join(seed, "docs/board.json"), serializeBoard(migratedBoard()));
+  writeFileSync(path.join(seed, "docs/BOARD.md"), renderBoardMarkdown(migratedBoard()));
   execFileSync("git", ["init", "--quiet", "-b", "board", seed]);
   git(seed, "add", "-A");
   git(seed, "commit", "--quiet", "-m", "seed");
