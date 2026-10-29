@@ -883,8 +883,8 @@
       "title": "Backup & Export: ZIP download and restore",
       "category": "feature",
       "priority": "high",
-      "status": "todo",
-      "rank": "zy",
+      "status": "review",
+      "rank": "zzz",
       "archived": false,
       "archivedAt": null,
       "description": "Manual backup without any service: download a ZIP of the complete board, one creation month or selected cards (with this device's screenshots). Restore from such a ZIP with validation and a preview; nothing is overwritten without confirmation, comments are merged, never lost.",
@@ -906,11 +906,19 @@
           "at": "2026-10-29T13:41:24Z",
           "by": "claude",
           "to": "todo"
+        },
+        {
+          "id": "b6979a99-41ac-4a79-b38c-d0fd465392e9",
+          "type": "status",
+          "at": "2026-10-29T14:01:16Z",
+          "by": "claude",
+          "from": "todo",
+          "to": "review"
         }
       ],
       "createdAt": "2026-10-29T13:41:24Z",
-      "updatedAt": "2026-10-29T14:01:14Z",
-      "rev": 2
+      "updatedAt": "2026-10-29T14:01:16Z",
+      "rev": 3
     },
     {
       "id": "WT-047",

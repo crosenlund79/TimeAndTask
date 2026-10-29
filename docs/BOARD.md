@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 9 | 0 | 14 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 15 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -225,6 +225,23 @@ Several external links per card, each with Open and Copy. Paste a URL; the label
 
 Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
 
+### WT-046 · Backup & Export: ZIP download and restore
+
+`feature` · priority High
+
+Manual backup without any service: download a ZIP of the complete board, one creation month or selected cards (with this device's screenshots). Restore from such a ZIP with validation and a preview; nothing is overwritten without confirmation, comments are merged, never lost.
+
+**Acceptance criteria**
+
+- Download complete / month / selected cards as ZIP
+- Each monthly ZIP restores on its own
+- Restore validates the file and previews new, changed and unchanged cards before applying
+- Restoring never deletes cards or comments
+
+**Evidence**
+
+Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
+
 ## To do
 
 ### WT-030 · Estimation engine
@@ -264,23 +281,6 @@ Phase 6. Week view, grouping and totals, unclassified time, adjustments with rec
 `feature` · priority Normal
 
 Phase 7. Start with Windows, theme, hand-tuned tray icons, backup/restore UI, packaging, user documentation.
-
-### WT-046 · Backup & Export: ZIP download and restore
-
-`feature` · priority High
-
-Manual backup without any service: download a ZIP of the complete board, one creation month or selected cards (with this device's screenshots). Restore from such a ZIP with validation and a preview; nothing is overwritten without confirmation, comments are merged, never lost.
-
-**Acceptance criteria**
-
-- Download complete / month / selected cards as ZIP
-- Each monthly ZIP restores on its own
-- Restore validates the file and previews new, changed and unchanged cards before applying
-- Restoring never deletes cards or comments
-
-**Evidence**
-
-Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
 
 ### WT-047 · Decide: screenshot storage and email delivery
 
