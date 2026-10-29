@@ -1,0 +1,25 @@
+# Browser tests of the board app (Chromium, desktop and phone sizes) against a fake GitHub API.
+# Runs only when the app or its tests change, not on every card edit.
+name: Board UI
+
+on:
+  push:
+    branches: [board, "board-*"]
+    paths: ["index.html", "app/**", "tests/**", "tools/**", "package.json", "package-lock.json", ".github/workflows/board-ui.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Browser tests
+        run: npm run test:ui

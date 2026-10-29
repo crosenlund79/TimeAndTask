@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>WorkTrace Board</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="app/styles.css">
+  <script type="module" src="app/app.js"></script>
+</head>
+<body>
+  <header class="toolbar">
+    <div class="toolbar-row">
+      <h1 class="brand">WorkTrace Board <span id="branch-label" class="branch-label" hidden></span></h1>
+      <div class="toolbar-actions">
+        <button type="button" id="sync" class="sync" data-state="loading" aria-live="polite">
+          <span class="sync-dot" aria-hidden="true"></span><span id="sync-text">Loading…</span>
+        </button>
+        <button type="button" id="refresh" class="btn icon-btn" title="Load the latest board from GitHub" aria-label="Refresh">⟳</button>
+        <button type="button" id="undo" class="btn" disabled title="Undo the last change (Ctrl+Z)">Undo</button>
+        <button type="button" id="archive-open" class="btn">Archive <span id="archive-count" class="count-pill">0</span></button>
+        <button type="button" id="new-card" class="btn btn-primary">New card</button>
+        <button type="button" id="account" class="btn">Sign in</button>
+      </div>
+    </div>
+    <div class="toolbar-row filters" role="search">
+      <input type="search" id="search" placeholder="Search id, title, notes, comments…" aria-label="Search cards" autocomplete="off">
+      <select id="filter-category" aria-label="Category"><option value="">All categories</option></select>
+      <select id="filter-priority" aria-label="Priority"><option value="">All priorities</option></select>
+      <select id="filter-status" aria-label="Status"><option value="">All statuses</option></select>
+      <select id="filter-scope" aria-label="Archived cards">
+        <option value="active">Active cards</option>
+        <option value="archived">Archived cards</option>
+        <option value="all">Active and archived</option>
+      </select>
+    </div>
+  </header>
+  <div id="banner" class="banner" role="alert" hidden></div>
+  <nav id="tabs" class="tabs" aria-label="Columns"></nav>
+  <main id="board" class="board" aria-label="Board"></main>
+  <div id="scrim" class="scrim" hidden></div>
+  <aside id="panel" class="panel" aria-label="Card details" hidden></aside>
+  <aside id="archive" class="panel archive" aria-label="Archive" hidden></aside>
+  <div id="dialog" class="dialog-root" hidden></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <noscript>The board needs JavaScript. You can also read docs/BOARD.md in the repository.</noscript>
+</body>
+</html>

@@ -1,0 +1,694 @@
+{
+  "schemaVersion": 1,
+  "nextId": 42,
+  "cards": [
+    {
+      "id": "WT-001",
+      "uid": "00ed5f06-8b3e-47b3-852a-c3ae0ab88b9e",
+      "title": "Foundation: solution, SQLite + migrations, settings file, logging, tray, Windows CI",
+      "category": "architecture",
+      "priority": "normal",
+      "status": "done",
+      "rank": "i",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "f61a73c9-01aa-40ea-b615-f2618a05d6ee",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "done"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-002",
+      "uid": "d959f3ad-cf0d-4ed2-8a63-e805045577df",
+      "title": "Clients, tasks and lists management UI, incl. Phase 2 refinements",
+      "category": "feature",
+      "priority": "normal",
+      "status": "done",
+      "rank": "r",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "ce4e1dc9-6cc2-48d7-b3a3-15c3e54ff89a",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "done"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-003",
+      "uid": "55639c9d-f9d2-4a49-a12c-65d1fc502daf",
+      "title": "Check-in popup: record, reuse previous task, create task, notes, details",
+      "category": "feature",
+      "priority": "normal",
+      "status": "done",
+      "rank": "w",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "c5960a71-ee69-4dbb-bc3a-3d24f5aa0f61",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "done"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-004",
+      "uid": "bdb5512a-5407-4a9e-b78b-b057118adf7b",
+      "title": "Tracking engine: segments, pause/resume, sleep/lock/clock handling, Today timeline",
+      "category": "architecture",
+      "priority": "normal",
+      "status": "done",
+      "rank": "y",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "8367c2b6-2755-4ca3-889e-e55ca2b7c966",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "done"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-005",
+      "uid": "e4640da2-558e-4ce1-8f6a-6517017b0597",
+      "title": "Check-in interval presets and custom value",
+      "category": "feature",
+      "priority": "normal",
+      "status": "review",
+      "rank": "zi",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Presets 1/5/10/15/30/60 minutes plus custom; applied immediately, no duplicate or backlog prompts.",
+      "acceptance": [
+        "changing the interval moves the next check-in in Overview and the popups follow it."
+      ],
+      "notes": "",
+      "evidence": "engine interval tests, `SettingsTests`. Could not be verified while WT-010 blocked check-ins.",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "e46d00fd-d47c-4c55-bc16-879e01028780",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-006",
+      "uid": "dc57fc98-1f41-43a7-8308-241e12f24c3e",
+      "title": "Global shortcut opens a focused check-in from any app",
+      "category": "bug",
+      "priority": "normal",
+      "status": "done",
+      "rank": "z",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "3b322148-5702-4aea-8dcd-f754cc6267c7",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "done"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-010",
+      "uid": "1584b786-00c6-4f75-b07e-1afdafff883b",
+      "title": "Scheduled check-ins appear reliably",
+      "category": "bug",
+      "priority": "normal",
+      "status": "review",
+      "rank": "i",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Scheduled check-ins did not appear on the owner's machine (Unobtrusive, Focused, auto-dismiss, \"show now\"). Likely cause: a wake reported only as an automatic resume left tracking \"asleep\"; also guards a lock without unlock.",
+      "acceptance": [
+        "With a 1-minute interval, check-ins appear in Unobtrusive mode (no focus taken) and in Focused mode (takes focus).",
+        "They appear while the main window is closed to the tray, and after sleep/wake (within about a minute).",
+        "An ignored check-in closes after its countdown and shows as \"missed\" in Overview."
+      ],
+      "notes": "",
+      "evidence": "`RealAppTests` (real WorkTrace.exe in CI), `SchedulingTests`, engine tests. Not yet confirmed on the owner's machine.",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "5e0040f5-d219-4cf0-8e8c-42445281dc79",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-011",
+      "uid": "4a933f96-3258-4541-a24c-b478e7690e42",
+      "title": "Tracking status and last check-in visible",
+      "category": "feature",
+      "priority": "normal",
+      "status": "review",
+      "rank": "r",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Overview and Settings show Active / Paused / check-ins off / error, interval, next check-in, the last attempt with its outcome, and a warning when check-ins are held back or failing.",
+      "acceptance": [
+        "the status matches what happens (pause, resume, missed, answered); nothing fails without a visible reason."
+      ],
+      "notes": "",
+      "evidence": "`TrackingStateTests`, `SchedulingTests`.",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "9ac962bd-c16c-4061-a72d-18dabfb010bb",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-012",
+      "uid": "d9555f4b-2cd5-4702-b459-3df99f13ff14",
+      "title": "\"Show a scheduled check-in now\" explains itself",
+      "category": "feature",
+      "priority": "normal",
+      "status": "review",
+      "rank": "w",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Uses the real scheduled path; when it cannot show one it says why (paused, popup already open, session locked).",
+      "acceptance": [
+        "shows a popup with countdown when tracking; shows a clear message when paused or a popup is open."
+      ],
+      "notes": "",
+      "evidence": "`ShowNow_…` tests.",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "d02d5e61-9318-4071-95c9-556fed11d806",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-013",
+      "uid": "503bb175-41bb-4295-82c9-ca9879edb946",
+      "title": "Popup countdown",
+      "category": "feature",
+      "priority": "normal",
+      "status": "review",
+      "rank": "y",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Compact mm:ss countdown on scheduled popups; paused while the pointer is over the popup; stops on interaction; closes and records a missed check-in on expiry. No focus stealing, tick stops when not needed.",
+      "acceptance": [
+        "behaves as described in both popup modes."
+      ],
+      "notes": "",
+      "evidence": "`Countdown_…` tests, `RealAppTests`.",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "4df085c1-eaa8-44d7-a8bf-53e0909dc55d",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-014",
+      "uid": "8bfbd485-1bcb-496d-8569-831dc56448fa",
+      "title": "Alt+1–4 records a recent task",
+      "category": "bug",
+      "priority": "normal",
+      "status": "review",
+      "rank": "z",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Handled at window level (top row and number pad); never types into the search box; does nothing without recents.",
+      "acceptance": [
+        "with the popup active and search empty, Alt+1 records recent task 1 and closes the popup, no characters typed."
+      ],
+      "notes": "",
+      "evidence": "`FocusTests` (incl. real keystrokes from another process).",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "68fc536a-97ea-443b-9063-0ec142ab10a8",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-015",
+      "uid": "e67b7569-4614-4418-8cd0-37bdcd8e97e7",
+      "title": "Custom interval validation (R08)",
+      "category": "testing",
+      "priority": "normal",
+      "status": "review",
+      "rank": "zr",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Whole minutes 1–240 only.",
+      "acceptance": [
+        "0, 241, 1.5 rejected with a message; 7 accepted and applied."
+      ],
+      "notes": "",
+      "evidence": "`CustomInterval_AcceptsOnlyWholeMinutesFrom1To240`.",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "2eb3f970-b5ce-4482-8c59-518da7c2422b",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-016",
+      "uid": "4e1cb913-cdf4-40f6-9e1d-fe6d27403f1f",
+      "title": "Pause and resume in tray and Overview (R09)",
+      "category": "feature",
+      "priority": "normal",
+      "status": "review",
+      "rank": "zw",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "timed and indefinite pause show in tray menu and Overview; Resume appears only while paused; a timed pause resumes by itself."
+      ],
+      "notes": "",
+      "evidence": "`TrackingStateTests`. Tray menu appearance is a manual check.",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "cd403d9e-d7be-48eb-88c7-34604eef71ca",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-017",
+      "uid": "b7b77564-505f-4b79-b7d7-b004c20ce1be",
+      "title": "Close to tray, reopen, single instance (R10)",
+      "category": "feature",
+      "priority": "normal",
+      "status": "review",
+      "rank": "zy",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "closing the window keeps WorkTrace running in the tray; starting it again opens the existing window."
+      ],
+      "notes": "",
+      "evidence": "`RealAppTests`.",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "a2a2eb15-89e2-4865-a4c3-e9ce45725c93",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-018",
+      "uid": "de90d807-8678-4007-8054-c7af0b2f7e17",
+      "title": "WorkTrace logo in the popup header",
+      "category": "feature",
+      "priority": "normal",
+      "status": "review",
+      "rank": "zz",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Small vector logo.",
+      "acceptance": [
+        "looks right in light and dark themes."
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "bb52550c-3f77-49a2-862b-04685f59e0a0",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-030",
+      "uid": "dc3dd4ac-c458-4054-9b22-b4566fe6e545",
+      "title": "Estimation engine",
+      "category": "architecture",
+      "priority": "normal",
+      "status": "todo",
+      "rank": "i",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Phase 4. Reconstruct time from segments, lock periods, observations, prompts and manual allocations. Blocked by WT-010 (scheduled check-ins must work on the owner's machine first).",
+      "acceptance": [
+        "the nine time-estimation invariants in CLAUDE.md hold, each covered by tests; estimates are labelled Estimated, never Confirmed; recalculation never discards manual allocations."
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [
+        "WT-010"
+      ],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "04df57fd-1b11-4e2e-a2a6-35e118ee4654",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "todo"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-031",
+      "uid": "740c450b-a8fc-4b8e-9861-1f5f423ea072",
+      "title": "Activity log",
+      "category": "feature",
+      "priority": "normal",
+      "status": "todo",
+      "rank": "r",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Phase 4. Editable day view of observations and estimated periods: filters, auto-save, undo (ChangeLog), manual allocations, split and merge.",
+      "acceptance": [
+        "owner can correct a day's time without losing original observations; undo restores the previous state."
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "9a927a70-0638-4a0a-bb30-03b811bcf5ab",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "todo"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-032",
+      "uid": "f8fb9081-ec13-4d76-9e1f-5161f16e7d00",
+      "title": "Screenshots",
+      "category": "feature",
+      "priority": "normal",
+      "status": "todo",
+      "rank": "w",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Phase 5. Opt-in primary-monitor capture, PNG default or JPEG with quality, date folders, viewer, retention and deletion, no capture while locked, notification excluded from the capture.",
+      "acceptance": [],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "62c4cafe-e6d5-4311-81a5-2a20467a16eb",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "todo"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-033",
+      "uid": "2a2aaa51-5405-4c94-bf31-9e129ad185a2",
+      "title": "Weekly timesheets",
+      "category": "feature",
+      "priority": "normal",
+      "status": "todo",
+      "rank": "y",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Phase 6. Week view, grouping and totals, unclassified time, adjustments with reconciliation, rounding, CSV (Danish-friendly, injection-safe) and JSON export.",
+      "acceptance": [],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "3a3e95c7-22cc-4616-916b-e2e46ef42738",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "todo"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-034",
+      "uid": "324a1fb1-ee65-42f3-899b-3f17542c2151",
+      "title": "Polish and release",
+      "category": "feature",
+      "priority": "normal",
+      "status": "todo",
+      "rank": "z",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Phase 7. Start with Windows, theme, hand-tuned tray icons, backup/restore UI, packaging, user documentation.",
+      "acceptance": [],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "a1b5b19b-bd59-4283-9d00-da47ff847269",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "todo"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-040",
+      "uid": "ef58eac1-6c25-4613-8618-40557b9fb932",
+      "title": "Tray notification when check-ins are held back",
+      "category": "idea",
+      "priority": "normal",
+      "status": "backlog",
+      "rank": "i",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Today the warning is shown only in the main window. A tray balloon could tell the owner sooner.",
+      "acceptance": [],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "e94456b6-1504-4fb0-8ee7-626f874f0589",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "backlog"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-041",
+      "uid": "21a5b35c-6e5b-4786-b405-e5b07223aedc",
+      "title": "Automated check of the tray menu's appearance",
+      "category": "idea",
+      "priority": "normal",
+      "status": "backlog",
+      "rank": "r",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Tray menu layout is verified manually today.",
+      "acceptance": [],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "d164ffd7-4a78-4472-92b4-978e397ea8aa",
+          "type": "migrated",
+          "at": "2026-10-28T22:47:05Z",
+          "by": "migration",
+          "to": "backlog"
+        }
+      ],
+      "createdAt": "2026-10-28T22:47:05Z",
+      "updatedAt": "2026-10-28T22:47:05Z",
+      "rev": 1
+    }
+  ]
+}

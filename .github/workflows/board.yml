@@ -1,0 +1,44 @@
+# Runs on every change to a board branch: validates docs/board.json, runs the data/sync/CLI tests and
+# regenerates docs/BOARD.md when a browser save changed board.json (the browser writes only that file).
+name: Board
+
+on:
+  push:
+    branches: [board, "board-*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: board-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate board.json
+        run: node tools/board.mjs validate
+      - name: Data, sync and CLI tests
+        run: npm test
+      - name: Regenerate BOARD.md from board.json
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3 4; do
+            node tools/board.mjs render
+            if git diff --quiet -- docs/BOARD.md; then echo "BOARD.md is up to date"; exit 0; fi
+            git add docs/BOARD.md
+            git commit -m "board: regenerate BOARD.md"
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then exit 0; fi
+            echo "The board changed meanwhile; regenerating from the latest version"
+            git fetch origin "${GITHUB_REF_NAME}"
+            git reset --hard "origin/${GITHUB_REF_NAME}"
+          done
+          exit 1

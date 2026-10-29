@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crosenlund79.github.io/TimeAndTask/schema/board.schema.json",
+  "title": "WorkTrace board",
+  "description": "docs/board.json on the board branch. Version 1. Validated by validateBoard() in app/board-core.js, which also checks rules JSON Schema cannot express: unique ids/uids/comment ids, existing dependencies, no cycles, nextId above every card number.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "nextId", "cards"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "nextId": { "type": "integer", "minimum": 1, "description": "Number for the next new card. Ids are never reused." },
+    "cards": { "type": "array", "items": { "$ref": "#/$defs/card" } }
+  },
+  "$defs": {
+    "timestamp": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$", "description": "UTC, ISO 8601" },
+    "cardId": { "type": "string", "pattern": "^WT-\\d{3,}$" },
+    "status": { "enum": ["backlog", "todo", "doing", "review", "done"] },
+    "card": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "uid", "title", "category", "priority", "status", "rank", "archived", "archivedAt", "description",
+        "acceptance", "notes", "evidence", "blockedBy", "links", "comments", "history", "createdAt", "updatedAt", "rev"],
+      "properties": {
+        "id": { "$ref": "#/$defs/cardId" },
+        "uid": { "type": "string", "minLength": 1, "description": "Random identity; tells two cards with the same id apart during sync." },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "category": { "enum": ["feature", "bug", "architecture", "testing", "idea"] },
+        "priority": { "enum": ["low", "normal", "high", "critical"] },
+        "status": { "$ref": "#/$defs/status" },
+        "rank": { "type": "string", "pattern": "^[0-9a-z]*[1-9a-z]$", "description": "Order within the column (string comparison)." },
+        "archived": { "type": "boolean", "description": "Archived cards are Done cards hidden from the board; never deleted." },
+        "archivedAt": { "oneOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
+        "description": { "type": "string", "description": "Markdown" },
+        "acceptance": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "notes": { "type": "string", "description": "Markdown; the current situation" },
+        "evidence": { "type": "string", "description": "Markdown; what verified the work (tests, CI runs)" },
+        "blockedBy": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/cardId" } },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["label", "url"],
+            "properties": { "label": { "type": "string", "minLength": 1 }, "url": { "type": "string", "pattern": "^https?://" } }
+          }
+        },
+        "comments": {
+          "type": "array",
+          "description": "Append-only, chronological.",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["id", "author", "at", "text"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "author": { "type": "string", "minLength": 1 },
+              "at": { "$ref": "#/$defs/timestamp" },
+              "text": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "history": {
+          "type": "array",
+          "description": "Status changes, archiving and restoring, oldest first.",
+          "items": {
+            "type": "object", "required": ["id", "type", "at", "by"],
+            "properties": {
+              "id": { "type": "string" },
+              "type": { "enum": ["created", "migrated", "status", "archived", "restored"] },
+              "at": { "$ref": "#/$defs/timestamp" },
+              "by": { "type": "string" },
+              "from": { "$ref": "#/$defs/status" },
+              "to": { "$ref": "#/$defs/status" },
+              "accepted": { "type": "string", "description": "Owner acceptance recorded when moved to Done" }
+            }
+          }
+        },
+        "createdAt": { "$ref": "#/$defs/timestamp" },
+        "updatedAt": { "$ref": "#/$defs/timestamp" },
+        "rev": { "type": "integer", "minimum": 1, "description": "Incremented on every change to the card." }
+      }
+    }
+  }
+}

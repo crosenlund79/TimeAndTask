@@ -1,0 +1,14 @@
+{
+  "name": "worktrace-board",
+  "private": true,
+  "description": "Interactive Kanban board for WorkTrace development, stored in docs/board.json on the board branch.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"tests/*.test.mjs\"",
+    "test:ui": "node --test --test-concurrency=1 \"tests/ui/*.test.mjs\"",
+    "validate": "node tools/board.mjs validate && node tools/board.mjs render --check"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}
