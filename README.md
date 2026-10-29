@@ -15,6 +15,9 @@ feature branches, so board edits never conflict with code changes.
 | `index.html`, `app/` | The browser app: plain HTML/CSS/JS, no third-party code, served by GitHub Pages. |
 | `app/board-core.js` | Shared rules (validation, operations, conflicts, Markdown), used by the app and the CLI. |
 | `tools/board.mjs` | Command-line tool for Claude Code. |
+| `app/backup.js`, `app/zip.js` | Backup & Export: ZIP archives per creation month, restore with preview. |
+| `app/attachments.js` | Screenshots, stored in this browser only (IndexedDB) until private storage is decided. |
+| `docs/proposals/` | Designs waiting for a decision. |
 | `tools/migrate.mjs`, `docs/migration/` | One-time migration from the hand-written BOARD.md (2026-10-28). |
 | `tests/` | Data, sync and CLI tests (`npm test`) and browser tests (`npm run test:ui`). |
 
@@ -37,6 +40,24 @@ it on the same GitHub page.
 
 A fine-grained token with Contents write can push to any branch of the repository. The app itself only writes
 `docs/board.json` on the `board` branch. For extra safety, protect `main` with a ruleset (Settings › Rules).
+
+## Capture first, organise later
+
+- **Quick capture:** type in the box at the top (or press `c`) and press **Enter**. A title is all it needs. The item
+  goes to the **Inbox**, not onto the board. Paste a link and it becomes the title and a link. Paste a screenshot
+  (Ctrl+V) or drop an image anywhere, and press Enter, with or without a title.
+- **Inbox** (toolbar, with a counter): captured items, newest first. Search, open one to add notes, links or
+  screenshots, put it on the board with *To board…*, or archive it. Inbox items need no category.
+- **Screenshots:** Ctrl+V, drag-and-drop or *browse*, on a card or while capturing. Several per card, with
+  thumbnails, click to enlarge, an optional caption, and remove. **They stay in this browser only** and are never
+  uploaded: the repository is public. Include them in a backup to keep them safe. Syncing them privately between
+  devices waits for a decision ([proposal](docs/proposals/2026-10-29-screenshots-and-email-backup.md)).
+- **Links:** paste a URL (the label is optional); each link has **Copy** and **Open**. URLs written in notes become
+  links too.
+- **Backup & Export** (toolbar): download a ZIP of everything, one creation month or selected cards, including this
+  browser's screenshots. Each ZIP restores on its own. **Restore** checks the file and shows what would change
+  (new, changed, unchanged) before anything happens. It never deletes cards or comments, and edits made after the
+  backup are not overwritten unless you tick them. Daily email backups wait for the same decision.
 
 ## Using the board
 
@@ -89,6 +110,8 @@ Every command fetches the latest board first. Changes are committed and pushed w
 meanwhile, the change is re-applied on top, or reported as a conflict (exit code 3) without saving anything.
 
 ```bash
+node tools/board.mjs capture "Ask Peter about the export" --link https://…   # into the Inbox
+node tools/board.mjs inbox                     # what is waiting in the Inbox
 node tools/board.mjs show                      # columns and cards
 node tools/board.mjs get WT-010                # one card: notes, comments, history
 node tools/board.mjs move WT-010 doing         # start work
@@ -101,12 +124,15 @@ node tools/board.mjs set WT-030 blockedBy '["WT-010"]'
 node tools/board.mjs move WT-010 done --owner-accepted "Owner, 2026-11-02: works on my machine"
 ```
 
-Feature and bug cards move to Done only with `--owner-accepted`, after the owner explicitly accepted the work.
+Feature, bug and uncategorised cards move to Done only with `--owner-accepted`, after the owner explicitly accepted
+the work.
 
 ## Data format
 
-`docs/board.json` follows [schema/board.schema.json](schema/board.schema.json) (version 1): `nextId` and a list of
-cards with `id` (never reused), `title`, `category`, `priority`, `status`, `rank` (order within a column),
+`docs/board.json` follows [schema/board.schema.json](schema/board.schema.json) (version 2; version-1 files are
+upgraded when read): `nextId` and a list of
+cards with `id` (never reused), `title`, `category` (optional), `priority`, `status` (`inbox` or one of the five
+columns), `rank` (order within a column),
 `archived`/`archivedAt`, `description`, `acceptance`, `notes`, `evidence`, `blockedBy`, `links`, `comments`,
 `history`, `createdAt`, `updatedAt` and `rev`. `validateBoard()` in `app/board-core.js` also checks unique ids,
 existing dependencies and the absence of cycles.
