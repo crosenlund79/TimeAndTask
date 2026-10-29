@@ -33,6 +33,7 @@ Owner request 2026-10-29: no separate website. Kanban, Inbox, Archive, screensho
 
 Phase A (data, service, import): commit 0b2f544, CI run 25 green
 Phase B (Board/Inbox pages, screenshots): commit a6c4add, CI run 26 green on windows-latest, 247 tests incl. BoardFlowTests and UiSmokeTests
+Phase D (backup/restore, docs): commit 3ad2687, CI run 27 green on windows-latest; WorkTrace ZIPs also parse in the browser board's parseBackup
 
 **Links**
 
