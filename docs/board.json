@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "nextId": 48,
+  "nextId": 49,
   "cards": [
     {
       "id": "WT-001",
@@ -912,6 +912,42 @@
       ],
       "createdAt": "2026-10-29T13:41:26Z",
       "updatedAt": "2026-10-29T13:41:26Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-048",
+      "uid": "fa9d9e6e-3a67-47a2-8f8f-8440e957a4ae",
+      "title": "Screenshot storage that syncs between devices",
+      "category": "feature",
+      "priority": "high",
+      "status": "todo",
+      "rank": "zzi",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Store screenshots privately (not in the public repository) so they appear on every device and can be backed up. Depends on the storage decision.",
+      "acceptance": [
+        "Screenshots added on one device appear on another",
+        "No screenshot is publicly readable",
+        "Images that existed only on this device can be uploaded once storage exists"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [
+        "WT-047"
+      ],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "bd99911e-c628-4615-a900-9caf709ac95f",
+          "type": "created",
+          "at": "2026-10-29T13:41:29Z",
+          "by": "claude",
+          "to": "todo"
+        }
+      ],
+      "createdAt": "2026-10-29T13:41:29Z",
+      "updatedAt": "2026-10-29T13:41:29Z",
       "rev": 1
     }
   ]

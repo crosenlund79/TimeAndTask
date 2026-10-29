@@ -5,7 +5,7 @@
 
 | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|
-| 2 | 10 | 0 | 11 | 5 | 0 |
+| 2 | 11 | 0 | 11 | 5 | 0 |
 
 ## In progress
 
@@ -273,6 +273,18 @@ Owner decision needed. See docs/proposals/2026-10-29-screenshots-and-email-backu
 - Storage location for screenshots chosen
 - Email sending service and credential handling chosen
 - Recurring cost confirmed (expected: none)
+
+### WT-048 · Screenshot storage that syncs between devices
+
+`feature` · priority High · blocked by WT-047
+
+Store screenshots privately (not in the public repository) so they appear on every device and can be backed up. Depends on the storage decision.
+
+**Acceptance criteria**
+
+- Screenshots added on one device appear on another
+- No screenshot is publicly readable
+- Images that existed only on this device can be uploaded once storage exists
 
 ## Backlog
 
