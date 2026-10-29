@@ -5,7 +5,7 @@
 
 | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|
-| 2 | 5 | 0 | 10 | 5 | 0 |
+| 0 | 2 | 0 | 1 | 1 | 0 |
 
 ## In progress
 
@@ -13,201 +13,33 @@ _None._
 
 ## Review / Test
 
-### WT-010 · Scheduled check-ins appear reliably
-
-`bug` · priority Normal
-
-Scheduled check-ins did not appear on the owner's machine (Unobtrusive, Focused, auto-dismiss, "show now"). Likely cause: a wake reported only as an automatic resume left tracking "asleep"; also guards a lock without unlock.
-
-**Acceptance criteria**
-
-- With a 1-minute interval, check-ins appear in Unobtrusive mode (no focus taken) and in Focused mode (takes focus).
-- They appear while the main window is closed to the tray, and after sleep/wake (within about a minute).
-- An ignored check-in closes after its countdown and shows as "missed" in Overview.
-
-**Evidence**
-
-`RealAppTests` (real WorkTrace.exe in CI), `SchedulingTests`, engine tests. Not yet confirmed on the owner's machine.
-
-### WT-011 · Tracking status and last check-in visible
-
-`feature` · priority Normal
-
-Overview and Settings show Active / Paused / check-ins off / error, interval, next check-in, the last attempt with its outcome, and a warning when check-ins are held back or failing.
-
-**Acceptance criteria**
-
-- the status matches what happens (pause, resume, missed, answered); nothing fails without a visible reason.
-
-**Evidence**
-
-`TrackingStateTests`, `SchedulingTests`.
-
-### WT-012 · "Show a scheduled check-in now" explains itself
-
-`feature` · priority Normal
-
-Uses the real scheduled path; when it cannot show one it says why (paused, popup already open, session locked).
-
-**Acceptance criteria**
-
-- shows a popup with countdown when tracking; shows a clear message when paused or a popup is open.
-
-**Evidence**
-
-`ShowNow_…` tests.
-
-### WT-013 · Popup countdown
-
-`feature` · priority Normal
-
-Compact mm:ss countdown on scheduled popups; paused while the pointer is over the popup; stops on interaction; closes and records a missed check-in on expiry. No focus stealing, tick stops when not needed.
-
-**Acceptance criteria**
-
-- behaves as described in both popup modes.
-
-**Evidence**
-
-`Countdown_…` tests, `RealAppTests`.
-
-### WT-014 · Alt+1–4 records a recent task
-
-`bug` · priority Normal
-
-Handled at window level (top row and number pad); never types into the search box; does nothing without recents.
-
-**Acceptance criteria**
-
-- with the popup active and search empty, Alt+1 records recent task 1 and closes the popup, no characters typed.
-
-**Evidence**
-
-`FocusTests` (incl. real keystrokes from another process).
-
-### WT-005 · Check-in interval presets and custom value
-
-`feature` · priority Normal
-
-Presets 1/5/10/15/30/60 minutes plus custom; applied immediately, no duplicate or backlog prompts.
-
-**Acceptance criteria**
-
-- changing the interval moves the next check-in in Overview and the popups follow it.
-
-**Evidence**
-
-engine interval tests, `SettingsTests`. Could not be verified while WT-010 blocked check-ins.
-
-### WT-015 · Custom interval validation (R08)
+### WT-003 · Test card C
 
 `testing` · priority Normal
 
-Whole minutes 1–240 only.
-
-**Acceptance criteria**
-
-- 0, 241, 1.5 rejected with a message; 7 accepted and applied.
-
-**Evidence**
-
-`CustomInterval_AcceptsOnlyWholeMinutesFrom1To240`.
-
-### WT-016 · Pause and resume in tray and Overview (R09)
-
-`feature` · priority Normal
-
-**Acceptance criteria**
-
-- timed and indefinite pause show in tray menu and Overview; Resume appears only while paused; a timed pause resumes by itself.
-
-**Evidence**
-
-`TrackingStateTests`. Tray menu appearance is a manual check.
-
-### WT-017 · Close to tray, reopen, single instance (R10)
-
-`feature` · priority Normal
-
-**Acceptance criteria**
-
-- closing the window keeps WorkTrace running in the tray; starting it again opens the existing window.
-
-**Evidence**
-
-`RealAppTests`.
-
-### WT-018 · WorkTrace logo in the popup header
-
-`feature` · priority Normal
-
-Small vector logo.
-
-**Acceptance criteria**
-
-- looks right in light and dark themes.
+Disposable card for the real GitHub sync tests.
 
 ## To do
 
-### WT-030 · Estimation engine
+### WT-001 · Test card A
 
-`architecture` · priority Normal · blocked by WT-010
+`testing` · priority Normal
 
-Phase 4. Reconstruct time from segments, lock periods, observations, prompts and manual allocations. Blocked by WT-010 (scheduled check-ins must work on the owner's machine first).
+Disposable card for the real GitHub sync tests.
 
-**Acceptance criteria**
+### WT-002 · Test card B
 
-- the nine time-estimation invariants in CLAUDE.md hold, each covered by tests; estimates are labelled Estimated, never Confirmed; recalculation never discards manual allocations.
+`testing` · priority Normal
 
-### WT-031 · Activity log
-
-`feature` · priority Normal
-
-Phase 4. Editable day view of observations and estimated periods: filters, auto-save, undo (ChangeLog), manual allocations, split and merge.
-
-**Acceptance criteria**
-
-- owner can correct a day's time without losing original observations; undo restores the previous state.
-
-### WT-032 · Screenshots
-
-`feature` · priority Normal
-
-Phase 5. Opt-in primary-monitor capture, PNG default or JPEG with quality, date folders, viewer, retention and deletion, no capture while locked, notification excluded from the capture.
-
-### WT-033 · Weekly timesheets
-
-`feature` · priority Normal
-
-Phase 6. Week view, grouping and totals, unclassified time, adjustments with reconciliation, rounding, CSV (Danish-friendly, injection-safe) and JSON export.
-
-### WT-034 · Polish and release
-
-`feature` · priority Normal
-
-Phase 7. Start with Windows, theme, hand-tuned tray icons, backup/restore UI, packaging, user documentation.
+Disposable card for the real GitHub sync tests.
 
 ## Backlog
 
-### WT-040 · Tray notification when check-ins are held back
-
-`idea` · priority Normal
-
-Today the warning is shown only in the main window. A tray balloon could tell the owner sooner.
-
-### WT-041 · Automated check of the tray menu's appearance
-
-`idea` · priority Normal
-
-Tray menu layout is verified manually today.
+_None._
 
 ## Done
 
-- **WT-001** · Foundation: solution, SQLite + migrations, settings file, logging, tray, Windows CI · `architecture`
-- **WT-002** · Clients, tasks and lists management UI, incl. Phase 2 refinements · `feature`
-- **WT-003** · Check-in popup: record, reuse previous task, create task, notes, details · `feature`
-- **WT-004** · Tracking engine: segments, pause/resume, sleep/lock/clock handling, Today timeline · `architecture`
-- **WT-006** · Global shortcut opens a focused check-in from any app · `bug`
+- **WT-004** · Test card D · `testing`
 
 ## Archived (0)
 
