@@ -65,7 +65,7 @@
       "archivedAt": null,
       "description": "Disposable card for the real GitHub sync tests.",
       "acceptance": [],
-      "notes": "B: real race note",
+      "notes": "Browser-path note on a Review card: the workflow must regenerate BOARD.md.",
       "evidence": "",
       "blockedBy": [],
       "links": [],
@@ -88,8 +88,8 @@
         }
       ],
       "createdAt": "2026-10-29T01:30:00Z",
-      "updatedAt": "2026-10-29T01:17:02Z",
-      "rev": 4
+      "updatedAt": "2026-10-29T01:22:00Z",
+      "rev": 5
     },
     {
       "id": "WT-003",
