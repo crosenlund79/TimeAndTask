@@ -34,7 +34,7 @@ Disposable card for the real GitHub sync tests.
 
 **Notes**
 
-B: real race note
+Browser-path note on a Review card: the workflow must regenerate BOARD.md.
 
 ## To do
 
