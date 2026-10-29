@@ -13,7 +13,7 @@ _None._
 
 ## Review / Test
 
-### WT-003 · Test card C
+### WT-003 · Title from B
 
 `testing` · priority Normal
 

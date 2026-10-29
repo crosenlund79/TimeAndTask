@@ -65,7 +65,7 @@
     {
       "id": "WT-003",
       "uid": "9acccbb9-6470-4287-a9d4-1d87bf965b75",
-      "title": "Test card C",
+      "title": "Title from B",
       "category": "testing",
       "priority": "normal",
       "status": "review",
@@ -89,8 +89,8 @@
         }
       ],
       "createdAt": "2026-10-29T01:30:00Z",
-      "updatedAt": "2026-10-29T01:30:00Z",
-      "rev": 1
+      "updatedAt": "2026-10-29T01:15:07Z",
+      "rev": 2
     },
     {
       "id": "WT-004",
