@@ -1,18 +1,27 @@
 // WorkTrace board — shared core used by the browser app and the CLI (tools/board.mjs).
 // Pure functions only: no DOM, no network, no Node APIs. Schema: schema/board.schema.json (version 1).
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
+/** The five Kanban columns. */
 export const STATUSES = ["backlog", "todo", "doing", "review", "done"];
-export const STATUS_LABELS = { backlog: "Backlog", todo: "To do", doing: "In progress", review: "Review / Test", done: "Done" };
+/** Captured, not yet organised. A list beside the board, not a column. */
+export const INBOX = "inbox";
+export const ALL_STATUSES = [INBOX, ...STATUSES];
+export const STATUS_LABELS = { inbox: "Inbox", backlog: "Backlog", todo: "To do", doing: "In progress", review: "Review / Test", done: "Done" };
 export const CATEGORIES = ["feature", "bug", "architecture", "testing", "idea"];
 export const CATEGORY_LABELS = { feature: "Feature", bug: "Bug", architecture: "Architecture", testing: "Testing", idea: "Idea" };
 export const PRIORITIES = ["low", "normal", "high", "critical"];
 export const PRIORITY_LABELS = { low: "Low", normal: "Normal", high: "High", critical: "Critical" };
 /** Categories whose work the owner must accept before it is Done. */
 export const USER_FACING = new Set(["feature", "bug"]);
+
+/** Uncategorised cards might be user-facing too, so they also need the owner's acceptance. */
+export function needsOwnerAcceptance(card) {
+  return card.category === null || USER_FACING.has(card.category);
+}
 /** Fields a `set` operation may change. Status, order and archiving have their own operations. */
 export const EDITABLE_FIELDS = ["title", "description", "category", "priority", "acceptance", "notes", "evidence", "blockedBy", "links"];
-export const HISTORY_TYPES = ["created", "migrated", "status", "archived", "restored"];
+export const HISTORY_TYPES = ["created", "migrated", "status", "archived", "restored", "imported"];
 
 const CARD_KEYS = ["id", "uid", "title", "category", "priority", "status", "rank", "archived", "archivedAt", "description",
   "acceptance", "notes", "evidence", "blockedBy", "links", "comments", "history", "createdAt", "updatedAt", "rev"];
@@ -175,13 +184,13 @@ export function validateBoard(board) {
     else uids.add(card.uid);
     if (typeof card.title !== "string" || !card.title.trim()) err(p, "title must not be empty");
     else if (card.title.length > 200) err(p, "title is longer than 200 characters");
-    if (!CATEGORIES.includes(card.category)) err(p, `category must be one of ${CATEGORIES.join(", ")}`);
+    if (card.category !== null && !CATEGORIES.includes(card.category)) err(p, `category must be one of ${CATEGORIES.join(", ")} or null`);
     if (!PRIORITIES.includes(card.priority)) err(p, `priority must be one of ${PRIORITIES.join(", ")}`);
-    if (!STATUSES.includes(card.status)) err(p, `status must be one of ${STATUSES.join(", ")}`);
+    if (!ALL_STATUSES.includes(card.status)) err(p, `status must be one of ${ALL_STATUSES.join(", ")}`);
     if (!isValidRank(card.rank)) err(p, "rank must be a base-36 string not ending in 0");
     if (typeof card.archived !== "boolean") err(p, "archived must be true or false");
     if (card.archived) {
-      if (card.status !== "done") err(p, "only Done cards can be archived");
+      if (card.status !== "done" && card.status !== INBOX) err(p, "only Done and Inbox cards can be archived");
       if (!ISO_RE.test(card.archivedAt ?? "")) err(p, "archivedAt must be a UTC timestamp when archived");
     } else if (card.archivedAt !== null) err(p, "archivedAt must be null when not archived");
     for (const f of ["description", "notes", "evidence"]) if (typeof card[f] !== "string") err(p, `${f} must be a string`);
@@ -258,8 +267,15 @@ export function serializeBoard(board) {
   return JSON.stringify(ordered, null, 2) + "\n";
 }
 
+/** Parses board.json, upgrading older versions in memory (they are written back as the current version). */
 export function parseBoard(text) {
-  return JSON.parse(text);
+  return upgradeBoard(JSON.parse(text));
+}
+
+/** Version 1 → 2 added the Inbox status and optional categories; every version-1 board is valid as version 2. */
+export function upgradeBoard(board) {
+  if (board && board.schemaVersion === 1) return { ...board, schemaVersion: 2 };
+  return board;
 }
 
 // ------------------------------------------------------------------ cards and operations
@@ -299,6 +315,11 @@ export const ops = {
     mustFind(board, id);
     return { opId: newUid(), type: "comment", id, at, by, comment: { id: newUid(), author: by, at, text: text.trim() } };
   },
+  /** Restore `card` from a backup. `fromRev` is the board's revision of that card when the preview was shown. */
+  restoreFromBackup(board, card, at, by, source) {
+    const existing = board.cards.find(c => c.uid === card.uid);
+    return { opId: newUid(), type: "import", id: existing?.id ?? card.id, at, by, source, fromRev: existing?.rev ?? null, card: clone(card) };
+  },
   archive(board, id, at, by) {
     mustFind(board, id);
     return { opId: newUid(), type: "archive", id, at, by };
@@ -325,6 +346,7 @@ function touch(card, op) {
  * save). Throws ConflictError when the card changed in a way the operation did not expect.
  */
 export function applyOp(board, op) {
+  if (op.type === "import") return applyImport(board, op);
   if (op.type === "create") {
     const existing = findCard(board, op.id);
     if (existing && existing.uid === op.card.uid) return "noop";
@@ -378,7 +400,7 @@ export function applyOp(board, op) {
     }
     case "archive": {
       if (card.archived) return "noop";
-      if (card.status !== "done") throw new ConflictError(op, `${op.id} is no longer Done`, { status: card.status });
+      if (card.status !== "done" && card.status !== INBOX) throw new ConflictError(op, `${op.id} is no longer Done`, { status: card.status });
       card.archived = true;
       card.archivedAt = op.at;
       card.history.push({ id: op.opId, type: "archived", at: op.at, by: op.by });
@@ -398,12 +420,61 @@ export function applyOp(board, op) {
   }
 }
 
+/** Card fields a restore copies from the backup (identity, comments and history are merged separately). */
+const RESTORED_FIELDS = ["title", "category", "priority", "status", "rank", "archived", "archivedAt", "description",
+  "acceptance", "notes", "evidence", "blockedBy", "links"];
+
+/**
+ * Restores one card from a backup ("import" operation). A card already on the board (same uid) gets the backup's
+ * fields, but only if it is still the revision the user previewed; comments and history are merged, never lost.
+ * A card that is not on the board is added (renumbered if its id is taken by another card).
+ */
+function applyImport(board, op) {
+  const backup = op.card;
+  const existing = board.cards.find(c => c.uid === backup.uid);
+  const entry = { id: op.opId, type: "imported", at: op.at, by: op.by, note: op.source ?? "backup" };
+  const knownIds = new Set(board.cards.map(c => c.id));
+  const deps = list => list.filter(id => knownIds.has(id) && id !== (existing?.id ?? op.id));
+
+  if (existing) {
+    if (op.fromRev !== null && existing.rev !== op.fromRev) {
+      throw new ConflictError(op, `${existing.id} changed after the restore was previewed`, { rev: existing.rev });
+    }
+    const alreadyThere = RESTORED_FIELDS.every(f => sameValue(existing[f], backup[f]))
+      && backup.comments.every(c => existing.comments.some(x => x.id === c.id));
+    if (alreadyThere) return "noop";
+    for (const f of RESTORED_FIELDS) existing[f] = clone(backup[f]);
+    existing.blockedBy = deps(existing.blockedBy);
+    if (wouldCycle(board, existing.id, existing.blockedBy)) existing.blockedBy = [];
+    existing.comments = mergeById(existing.comments, backup.comments);
+    existing.history = mergeById(existing.history, backup.history).concat(entry);
+    touch(existing, op);
+    return "applied";
+  }
+
+  if (findCard(board, op.id)) throw new ConflictError(op, "id-taken", findCard(board, op.id));
+  const card = clone(backup);
+  card.id = op.id;
+  card.blockedBy = deps(card.blockedBy);
+  card.history = [...card.history, entry];
+  card.updatedAt = op.at;
+  card.rev = (card.rev ?? 0) + 1;
+  board.cards.push(card);
+  board.nextId = Math.max(board.nextId, idNumber(op.id) + 1);
+  return "applied";
+}
+
+function mergeById(current, incoming) {
+  const seen = new Set(current.map(x => x.id));
+  return [...current, ...incoming.filter(x => !seen.has(x.id))].sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0));
+}
+
 /** Renames card ids in an operation (used when a new card's id was taken by someone else meanwhile). */
 export function remapOp(op, map) {
   const r = id => map.get(id) ?? id;
   const out = clone(op);
   out.id = r(out.id);
-  if (out.type === "create") {
+  if (out.type === "create" || out.type === "import") {
     out.card.id = out.id;
     out.card.blockedBy = out.card.blockedBy.map(r);
   }
@@ -466,6 +537,7 @@ export function describeOp(op) {
     case "comment": return `comment on ${op.id}`;
     case "archive": return `archive ${op.id}`;
     case "restore": return `restore ${op.id}`;
+    case "import": return `restore ${op.id} from backup`;
     default: return op.type;
   }
 }
@@ -488,9 +560,14 @@ export function renderBoardMarkdown(board, { appUrl = "https://crosenlund79.gith
   lines.push("# WorkTrace board", "");
   lines.push(`> Generated from \`docs/board.json\` on the \`board\` branch. Do not edit this file: change cards on the`);
   lines.push(`> [interactive board](${appUrl}) or with \`node tools/board.mjs\`.`, "");
-  lines.push(`| ${STATUSES.map(s => STATUS_LABELS[s]).join(" | ")} | Archived |`);
-  lines.push(`|${STATUSES.map(() => "---").join("|")}|---|`);
-  lines.push(`| ${STATUSES.map(s => active.filter(c => c.status === s).length).join(" | ")} | ${archived.length} |`, "");
+  lines.push(`| Inbox | ${STATUSES.map(s => STATUS_LABELS[s]).join(" | ")} | Archived |`);
+  lines.push(`|---|${STATUSES.map(() => "---").join("|")}|---|`);
+  lines.push(`| ${[INBOX, ...STATUSES].map(s => active.filter(c => c.status === s).length).join(" | ")} | ${archived.length} |`, "");
+
+  const inbox = columnCards(board, INBOX).reverse();
+  lines.push(`## Inbox (${inbox.length})`, "");
+  if (inbox.length === 0) lines.push("_Empty._", "");
+  else lines.push(...inbox.map(c => `- **${c.id}** · ${c.title} · captured ${c.createdAt.slice(0, 10)}`), "");
 
   for (const status of MD_ORDER) {
     const cards = columnCards(board, status);
@@ -501,11 +578,11 @@ export function renderBoardMarkdown(board, { appUrl = "https://crosenlund79.gith
     }
     for (const card of cards) {
       if (status === "done") {
-        lines.push(`- **${card.id}** · ${card.title} · \`${card.category}\``);
+        lines.push(`- **${card.id}** · ${card.title}${card.category ? ` · \`${card.category}\`` : ""}`);
         continue;
       }
       lines.push(`### ${card.id} · ${card.title}`, "");
-      const meta = [`\`${card.category}\``, `priority ${PRIORITY_LABELS[card.priority]}`];
+      const meta = [card.category ? `\`${card.category}\`` : "uncategorised", `priority ${PRIORITY_LABELS[card.priority]}`];
       if (card.blockedBy.length) meta.push(`blocked by ${card.blockedBy.join(", ")}`);
       lines.push(meta.join(" · "), "");
       if (card.description.trim()) lines.push(card.description.trim(), "");

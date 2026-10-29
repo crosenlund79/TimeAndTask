@@ -12,8 +12,8 @@ import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  CATEGORIES, PRIORITIES, STATUS_LABELS, STATUSES, USER_FACING, EDITABLE_FIELDS, columnCards, commitMessage, findCard,
-  nowIso, openBlockers, ops, parseBoard, rebase, renderBoardMarkdown, serializeBoard, validateBoard,
+  ALL_STATUSES, CATEGORIES, INBOX, PRIORITIES, STATUS_LABELS, STATUSES, EDITABLE_FIELDS, columnCards, commitMessage, findCard,
+  needsOwnerAcceptance, nowIso, openBlockers, ops, parseBoard, rebase, renderBoardMarkdown, serializeBoard, validateBoard,
 } from "../app/board-core.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -24,12 +24,14 @@ const MAX_ATTEMPTS = 4;
 const HELP = `WorkTrace board CLI
 
 Read (always fetches the latest board first):
-  show [--status <s>] [--archived]       Cards per column
+  show [--status <s>] [--archived]       Cards per column (and the Inbox count)
+  inbox                                  Captured items not yet on the board
   get <id> [--json]                      One card with notes, comments and history
   validate                               Check docs/board.json in this checkout
   render [--check]                       Regenerate docs/BOARD.md (or check it is current)
 
 Change (commit + push to the board branch; re-applied or reported if the board changed meanwhile):
+  capture <title> [--note n] [--link url]  Quick capture into the Inbox (no category needed)
   add --title <t> [--category c] [--priority p] [--status s] [--description d] [--accept a]... [--blocked-by id]...
   move <id> <status> [--top] [--owner-accepted "<the owner's words>"]
   set <id> <field> <value>               fields: ${EDITABLE_FIELDS.join(", ")} (lists as JSON arrays)
@@ -39,8 +41,8 @@ Change (commit + push to the board branch; re-applied or reported if the board c
   archive <id> | restore <id>
 
 Options: --branch <name> (default board), --by <author> (default claude), --offline (no fetch/push), --json
-Statuses: ${STATUSES.join(", ")} · categories: ${CATEGORIES.join(", ")} · priorities: ${PRIORITIES.join(", ")}
-User-facing cards (feature, bug) move to done only with --owner-accepted, after the owner explicitly accepted.`;
+Statuses: ${ALL_STATUSES.join(", ")} · categories: ${CATEGORIES.join(", ")} · priorities: ${PRIORITIES.join(", ")}
+User-facing or uncategorised cards move to done only with --owner-accepted, after the owner explicitly accepted.`;
 
 // ---------------------------------------------------------------- arguments
 
@@ -188,6 +190,16 @@ function parseListValue(field, value) {
   }
 }
 
+/** "example.com/path" from a URL, used when no label is given. */
+function linkLabel(url) {
+  try {
+    const u = new URL(url);
+    return (u.hostname.replace(/^www\./, "") + u.pathname.replace(/\/$/, "")).slice(0, 80);
+  } catch {
+    return url.slice(0, 80);
+  }
+}
+
 // ---------------------------------------------------------------- commands
 
 function main() {
@@ -208,17 +220,35 @@ function main() {
       if (!options.offline) syncCheckout(branch);
       const board = readBoard();
       if (options.json) return console.log(serializeBoard(board));
+      const inboxCount = columnCards(board, INBOX).length;
+      if (!options.status) console.log(`Inbox: ${inboxCount} item(s)${inboxCount ? " (node tools/board.mjs inbox)" : ""}`);
       for (const status of options.status ? [options.status] : STATUSES) {
         const cards = columnCards(board, status, { archived: !!options.archived });
         console.log(`\n${STATUS_LABELS[status]} (${cards.length})`);
         for (const c of cards) {
           const blockers = openBlockers(board, c);
-          console.log(`  ${c.id}  ${c.title}  [${c.category}${c.priority !== "normal" ? `, ${c.priority}` : ""}]` +
+          console.log(`  ${c.id}  ${c.title}  [${c.category ?? "uncategorised"}${c.priority !== "normal" ? `, ${c.priority}` : ""}]` +
             `${blockers.length ? `  blocked by ${blockers.join(", ")}` : ""}${c.comments.length ? `  ${c.comments.length} comment(s)` : ""}`);
         }
       }
       const archived = board.cards.filter(c => c.archived).length;
       if (!options.archived) console.log(`\nArchived: ${archived} · next id WT-${String(board.nextId).padStart(3, "0")}`);
+      return;
+    }
+    case "inbox": {
+      if (!options.offline) syncCheckout(branch);
+      const board = readBoard();
+      const items = columnCards(board, INBOX).reverse();
+      console.log(`Inbox (${items.length})`);
+      for (const c of items) console.log(`  ${c.id}  ${c.title}  · captured ${c.createdAt}${c.notes ? " · notes" : ""}${c.links.length ? ` · ${c.links.length} link(s)` : ""}`);
+      return;
+    }
+    case "capture": {
+      need(1, "capture <title> [--note n] [--link url]");
+      change(options, board => ops.create(board, {
+        title: args.join(" "), category: null, status: INBOX, notes: options.note ?? "",
+        links: options.link ? [{ label: linkLabel(options.link), url: options.link }] : [],
+      }, at, by));
       return;
     }
     case "get": {
@@ -248,8 +278,9 @@ function main() {
       change(options, board => {
         const status = options.status ?? "backlog";
         if (status === "done") fail("new cards cannot start in done");
+        if (options.category === "none") options.category = null;
         return ops.create(board, {
-          title: options.title, category: options.category ?? "feature", priority: options.priority ?? "normal", status,
+          title: options.title, category: options.category === undefined ? "feature" : options.category, priority: options.priority ?? "normal", status,
           description: options.description ?? "", acceptance: options.accept, blockedBy: options["blocked-by"],
         }, at, by);
       });
@@ -258,11 +289,11 @@ function main() {
     case "move": {
       need(2, "move <id> <status> [--top] [--owner-accepted \"...\"]");
       const [id, status] = args;
-      if (!STATUSES.includes(status)) fail(`status must be one of ${STATUSES.join(", ")}`);
+      if (!ALL_STATUSES.includes(status)) fail(`status must be one of ${ALL_STATUSES.join(", ")}`);
       change(options, board => {
         const c = card(board, id);
-        if (status === "done" && USER_FACING.has(c.category) && !options["owner-accepted"]) {
-          fail(`${id} is user-facing (${c.category}): only the owner accepts it. Move it to review; use --owner-accepted "<their words>" only after explicit acceptance.`);
+        if (status === "done" && needsOwnerAcceptance(c) && !options["owner-accepted"]) {
+          fail(`${id} is user-facing (${c.category ?? "uncategorised"}): only the owner accepts it. Move it to review; use --owner-accepted "<their words>" only after explicit acceptance.`);
         }
         if (c.archived) fail(`${id} is archived; restore it first`);
         return ops.move(board, id, status, options.top ? 0 : Infinity, at, by, options["owner-accepted"] ?? null);

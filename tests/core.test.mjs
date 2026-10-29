@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import {
-  applyOp, CATEGORIES, clone, columnCards, ConflictError, findCard, inverseOp, isValidRank, openBlockers, ops, PRIORITIES,
+  ALL_STATUSES, needsOwnerAcceptance, parseBoard, applyOp, CATEGORIES, clone, columnCards, ConflictError, findCard, inverseOp, isValidRank, openBlockers, ops, PRIORITIES,
   rankBetween, rebase, renderBoardMarkdown, serializeBoard, STATUSES, validateBoard, wouldCycle,
 } from "../app/board-core.js";
 import { AT, committedBoard, migratedBoard, ROOT } from "./helpers.mjs";
@@ -29,8 +29,8 @@ test("serialisation is stable", () => {
 test("schema file lists the same values as the validator", () => {
   const schema = JSON.parse(readFileSync(path.join(ROOT, "schema/board.schema.json"), "utf8"));
   const card = schema.$defs.card.properties;
-  assert.deepEqual(schema.$defs.status.enum, STATUSES);
-  assert.deepEqual(card.category.enum, CATEGORIES);
+  assert.deepEqual(schema.$defs.status.enum, ALL_STATUSES);
+  assert.deepEqual(card.category.oneOf[0].enum, CATEGORIES);
   assert.deepEqual(card.priority.enum, PRIORITIES);
   assert.deepEqual([...schema.$defs.card.required].sort(), Object.keys(migratedBoard().cards[0]).sort());
 });
@@ -203,4 +203,33 @@ test("inverse operations undo moves, edits and archiving", () => {
   const strip = b => JSON.parse(b, (k, v) => (["history", "rev", "updatedAt"].includes(k) ? undefined : v));
   assert.deepEqual(strip(serializeBoard(board)), strip(before));
   assert.equal(inverseOp(ops.comment(board, "WT-011", "c", AT, "owner"), AT, "owner"), null);
+});
+
+test("version 1 boards are upgraded on read and stay valid", () => {
+  const v1 = JSON.parse(serializeBoard(migratedBoard()));
+  v1.schemaVersion = 1;
+  const upgraded = parseBoard(JSON.stringify(v1));
+  assert.equal(upgraded.schemaVersion, 2);
+  assert.deepEqual(validateBoard(upgraded), []);
+});
+
+test("Inbox: capture without a category, not a column, can be archived or put on the board", () => {
+  const board = migratedBoard();
+  const capture = ops.create(board, { title: "Call Peter about invoices", category: null, status: "inbox" }, AT, "owner");
+  applyOp(board, capture);
+  assert.deepEqual(validateBoard(board), []);
+  for (const s of STATUSES) assert.ok(!columnCards(board, s).some(c => c.id === capture.id));
+  assert.match(renderBoardMarkdown(board), /## Inbox \(1\)\n\n- \*\*WT-042\*\* · Call Peter about invoices/);
+  assert.ok(needsOwnerAcceptance(findCard(board, "WT-042")), "uncategorised cards need acceptance before Done");
+
+  const second = ops.create(board, { title: "Idea", category: null, status: "inbox" }, AT, "owner");
+  applyOp(board, second);
+  applyOp(board, ops.archive(board, second.id, AT, "owner"));
+  assert.equal(findCard(board, second.id).archived, true);
+  applyOp(board, ops.restore(board, second.id, AT, "owner"));
+  assert.equal(findCard(board, second.id).status, "inbox");
+
+  applyOp(board, ops.move(board, capture.id, "todo", 0, AT, "owner"));
+  assert.equal(columnCards(board, "todo")[0].id, capture.id);
+  assert.deepEqual(validateBoard(board), []);
 });

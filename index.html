@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>WorkTrace Board</title>
   <link rel="icon" href="data:,">
@@ -20,11 +20,21 @@
         </button>
         <button type="button" id="refresh" class="btn icon-btn" title="Load the latest board from GitHub" aria-label="Refresh">⟳</button>
         <button type="button" id="undo" class="btn" disabled title="Undo the last change (Ctrl+Z)">Undo</button>
+        <button type="button" id="inbox-open" class="btn">Inbox <span id="inbox-count" class="count-pill">0</span></button>
         <button type="button" id="archive-open" class="btn">Archive <span id="archive-count" class="count-pill">0</span></button>
+        <button type="button" id="backup-open" class="btn" title="Download or restore a backup">Backup</button>
         <button type="button" id="new-card" class="btn btn-primary">New card</button>
         <button type="button" id="account" class="btn">Sign in</button>
       </div>
     </div>
+    <form id="capture" class="capture" autocomplete="off">
+      <input type="text" id="capture-title" maxlength="200" placeholder="Capture a thought, link or screenshot… (Enter)" aria-label="Quick capture into the Inbox" enterkeyhint="done">
+      <span id="capture-images" class="capture-images" hidden></span>
+      <label class="btn icon-btn capture-attach" title="Attach screenshots" aria-label="Attach screenshots">
+        <input type="file" id="capture-files" accept="image/*" multiple hidden>Image
+      </label>
+      <button type="submit" class="btn btn-primary">Capture</button>
+    </form>
     <div class="toolbar-row filters" role="search">
       <input type="search" id="search" placeholder="Search id, title, notes, comments…" aria-label="Search cards" autocomplete="off">
       <select id="filter-category" aria-label="Category"><option value="">All categories</option></select>
@@ -43,6 +53,7 @@
   <div id="scrim" class="scrim" hidden></div>
   <aside id="panel" class="panel" aria-label="Card details" hidden></aside>
   <aside id="archive" class="panel archive" aria-label="Archive" hidden></aside>
+  <aside id="inbox" class="panel archive" aria-label="Inbox" hidden></aside>
   <div id="dialog" class="dialog-root" hidden></div>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <noscript>The board needs JavaScript. You can also read docs/BOARD.md in the repository.</noscript>

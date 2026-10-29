@@ -88,11 +88,12 @@ test("edit title, priority, notes, acceptance and dependencies in the card panel
   await panel.locator(".panel-section", { hasText: "Acceptance criteria" }).getByRole("button", { name: "Edit" }).click();
   await panel.locator("#card-acceptance").fill("Corrections keep originals\nUndo works");
   await panel.getByRole("button", { name: "Save" }).click();
-  await panel.locator("#dep-input").fill("WT-030");
-  await panel.getByRole("button", { name: "Add", exact: true }).first().click();
+  const deps = () => panel.locator(".panel-section", { hasText: "Blocked by" });
+  await deps().locator("#dep-input").fill("WT-030");
+  await deps().getByRole("button", { name: "Add", exact: true }).click();
   // A self-dependency and a cycle are refused with a message.
-  await panel.locator("#dep-input").fill("WT-031");
-  await panel.getByRole("button", { name: "Add", exact: true }).first().click();
+  await deps().locator("#dep-input").fill("WT-031");
+  await deps().getByRole("button", { name: "Add", exact: true }).click();
   await panel.getByText("A card cannot wait for itself.").waitFor();
   await b.flush();
   const card = b.apiBoardCard("WT-031");

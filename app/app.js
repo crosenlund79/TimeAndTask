@@ -4,9 +4,11 @@
 // inserted as text; Markdown goes through app/markdown.js, which escapes everything first.
 
 import {
-  CATEGORIES, CATEGORY_LABELS, PRIORITIES, PRIORITY_LABELS, STATUSES, STATUS_LABELS, USER_FACING, columnCards, findCard,
+  ALL_STATUSES, CATEGORIES, CATEGORY_LABELS, INBOX, PRIORITIES, PRIORITY_LABELS, STATUSES, STATUS_LABELS, columnCards, findCard,
   nowIso, openBlockers, ops, wouldCycle,
 } from "./board-core.js";
+import { AttachmentStore, imagesFrom } from "./attachments.js";
+import { buildBackup, monthsOf, parseBackup, planRestore, restoreOps } from "./backup.js";
 import { GitHubStore } from "./github.js";
 import { renderMarkdown } from "./markdown.js";
 import { SyncEngine } from "./sync.js";
@@ -69,9 +71,11 @@ const store = new GitHubStore({ owner: OWNER, repo: REPO, branch: BRANCH, token:
 const engine = new SyncEngine({
   store, storage: localStorage, key: `wtb:${OWNER}/${REPO}@${BRANCH}`, onUpdate: () => scheduleRender(),
 });
+const attachments = new AttachmentStore({ onChange: () => scheduleRender() });
 const ui = {
   search: "", category: "", priority: "", status: "", scope: "active",
   openCardId: null, mobileColumn: "review", archiveOpen: false, archiveSearch: "",
+  inboxOpen: false, inboxSearch: "", pendingImages: [],
   editing: new Set(), // panel sections switched to edit mode
   login: safeGet(localStorage, LOGIN_KEY),
 };
@@ -94,7 +98,7 @@ function h(tag, props = {}, ...children) {
     else if (key in el && typeof value !== "string") el[key] = value;
     else el.setAttribute(key, value === true ? "" : value);
   }
-  for (const child of children.flat()) {
+  for (const child of children.flat(Infinity)) {
     if (child === null || child === undefined || child === false) continue;
     el.append(child instanceof Node ? child : document.createTextNode(String(child)));
   }
@@ -214,11 +218,19 @@ function render() {
   renderTabs();
   if (ui.openCardId) renderPanel();
   if (ui.archiveOpen) renderArchive();
+  if (ui.inboxOpen) renderInbox();
 }
 
 function renderToolbar() {
   $("undo").disabled = !engine.canUndo;
   $("archive-count").textContent = String(board().cards.filter(c => c.archived).length);
+  const inbox = columnCards(board(), INBOX);
+  const inboxMatches = ui.search.trim() ? inbox.filter(c => textMatches(c, ui.search)).length : 0;
+  $("inbox-count").textContent = inboxMatches ? `${inbox.length} · ${inboxMatches} match` : String(inbox.length);
+  const chip = $("capture-images");
+  chip.hidden = ui.pendingImages.length === 0;
+  chip.replaceChildren(`${ui.pendingImages.length} image${ui.pendingImages.length === 1 ? "" : "s"}`,
+    h("button", { type: "button", class: "chip-remove", "aria-label": "Remove the images from this capture", onclick: () => { ui.pendingImages = []; render(); } }, "✕"));
   const account = $("account");
   account.textContent = store.token && !store.tokenRejected ? (ui.login ? `${ui.login} · Sign out` : "Sign out") : "Sign in";
   account.title = store.token ? "Remove the GitHub token from this browser" : "Sign in with a GitHub token to save changes";
@@ -309,7 +321,7 @@ function cardElement(card) {
   const el = h("article", {
     class: `card prio-${card.priority}${card.archived ? " is-archived" : ""}${card.id === ui.openCardId ? " is-open" : ""}`,
     tabindex: "0", dataset: { id: card.id },
-    "aria-label": `${card.id} ${card.title}, ${CATEGORY_LABELS[card.category]}, ${PRIORITY_LABELS[card.priority]} priority${blockers.length ? ", blocked" : ""}`,
+    "aria-label": `${card.id} ${card.title}${card.category ? `, ${CATEGORY_LABELS[card.category]}` : ""}, ${PRIORITY_LABELS[card.priority]} priority${blockers.length ? ", blocked" : ""}`,
     onclick: e => {
       if (drag.suppressClick) return;
       if (!e.target.closest("button")) openCard(card.id);
@@ -318,17 +330,26 @@ function cardElement(card) {
   },
   h("div", { class: "card-top" },
     h("span", { class: "card-id" }, card.id),
-    h("span", { class: `cat cat-${card.category}` }, CATEGORY_LABELS[card.category]),
+    card.category ? h("span", { class: `cat cat-${card.category}` }, CATEGORY_LABELS[card.category]) : null,
     card.priority === "high" || card.priority === "critical" ? h("span", { class: `prio-badge prio-badge-${card.priority}` }, PRIORITY_LABELS[card.priority]) : null,
     card.archived ? h("span", { class: "archived-badge" }, "Archived") : null,
     h("button", { type: "button", class: "handle", "aria-label": `Drag ${card.id}`, title: "Drag to move", tabindex: "-1" }, "⋮⋮")),
   h("div", { class: "card-title" }, card.title),
-  blockers.length || card.comments.length
-    ? h("div", { class: "card-meta" },
-      blockers.length ? h("span", { class: "blocked" }, `Blocked by ${blockers.join(", ")}`) : null,
-      card.comments.length ? h("span", {}, `${card.comments.length} comment${card.comments.length === 1 ? "" : "s"}`) : null)
-    : null);
+  cardMeta(card, blockers));
   return el;
+}
+
+/** Small indicators under a card title: blocked, comments, links, screenshots. */
+function cardMeta(card, blockers = openBlockers(board(), card)) {
+  const images = attachments.forCard(card.uid).length;
+  const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  const bits = [
+    blockers.length ? h("span", { class: "blocked" }, `Blocked by ${blockers.join(", ")}`) : null,
+    card.comments.length ? h("span", {}, plural(card.comments.length, "comment")) : null,
+    card.links.length ? h("span", {}, plural(card.links.length, "link")) : null,
+    images ? h("span", {}, plural(images, "image")) : null,
+  ].filter(Boolean);
+  return bits.length ? h("div", { class: "card-meta" }, ...bits) : null;
 }
 
 /** Keyboard moves: Alt+←/→ changes column, Alt+↑/↓ reorders; Enter opens. */
@@ -489,7 +510,7 @@ function closePanel() {
   ui.openCardId = null;
   ui.editing.clear();
   $("panel").hidden = true;
-  $("scrim").hidden = ui.archiveOpen ? false : true;
+  $("scrim").hidden = !ui.archiveOpen && !ui.inboxOpen;
   render();
   if (id) document.querySelector(`.card[data-id="${id}"]`)?.focus();
 }
@@ -503,7 +524,8 @@ function renderPanel(force = false) {
     return;
   }
   // Rebuild only when the card changed, and never under the user's cursor.
-  const key = `${card.id}:${card.rev}:${card.status}:${card.archived}:${[...ui.editing].join()}`;
+  const shots = attachments.forCard(card.uid).map(m => `${m.id}${m.caption}`).join();
+  const key = `${card.id}:${card.rev}:${card.status}:${card.archived}:${[...ui.editing].join()}:${shots}`;
   if (!force && key === panelCardRev) return;
   if (!force && panel.contains(document.activeElement) && document.activeElement.matches("input, textarea")) {
     updatePanelLive(card);
@@ -528,8 +550,12 @@ function panelContent(card) {
   const section = (title, ...children) => h("section", { class: "panel-section" }, h("h3", {}, title), ...children);
   const select = (field, values, labels) => h("select", {
     id: `card-${field}`, disabled: readOnly, "aria-label": field[0].toUpperCase() + field.slice(1),
-    onchange: e => (field === "status" ? moveCard(card.id, e.target.value) : setField(card.id, field, e.target.value, { toast: `Changed ${card.id} ${field}` })),
-  }, values.map(v => option(v, labels[v], card[field])));
+    onchange: e => (field === "status" ? moveCard(card.id, e.target.value)
+      : setField(card.id, field, e.target.value === "" ? null : e.target.value, { toast: `Changed ${card.id} ${field}` })),
+  }, values.map(v => option(v, labels[v], card[field] ?? "")));
+  // Inbox items are quick notes: show only what is filled in, plus notes, links and screenshots.
+  const brief = card.status === INBOX;
+  const optional = (empty, build) => (brief && empty ? null : build());
 
   return [
     h("header", { class: "panel-header" },
@@ -544,15 +570,17 @@ function panelContent(card) {
       onkeydown: e => e.key === "Enter" && e.target.blur(),
     }),
     h("div", { class: "field-row" },
-      h("label", {}, "Status", select("status", STATUSES, STATUS_LABELS)),
-      h("label", {}, "Category", select("category", CATEGORIES, CATEGORY_LABELS)),
+      h("label", {}, "Status", select("status", ALL_STATUSES, STATUS_LABELS)),
+      h("label", {}, "Category", select("category", ["", ...CATEGORIES], { "": "None", ...CATEGORY_LABELS })),
       h("label", {}, "Priority", select("priority", PRIORITIES, PRIORITY_LABELS))),
-    dependencySection(card, readOnly),
-    markdownSection(card, "description", "Description", readOnly),
-    acceptanceSection(card, readOnly),
     notesSection(card, readOnly),
-    markdownSection(card, "evidence", "Evidence", readOnly),
     linksSection(card, readOnly),
+    screenshotsSection(card, readOnly),
+    optional(!card.description.trim(), () => markdownSection(card, "description", "Description", readOnly)),
+    optional(!card.acceptance.length, () => acceptanceSection(card, readOnly)),
+    optional(!card.blockedBy.length, () => dependencySection(card, readOnly)),
+    optional(!card.evidence.trim(), () => markdownSection(card, "evidence", "Evidence", readOnly)),
+    brief ? h("p", { class: "muted" }, "Inbox item. Choose a Status to put it on the board; more fields appear there.") : null,
     section(`Comments (${card.comments.length})`,
       h("ol", { class: "comment-list" }, ...commentItems(card)),
       commentForm(card)),
@@ -560,8 +588,8 @@ function panelContent(card) {
     h("footer", { class: "panel-footer" },
       h("span", {}, `Created ${formatTime(card.createdAt)} · updated ${formatTime(card.updatedAt)} · revision ${card.rev}`),
       card.archived
-        ? h("button", { type: "button", class: "btn", onclick: () => restoreCard(card.id) }, "Restore to Done")
-        : card.status === "done" ? h("button", { type: "button", class: "btn", onclick: () => archiveCard(card.id) }, "Archive") : null),
+        ? h("button", { type: "button", class: "btn", onclick: () => restoreCard(card.id) }, card.status === INBOX ? "Restore to Inbox" : "Restore to Done")
+        : card.status === "done" || card.status === INBOX ? h("button", { type: "button", class: "btn", onclick: () => archiveCard(card.id) }, "Archive") : null),
   ];
 }
 
@@ -588,7 +616,7 @@ function dependencySection(card, readOnly) {
     if (id === card.id) return (error.textContent = "A card cannot wait for itself.");
     if (card.blockedBy.includes(id)) return (error.textContent = `Already waiting for ${id}.`);
     if (wouldCycle(board(), card.id, [...card.blockedBy, id])) return (error.textContent = `${id} already waits for ${card.id}; that would be a cycle.`);
-    setField(card.id, "blockedBy", [...card.blockedBy, id], { toast: `${card.id} now waits for ${id}` });
+    if (setField(card.id, "blockedBy", [...card.blockedBy, id], { toast: `${card.id} now waits for ${id}` })) renderPanel(true);
   };
   return h("section", { class: "panel-section" },
     h("h3", {}, "Blocked by"),
@@ -676,24 +704,118 @@ function notesSection(card, readOnly) {
       : [area, status]);
 }
 
+/** "github.com/owner/repo/pull/12" from a URL: the default label when none is given. */
+function linkLabel(url) {
+  try {
+    const u = new URL(url);
+    return (u.hostname.replace(/^www\./, "") + u.pathname.replace(/\/$/, "")).slice(0, 80);
+  } catch {
+    return url.slice(0, 80);
+  }
+}
+
+async function copyText(text, what = "Link") {
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(`${what} copied.`);
+  } catch {
+    showToast(`Could not copy automatically. ${what}: ${text}`, null, true);
+  }
+}
+
 function linksSection(card, readOnly) {
-  const label = h("input", { id: "link-label", placeholder: "Label, e.g. CI run 21", "aria-label": "Link label" });
-  const url = h("input", { id: "link-url", placeholder: "https://…", type: "url", "aria-label": "Link URL" });
+  const url = h("input", { id: "link-url", placeholder: "Paste a link (https://…)", type: "url", "aria-label": "Link URL" });
+  const label = h("input", { id: "link-label", placeholder: "Label (optional)", "aria-label": "Link label" });
   const error = h("p", { class: "field-error", role: "alert" });
   const add = () => {
-    if (!label.value.trim()) return (error.textContent = "Give the link a label.");
-    if (!/^https?:\/\/\S+$/.test(url.value.trim())) return (error.textContent = "The URL must start with https://");
-    setField(card.id, "links", [...card.links, { label: label.value.trim(), url: url.value.trim() }], { toast: `Added link to ${card.id}` });
+    const href = url.value.trim();
+    if (!/^https?:\/\/\S+$/.test(href)) return (error.textContent = "Paste a link that starts with https://");
+    if (card.links.some(l => l.url === href)) return (error.textContent = "That link is already on this card.");
+    if (setField(card.id, "links", [...card.links, { label: label.value.trim() || linkLabel(href), url: href }], { toast: `Added link to ${card.id}` })) {
+      renderPanel(true); // show it now, even though the cursor is in the link box
+      $("link-url")?.focus();
+    }
   };
-  return h("section", { class: "panel-section" }, h("h3", {}, "Links"),
+  url.addEventListener("keydown", e => e.key === "Enter" && add());
+  label.addEventListener("keydown", e => e.key === "Enter" && add());
+  return h("section", { class: "panel-section" }, h("h3", {}, `Links${card.links.length ? ` (${card.links.length})` : ""}`),
     card.links.length ? h("ul", { class: "link-list" }, card.links.map((l, i) => h("li", {},
-      h("a", { href: l.url, target: "_blank", rel: "noopener noreferrer" }, l.label),
+      h("div", { class: "link-text" },
+        h("a", { href: l.url, target: "_blank", rel: "noopener noreferrer", title: l.url }, l.label),
+        h("span", { class: "link-url" }, l.url)),
+      h("button", { type: "button", class: "btn link-action", onclick: () => copyText(l.url), "aria-label": `Copy link ${l.label}` }, "Copy"),
+      h("a", { class: "btn link-action", href: l.url, target: "_blank", rel: "noopener noreferrer", "aria-label": `Open link ${l.label}` }, "Open ↗"),
       readOnly ? null : h("button", {
         type: "button", class: "chip-remove", "aria-label": `Remove link ${l.label}`,
         onclick: () => setField(card.id, "links", card.links.filter((_, j) => j !== i), { toast: `Removed link from ${card.id}` }),
-      }, "✕")))) : h("p", { class: "muted" }, "No links to commits, pull requests or CI runs yet."),
-    readOnly ? null : h("div", { class: "inline-form" }, label, url, h("button", { type: "button", class: "btn", onclick: add }, "Add")),
+      }, "✕")))) : null,
+    readOnly ? null : h("div", { class: "inline-form" }, url, label, h("button", { type: "button", class: "btn", onclick: add }, "Add")),
     error);
+}
+
+// ---------------------------------------------------------------- screenshots (this browser only, see attachments.js)
+
+async function attachImages(card, files) {
+  let added = 0;
+  for (const file of files) {
+    try {
+      await attachments.add(card.uid, file);
+      added++;
+    } catch (e) {
+      showToast(e.message, null, true);
+    }
+  }
+  if (added) showToast(`Added ${added} screenshot${added === 1 ? "" : "s"} to ${card.id} (stored in this browser only).`);
+}
+
+function screenshotsSection(card, readOnly) {
+  const list = attachments.forCard(card.uid);
+  const picker = h("input", { type: "file", accept: "image/*", multiple: true, hidden: true, id: "card-files",
+    onchange: e => attachImages(card, [...e.target.files]) });
+  const drop = h("div", {
+    class: "drop-zone", tabindex: "0", "aria-label": "Add screenshots: paste, drop or browse",
+    ondragover: e => { e.preventDefault(); drop.classList.add("is-over"); },
+    ondragleave: () => drop.classList.remove("is-over"),
+    ondrop: e => { e.preventDefault(); e.stopPropagation(); drop.classList.remove("is-over"); attachImages(card, imagesFrom(e.dataTransfer)); },
+  }, "Paste (Ctrl+V), drop images here, or ", h("button", { type: "button", class: "link-btn", onclick: () => picker.click() }, "browse"), ".");
+  const thumbs = list.map(m => {
+    const img = h("img", { alt: m.caption || m.name, loading: "lazy" });
+    attachments.url(m.id).then(u => u && (img.src = u));
+    return h("figure", { class: "thumb" },
+      h("button", { type: "button", class: "thumb-open", "aria-label": `Enlarge ${m.caption || m.name}`, onclick: () => imageDialog(card, m) }, img),
+      h("figcaption", {}, m.caption || h("span", { class: "muted" }, m.name)));
+  });
+  return h("section", { class: "panel-section" },
+    h("h3", {}, `Screenshots${list.length ? ` (${list.length})` : ""}`),
+    !attachments.available ? h("p", { class: "muted" }, "This browser does not allow storing screenshots here (private window?).")
+      : [thumbs.length ? h("div", { class: "thumbs" }, ...thumbs) : null,
+        readOnly ? null : [drop, picker],
+        h("p", { class: "muted local-note" }, "Stored in this browser only; never uploaded to the public repository. Include them in a backup (Backup) to keep them safe.")]);
+}
+
+function imageDialog(card, m) {
+  showDialog(close => {
+    const img = h("img", { class: "lightbox-img", alt: m.caption || m.name });
+    attachments.url(m.id).then(u => u && (img.src = u));
+    const caption = h("input", { value: m.caption, placeholder: "Caption (optional)", "aria-label": "Caption", maxlength: "200" });
+    const saveCaption = () => caption.value !== m.caption && attachments.setCaption(m.id, caption.value.trim());
+    caption.addEventListener("keydown", e => e.key === "Enter" && (saveCaption(), close()));
+    return [
+      h("h2", {}, `${card.id} · ${m.name}`),
+      img,
+      h("label", { class: "stack" }, "Caption", caption),
+      h("p", { class: "muted" }, `${Math.round(m.size / 1024)} KB · added ${formatTime(m.createdAt)} · stored in this browser only`),
+      h("div", { class: "form-actions" },
+        h("button", { type: "button", class: "btn", onclick: async () => {
+          close(); // one dialog at a time
+          if (await confirmDialog({ title: "Remove this screenshot?", message: "It is deleted from this browser. A backup that contains it can bring it back.", confirm: "Remove" })) {
+            await attachments.remove(m.id);
+            showToast("Screenshot removed.");
+          }
+        } }, "Remove"),
+        h("button", { type: "button", class: "btn btn-primary", onclick: () => { saveCaption(); close(); } }, "Done")),
+    ];
+  });
 }
 
 function commentItems(card) {
@@ -737,7 +859,8 @@ function archiveCard(id) {
 }
 
 function restoreCard(id) {
-  change(ops.restore(board(), id, now(), author()), { toast: `Restored ${id} to Done` });
+  const to = findCard(board(), id)?.status === INBOX ? "the Inbox" : "Done";
+  change(ops.restore(board(), id, now(), author()), { toast: `Restored ${id} to ${to}` });
 }
 
 async function archiveAllDone() {
@@ -767,7 +890,7 @@ function openArchive() {
 function closeArchive() {
   ui.archiveOpen = false;
   $("archive").hidden = true;
-  $("scrim").hidden = !ui.openCardId;
+  $("scrim").hidden = !ui.openCardId && !ui.inboxOpen;
   $("archive-open").focus();
 }
 
@@ -798,6 +921,240 @@ function renderArchive(force = false) {
       },
     }),
     h("ul", { class: "archive-list" }, ...items));
+}
+
+// ---------------------------------------------------------------- quick capture and inbox
+
+/**
+ * Captures a thought into the Inbox: a title is all that is needed (a pasted link or screenshot is enough too).
+ * Stays in the capture box so the next thought can follow immediately.
+ */
+async function capture(e) {
+  e?.preventDefault();
+  const input = $("capture-title");
+  let title = input.value.trim();
+  const images = ui.pendingImages;
+  if (!title && !images.length) return;
+  if (!board()) return showToast("The board has not loaded yet; try again in a moment.", null, true);
+  const links = [];
+  if (/^https?:\/\/\S+$/.test(title)) {
+    links.push({ label: linkLabel(title), url: title });
+    title = linkLabel(title);
+  }
+  if (!title) title = `Screenshot ${formatTime(now())}`;
+  const op = ops.create(board(), { title, category: null, status: INBOX, links }, now(), author());
+  if (!change(op, { undoable: false })) return;
+  input.value = "";
+  ui.pendingImages = [];
+  for (const file of images) {
+    try {
+      await attachments.add(op.card.uid, file);
+    } catch (err) {
+      showToast(err.message, null, true);
+    }
+  }
+  render();
+  showToast(`Captured to Inbox (${op.id}).`, { label: "Add details", run: () => openCard(op.id) });
+}
+
+function addPendingImages(files) {
+  if (!files.length) return;
+  ui.pendingImages = [...ui.pendingImages, ...files];
+  render();
+  $("capture-title").focus();
+  showToast(`${files.length} image${files.length === 1 ? "" : "s"} ready. Type a title (optional) and press Enter.`);
+}
+
+/** Ctrl+V with an image: to the open card, otherwise into a new capture. Text pastes are left alone. */
+function onPaste(e) {
+  const files = imagesFrom(e.clipboardData);
+  if (!files.length) return;
+  const card = ui.openCardId && findCard(board(), ui.openCardId);
+  e.preventDefault();
+  if (card && !card.archived) attachImages(card, files);
+  else addPendingImages(files);
+}
+
+/** Dropping image files anywhere outside a card's drop zone starts a capture with them. */
+function onFileDrop(e) {
+  if (![...(e.dataTransfer?.types ?? [])].includes("Files")) return;
+  e.preventDefault();
+  if (e.type !== "drop") return;
+  const files = imagesFrom(e.dataTransfer);
+  const card = ui.openCardId && findCard(board(), ui.openCardId);
+  if (card && !card.archived) attachImages(card, files);
+  else addPendingImages(files);
+}
+
+function openInbox() {
+  ui.inboxOpen = true;
+  $("inbox").hidden = false;
+  $("scrim").hidden = false;
+  renderInbox(true);
+}
+
+function closeInbox() {
+  ui.inboxOpen = false;
+  $("inbox").hidden = true;
+  $("scrim").hidden = !ui.openCardId && !ui.archiveOpen;
+  $("inbox-open").focus();
+}
+
+function ago(iso) {
+  const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 24 * 60) return `${Math.round(minutes / 60)} h ago`;
+  return formatTime(iso);
+}
+
+function renderInbox(force = false) {
+  const drawer = $("inbox");
+  const items = columnCards(board(), INBOX).reverse(); // newest first
+  const list = items.filter(c => textMatches(c, ui.inboxSearch));
+  const rows = list.length ? list.map(c => h("li", { class: "inbox-item", dataset: { id: c.id } },
+    h("button", { type: "button", class: "archive-open", onclick: () => openCard(c.id) },
+      h("span", { class: "inbox-title" }, c.title),
+      h("span", { class: "muted" }, ` · ${ago(c.createdAt)}`),
+      cardMeta(c)),
+    h("select", {
+      class: "inbox-move", "aria-label": `Put ${c.id} on the board`,
+      onchange: e => e.target.value && moveCard(c.id, e.target.value),
+    }, option("", "To board…", ""), ...STATUSES.filter(st => st !== "done").map(st => option(st, STATUS_LABELS[st], ""))),
+    h("button", { type: "button", class: "btn", title: "Archive (keeps it, out of the way)", onclick: () => archiveCard(c.id) }, "Archive")))
+    : [h("li", { class: "muted" }, items.length ? "No Inbox items match." : "The Inbox is empty. Capture thoughts with the box at the top (Enter saves).")];
+  if (!force && drawer.querySelector(".inbox-list")) {
+    drawer.querySelector(".inbox-list").replaceChildren(...rows);
+    drawer.querySelector(".inbox-heading").textContent = `Inbox (${items.length})`;
+    return;
+  }
+  drawer.replaceChildren(
+    h("header", { class: "panel-header" }, h("h2", { class: "inbox-heading" }, `Inbox (${items.length})`),
+      h("button", { type: "button", class: "btn icon-btn", "aria-label": "Close inbox", onclick: closeInbox }, "✕")),
+    h("p", { class: "muted" }, "Captured thoughts, not yet on the board. Put them on the board when you are ready, or archive them."),
+    h("input", {
+      type: "search", id: "inbox-search", placeholder: "Search the Inbox…", "aria-label": "Search the Inbox", value: ui.inboxSearch,
+      oninput: e => {
+        ui.inboxSearch = e.target.value;
+        renderInbox();
+      },
+    }),
+    h("ul", { class: "inbox-list" }, ...rows));
+}
+
+// ---------------------------------------------------------------- backup and export
+
+function download(fileName, bytes) {
+  const url = URL.createObjectURL(new Blob([bytes], { type: "application/zip" }));
+  const a = h("a", { href: url, download: fileName, hidden: true });
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
+function backupDialog() {
+  if (!board()) return;
+  showDialog(close => {
+    const months = monthsOf(board());
+    const scope = h("select", { id: "backup-scope", "aria-label": "What to back up" },
+      option("all", `Everything (${board().cards.length} cards)`, "all"),
+      ...months.map(m => option(`month:${m.month}`, `Created in ${m.month} (${m.cards.length} cards)`, "")),
+      option("cards", "Selected cards…", ""));
+    const picker = h("div", { class: "backup-picker", hidden: true },
+      ...board().cards.slice().sort((a, b) => a.id.localeCompare(b.id)).map(c => h("label", { class: "check" },
+        h("input", { type: "checkbox", value: c.id }), ` ${c.id} · ${c.title}${c.archived ? " (archived)" : ""}`)));
+    scope.addEventListener("change", () => (picker.hidden = scope.value !== "cards"));
+    const withImages = h("input", { type: "checkbox", id: "backup-images", checked: true });
+    const status = h("p", { class: "muted", role: "status" });
+    const downloadButton = h("button", { type: "button", class: "btn btn-primary" }, "Download ZIP");
+    downloadButton.addEventListener("click", async () => {
+      const value = scope.value;
+      const selected = [...picker.querySelectorAll("input:checked")].map(i => i.value);
+      if (value === "cards" && !selected.length) return (status.textContent = "Tick at least one card.");
+      const chosen = value === "all" ? { kind: "all" } : value === "cards" ? { kind: "cards", ids: selected } : { kind: "month", month: value.slice(6) };
+      downloadButton.disabled = true;
+      status.textContent = "Preparing the backup…";
+      try {
+        const images = withImages.checked ? await attachments.all() : [];
+        const result = await buildBackup({ board: board(), scope: chosen, attachments: images });
+        download(result.fileName, result.bytes);
+        status.textContent = `Downloaded ${result.fileName}: ${result.manifest.cards.length} cards, ${result.manifest.attachments.length} screenshots.`;
+      } catch (e) {
+        status.textContent = `The backup could not be created: ${e.message}`;
+      } finally {
+        downloadButton.disabled = false;
+      }
+    });
+    const file = h("input", { type: "file", id: "restore-file", accept: ".zip,application/zip", "aria-label": "Backup file to restore" });
+    file.addEventListener("change", () => file.files[0] && (close(), restorePreview(file.files[0])));
+    return [
+      h("h2", {}, "Backup & Export"),
+      h("section", { class: "dialog-section" },
+        h("h3", {}, "Download a backup"),
+        h("label", { class: "stack" }, "What", scope), picker,
+        h("label", { class: "check" }, withImages, ` Include screenshots stored in this browser (${attachments.total})`),
+        h("p", { class: "muted" }, "Each ZIP restores on its own: cards with notes, comments, links, history and screenshots."),
+        h("div", { class: "form-actions" }, status, downloadButton)),
+      h("section", { class: "dialog-section" },
+        h("h3", {}, "Restore from a backup"),
+        h("p", { class: "muted" }, "You will see what changes before anything is restored. Restoring never deletes cards or comments."),
+        file),
+      h("section", { class: "dialog-section" },
+        h("h3", {}, "Email backup"),
+        h("p", { class: "muted" }, "Daily backups to Outlook are not set up yet: they wait for your decision on screenshot storage and the email service (card WT-047).")),
+      h("div", { class: "form-actions" }, h("button", { type: "button", class: "btn", onclick: () => close() }, "Close")),
+    ];
+  });
+}
+
+async function restorePreview(fileObj) {
+  let backup;
+  try {
+    backup = await parseBackup(new Uint8Array(await fileObj.arrayBuffer()));
+  } catch (e) {
+    return showToast(`Cannot restore ${fileObj.name}: ${e.message}`, null, true);
+  }
+  const plan = planRestore(board(), backup.cards);
+  const counts = { new: 0, changed: 0, same: 0 };
+  plan.forEach(p => counts[p.state]++);
+  showDialog(close => {
+    const rows = plan.map((p, i) => {
+      const box = h("input", { type: "checkbox", value: String(i), checked: p.state === "new" || (p.state === "changed" && !p.boardNewer), disabled: p.state === "same" });
+      const what = p.state === "new" ? (p.idTaken ? `New (gets a new number: ${p.card.id} is used by another card)` : "New")
+        : p.state === "same" ? "Unchanged" : `Changes: ${p.fields.join(", ")}${p.boardNewer ? " · the board was edited after this backup" : ""}`;
+      return h("li", { class: `restore-item restore-${p.state}` }, h("label", { class: "check" }, box, ` ${p.card.id} · ${p.card.title}`), h("span", { class: "muted" }, what));
+    });
+    const list = h("ul", { class: "restore-list" }, ...rows);
+    const apply = h("button", { type: "button", class: "btn btn-primary" }, "Restore selected");
+    apply.addEventListener("click", async () => {
+      const chosen = [...list.querySelectorAll("input:checked")].map(b => plan[Number(b.value)]);
+      if (!chosen.length) return close();
+      const uids = new Set(chosen.map(p => p.card.uid));
+      let applied = 0;
+      for (const op of restoreOps(board(), chosen, now(), author(), fileObj.name)) if (change(op, { undoable: false })) applied++;
+      let images = 0;
+      for (const a of backup.attachments) {
+        if (!uids.has(a.meta.cardUid) && !board().cards.some(c => c.uid === a.meta.cardUid)) continue;
+        try {
+          if (await attachments.importAttachment(a.meta, a.bytes)) images++;
+        } catch (e) {
+          showToast(e.message, null, true);
+        }
+      }
+      close();
+      showToast(`Restored ${applied} card${applied === 1 ? "" : "s"} and ${images} screenshot${images === 1 ? "" : "s"} from ${fileObj.name}.`);
+    });
+    return [
+      h("h2", {}, `Restore ${fileObj.name}`),
+      h("p", {}, `Backup from ${formatTime(backup.manifest.createdAt)}: ${backup.cards.length} cards (${counts.new} new, ${counts.changed} changed, ${counts.same} unchanged), ${backup.attachments.length} screenshots.`),
+      backup.problems.length ? h("ul", { class: "field-error" }, ...backup.problems.map(p => h("li", {}, p))) : null,
+      list,
+      h("p", { class: "muted" }, "Checked cards get the backup's content; comments are merged, none are removed. Cards edited on the board after the backup are unchecked. Restoring cannot be undone with Undo; you can restore an older backup instead."),
+      h("div", { class: "form-actions" },
+        h("button", { type: "button", class: "btn", onclick: () => close() }, "Cancel"), apply),
+    ];
+  });
 }
 
 // ---------------------------------------------------------------- dialogs and toasts
@@ -993,6 +1350,16 @@ function wire() {
   $("undo").addEventListener("click", undo);
   $("new-card").addEventListener("click", () => (store.token || engine.view ? newCardDialog() : signInDialog()));
   $("archive-open").addEventListener("click", openArchive);
+  $("inbox-open").addEventListener("click", openInbox);
+  $("backup-open").addEventListener("click", backupDialog);
+  $("capture").addEventListener("submit", capture);
+  $("capture-files").addEventListener("change", e => {
+    addPendingImages([...e.target.files].filter(f => /^image\//.test(f.type)));
+    e.target.value = "";
+  });
+  document.addEventListener("paste", onPaste);
+  document.addEventListener("dragover", onFileDrop);
+  document.addEventListener("drop", onFileDrop);
   $("refresh").addEventListener("click", async () => {
     await engine.refresh();
     showToast(engine.error ? engine.error.message : "Board is up to date with GitHub.", null, !!engine.error);
@@ -1004,14 +1371,23 @@ function wire() {
     else if (engine.error) engine.retry();
     else engine.refresh();
   });
-  $("scrim").addEventListener("click", () => (ui.archiveOpen && !ui.openCardId ? closeArchive() : closePanel()));
+  $("scrim").addEventListener("click", () => {
+    if (ui.openCardId) closePanel();
+    else if (ui.inboxOpen) closeInbox();
+    else if (ui.archiveOpen) closeArchive();
+  });
   document.addEventListener("pointerdown", onPointerDown);
   document.addEventListener("keydown", e => {
     const typing = e.target.closest?.("input, textarea, select");
     if (e.key === "Escape") {
       if (drag.active) return cancelDrag();
       if (ui.openCardId) return closePanel();
+      if (ui.inboxOpen) return closeInbox();
       if (ui.archiveOpen) return closeArchive();
+    }
+    if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "c") {
+      e.preventDefault();
+      $("capture-title").focus();
     }
     if (!typing && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) {
       e.preventDefault();
@@ -1038,6 +1414,7 @@ function wire() {
 
 wire();
 render();
+attachments.open();
 engine.start().then(() => {
   if (store.token && !ui.login) store.whoami().then(login => {
     ui.login = login;

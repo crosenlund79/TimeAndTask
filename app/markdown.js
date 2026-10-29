@@ -1,6 +1,6 @@
 // Minimal, safe Markdown for descriptions, notes and comments. All text is HTML-escaped first; only the
 // tags created here are ever produced, and links are limited to http(s) URLs. Supported: paragraphs, line
-// breaks, - / * / 1. lists, `code`, ``` code blocks, **bold**, *italic*, [label](https://…).
+// breaks, - / * / 1. lists, `code`, ``` code blocks, **bold**, *italic*, [label](https://…) and bare https:// URLs.
 
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 
@@ -14,11 +14,19 @@ function inline(text) {
     codes.push(`<code>${code}</code>`);
     return `\u0000${codes.length - 1}\u0000`;
   });
+  const links = [];
+  const keep = anchor => {
+    links.push(anchor);
+    return `\u0001${links.length - 1}\u0001`;
+  };
   html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-    (_, label, url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`);
+    (_, label, url) => keep(`<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`));
+  // Bare URLs become links too (trailing punctuation stays text).
+  html = html.replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"&]/g,
+    url => keep(`<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`));
   html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   html = html.replace(/(^|[^*\w])\*([^*\s][^*]*)\*(?!\w)/g, "$1<em>$2</em>");
-  return html.replace(/\u0000(\d+)\u0000/g, (_, i) => codes[Number(i)]);
+  return html.replace(/\u0001(\d+)\u0001/g, (_, i) => links[Number(i)]).replace(/\u0000(\d+)\u0000/g, (_, i) => codes[Number(i)]);
 }
 
 export function renderMarkdown(source) {

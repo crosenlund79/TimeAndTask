@@ -108,3 +108,18 @@ test("adding cards uses the next id; invalid changes are refused", () => {
   assert.equal(cli(a, ["validate"]).status, 0);
   assert.equal(cli(a, ["render", "--check"]).status, 0);
 });
+
+test("capture puts a title-only item in the Inbox; it can go on the board; Done needs acceptance", () => {
+  const out = cli(a, ["capture", "Ask", "Peter", "about", "the", "invoice", "--link", "https://example.com/invoices/42"]);
+  assert.equal(out.status, 0, out.stderr);
+  const id = /Added (WT-\d+)/.exec(out.stdout)[1];
+  const card = findCard(remoteBoard(), id);
+  assert.equal(card.status, "inbox");
+  assert.equal(card.category, null);
+  assert.deepEqual(card.links, [{ label: "example.com/invoices/42", url: "https://example.com/invoices/42" }]);
+  assert.match(cli(a, ["inbox"]).stdout, new RegExp(`${id} {2}Ask Peter about the invoice`));
+  assert.match(cli(a, ["show"]).stdout, /^Inbox: 1 item/m);
+  assert.equal(cli(a, ["move", id, "done"]).status, 2, "uncategorised work needs the owner's acceptance");
+  assert.equal(cli(a, ["move", id, "todo"]).status, 0);
+  assert.equal(findCard(remoteBoard(), id).status, "todo");
+});
