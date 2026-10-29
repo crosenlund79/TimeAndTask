@@ -760,7 +760,7 @@
         "Existing cards and the five columns are unchanged"
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -782,8 +782,8 @@
         }
       ],
       "createdAt": "2026-10-29T13:41:16Z",
-      "updatedAt": "2026-10-29T13:41:39Z",
-      "rev": 2
+      "updatedAt": "2026-10-29T14:00:56Z",
+      "rev": 3
     },
     {
       "id": "WT-044",
