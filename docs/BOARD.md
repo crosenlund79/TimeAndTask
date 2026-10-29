@@ -34,6 +34,10 @@ Owner request 2026-10-29: no separate website. Kanban, Inbox, Archive, screensho
 Phase A (data, service, import): commit 0b2f544, CI run 25 green
 Phase B (Board/Inbox pages, screenshots): commit a6c4add, CI run 26 green on windows-latest, 247 tests incl. BoardFlowTests and UiSmokeTests
 
+**Links**
+
+- [Acceptance checklist](https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/acceptance/board-in-worktrace.md)
+
 ## Review / Test
 
 ### WT-010 · Scheduled check-ins appear reliably

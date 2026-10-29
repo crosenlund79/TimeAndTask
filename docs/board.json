@@ -1073,7 +1073,12 @@
       "notes": "",
       "evidence": "Phase A (data, service, import): commit 0b2f544, CI run 25 green\nPhase B (Board/Inbox pages, screenshots): commit a6c4add, CI run 26 green on windows-latest, 247 tests incl. BoardFlowTests and UiSmokeTests",
       "blockedBy": [],
-      "links": [],
+      "links": [
+        {
+          "label": "Acceptance checklist",
+          "url": "https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/acceptance/board-in-worktrace.md"
+        }
+      ],
       "comments": [],
       "history": [
         {
@@ -1085,8 +1090,8 @@
         }
       ],
       "createdAt": "2026-10-29T15:21:30Z",
-      "updatedAt": "2026-10-29T15:21:53Z",
-      "rev": 3
+      "updatedAt": "2026-10-29T15:21:58Z",
+      "rev": 4
     }
   ]
 }
