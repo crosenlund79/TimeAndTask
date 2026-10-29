@@ -713,7 +713,12 @@
       "notes": "",
       "evidence": "Unit, sync and CLI tests (47) and browser tests (19, 3 runs) green; real GitHub tests on branch board-synctest (concurrent edits, same-field conflict, concurrent comments, stale save refused, retry no-op, browser sees CLI changes).",
       "blockedBy": [],
-      "links": [],
+      "links": [
+        {
+          "label": "Board app",
+          "url": "https://crosenlund79.github.io/TimeAndTask/"
+        }
+      ],
       "comments": [],
       "history": [
         {
@@ -725,8 +730,8 @@
         }
       ],
       "createdAt": "2026-10-29T01:19:20Z",
-      "updatedAt": "2026-10-29T01:19:22Z",
-      "rev": 2
+      "updatedAt": "2026-10-29T01:19:25Z",
+      "rev": 3
     }
   ]
 }

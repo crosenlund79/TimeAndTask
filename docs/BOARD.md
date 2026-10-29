@@ -29,6 +29,10 @@ Browser board (GitHub Pages) backed by docs/board.json on the board branch, with
 
 Unit, sync and CLI tests (47) and browser tests (19, 3 runs) green; real GitHub tests on branch board-synctest (concurrent edits, same-field conflict, concurrent comments, stale save refused, retry no-op, browser sees CLI changes).
 
+**Links**
+
+- [Board app](https://crosenlund79.github.io/TimeAndTask/)
+
 ## Review / Test
 
 ### WT-010 · Scheduled check-ins appear reliably
