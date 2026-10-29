@@ -246,6 +246,10 @@ Ctrl+V, drag-and-drop and file picker in Quick Capture and on cards. Several ima
 - Nothing is uploaded to GitHub; the card says the images are on this device only
 - Large base64 images are never written to board.json
 
+**Evidence**
+
+Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
+
 ### WT-045 · Links: multiple per card, quick copy and open
 
 `feature` · priority Normal

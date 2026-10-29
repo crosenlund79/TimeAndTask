@@ -811,7 +811,7 @@
         "Large base64 images are never written to board.json"
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -825,8 +825,8 @@
         }
       ],
       "createdAt": "2026-10-29T13:41:19Z",
-      "updatedAt": "2026-10-29T13:41:19Z",
-      "rev": 1
+      "updatedAt": "2026-10-29T14:01:03Z",
+      "rev": 2
     },
     {
       "id": "WT-045",
