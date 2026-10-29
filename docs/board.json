@@ -1071,7 +1071,7 @@
         "Works without internet, GitHub token or Pages; time tracking unaffected"
       ],
       "notes": "",
-      "evidence": "Phase A (data, service, import): commit 0b2f544, CI run 25 green",
+      "evidence": "Phase A (data, service, import): commit 0b2f544, CI run 25 green\nPhase B (Board/Inbox pages, screenshots): commit a6c4add, CI run 26 green on windows-latest, 247 tests incl. BoardFlowTests and UiSmokeTests",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -1085,8 +1085,8 @@
         }
       ],
       "createdAt": "2026-10-29T15:21:30Z",
-      "updatedAt": "2026-10-29T15:21:43Z",
-      "rev": 2
+      "updatedAt": "2026-10-29T15:21:53Z",
+      "rev": 3
     }
   ]
 }
