@@ -1049,7 +1049,14 @@
           "url": "https://github.com/crosenlund79/TimeAndTask/blob/board/docs/proposals/2026-10-29-screenshots-and-email-backup.md"
         }
       ],
-      "comments": [],
+      "comments": [
+        {
+          "id": "c35ef3d6-4e69-4b17-b11f-a0a05de9e001",
+          "author": "claude",
+          "at": "2026-10-29T15:22:12Z",
+          "text": "Preparation done in WT-050: per-month change tracking and complete/monthly ZIPs exist; the email step waits for WT-047. The dependency on WT-048 no longer applies if WT-050 is accepted."
+        }
+      ],
       "history": [
         {
           "id": "578d293c-629c-4599-bf32-3a7160a127ec",
@@ -1060,8 +1067,8 @@
         }
       ],
       "createdAt": "2026-10-29T13:41:31Z",
-      "updatedAt": "2026-10-29T14:01:25Z",
-      "rev": 2
+      "updatedAt": "2026-10-29T15:22:12Z",
+      "rev": 3
     },
     {
       "id": "WT-050",

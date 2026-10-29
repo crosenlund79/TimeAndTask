@@ -368,6 +368,10 @@ Daily check; send only when board data or screenshots changed since the last suc
 
 - [Proposal: screenshots and email backup](https://github.com/crosenlund79/TimeAndTask/blob/board/docs/proposals/2026-10-29-screenshots-and-email-backup.md)
 
+**Comments (1)**
+
+- 2026-10-29 15:22 · claude: Preparation done in WT-050: per-month change tracking and complete/monthly ZIPs exist; the email step waits for WT-047. The dependency on WT-048 no longer applies if WT-050 is accepted.
+
 ## Backlog
 
 ### WT-040 · Tray notification when check-ins are held back
