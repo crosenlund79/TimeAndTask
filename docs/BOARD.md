@@ -278,6 +278,10 @@ Manual backup without any service: download a ZIP of the complete board, one cre
 - Restore validates the file and previews new, changed and unchanged cards before applying
 - Restoring never deletes cards or comments
 
+**Evidence**
+
+Board run 29 and Board UI run 4 green (commit 4b2ba4d): 61 unit/CLI tests, 27 browser tests, all 3 local runs green.
+
 ### WT-047 · Decide: screenshot storage and email delivery
 
 `architecture` · priority Critical
