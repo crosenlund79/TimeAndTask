@@ -31,6 +31,10 @@ Disposable card for the real GitHub sync tests.
 
 A: real race note
 
+**Comments (1)**
+
+- 2026-10-29 01:15 · claude: comment from editor B
+
 ### WT-002 · Test card B
 
 `testing` · priority Normal

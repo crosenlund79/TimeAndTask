@@ -18,7 +18,14 @@
       "evidence": "",
       "blockedBy": [],
       "links": [],
-      "comments": [],
+      "comments": [
+        {
+          "id": "31664c29-94e9-49f7-a3e8-e85445057783",
+          "author": "claude",
+          "at": "2026-10-29T01:15:11Z",
+          "text": "comment from editor B"
+        }
+      ],
       "history": [
         {
           "id": "9f746edd-bab7-451c-b027-b9f1cbb4dbf3",
@@ -29,8 +36,8 @@
         }
       ],
       "createdAt": "2026-10-29T01:30:00Z",
-      "updatedAt": "2026-10-29T01:14:54Z",
-      "rev": 2
+      "updatedAt": "2026-10-29T01:15:11Z",
+      "rev": 3
     },
     {
       "id": "WT-002",
