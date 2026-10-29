@@ -1077,6 +1077,10 @@
         {
           "label": "Acceptance checklist",
           "url": "https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/acceptance/board-in-worktrace.md"
+        },
+        {
+          "label": "Backups and restore",
+          "url": "https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/backup.md"
         }
       ],
       "comments": [],
@@ -1090,8 +1094,8 @@
         }
       ],
       "createdAt": "2026-10-29T15:21:30Z",
-      "updatedAt": "2026-10-29T15:21:58Z",
-      "rev": 4
+      "updatedAt": "2026-10-29T15:22:02Z",
+      "rev": 5
     }
   ]
 }

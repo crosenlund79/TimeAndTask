@@ -37,6 +37,7 @@ Phase B (Board/Inbox pages, screenshots): commit a6c4add, CI run 26 green on win
 **Links**
 
 - [Acceptance checklist](https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/acceptance/board-in-worktrace.md)
+- [Backups and restore](https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/backup.md)
 
 ## Review / Test
 
