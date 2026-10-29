@@ -1023,7 +1023,12 @@
         "WT-047",
         "WT-048"
       ],
-      "links": [],
+      "links": [
+        {
+          "label": "Proposal: screenshots and email backup",
+          "url": "https://github.com/crosenlund79/TimeAndTask/blob/board/docs/proposals/2026-10-29-screenshots-and-email-backup.md"
+        }
+      ],
       "comments": [],
       "history": [
         {
@@ -1035,8 +1040,8 @@
         }
       ],
       "createdAt": "2026-10-29T13:41:31Z",
-      "updatedAt": "2026-10-29T13:41:31Z",
-      "rev": 1
+      "updatedAt": "2026-10-29T14:01:25Z",
+      "rev": 2
     }
   ]
 }

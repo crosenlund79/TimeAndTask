@@ -331,6 +331,10 @@ Daily check; send only when board data or screenshots changed since the last suc
 - Oversized archives are split into numbered parts; nothing is omitted
 - Recipient, test email, send now, last success and retry are available
 
+**Links**
+
+- [Proposal: screenshots and email backup](https://github.com/crosenlund79/TimeAndTask/blob/board/docs/proposals/2026-10-29-screenshots-and-email-backup.md)
+
 ## Backlog
 
 ### WT-040 · Tray notification when check-ins are held back
