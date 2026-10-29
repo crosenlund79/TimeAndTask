@@ -711,7 +711,7 @@
         "No token or secret in committed code or public files"
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Unit, sync and CLI tests (47) and browser tests (19, 3 runs) green; real GitHub tests on branch board-synctest (concurrent edits, same-field conflict, concurrent comments, stale save refused, retry no-op, browser sees CLI changes).",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -725,8 +725,8 @@
         }
       ],
       "createdAt": "2026-10-29T01:19:20Z",
-      "updatedAt": "2026-10-29T01:19:20Z",
-      "rev": 1
+      "updatedAt": "2026-10-29T01:19:22Z",
+      "rev": 2
     }
   ]
 }
