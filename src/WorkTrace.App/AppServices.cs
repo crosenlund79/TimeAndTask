@@ -29,6 +29,8 @@ public static class AppServices
         services.AddSingleton<SystemEventsBridge>();
         services.AddSingleton<TimeReminderService>();
         services.AddSingleton<ScreenshotCaptureService>();
+        services.AddSingleton<BackupScheduler>();
+        services.AddSingleton<WorkTrace.Core.Board.ISecretStore, Interop.CredentialSecretStore>();
         services.AddSingleton<WorkTrace.Core.Tracking.ISessionStateProbe, SessionStateProbe>();
         services.AddTransient<CheckInViewModel>(); // the presenter creates popups untracked; registered for tests
 

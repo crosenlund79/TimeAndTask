@@ -14,12 +14,16 @@ public sealed partial class SettingsViewModel(
     ISettingsStore settings,
     TrackingController tracking,
     TimeReminderService reminders,
+    BackupViewModel backup,
     INotificationService notifications,
     ILogger<SettingsViewModel> logger) : ViewModelBase(notifications, logger), ISectionViewModel
 {
     private bool _loading;
 
     public TrackingController Tracking { get; } = tracking;
+
+    /// <summary>Backup &amp; restore section (automatic folder/email backups, manual backup, restore).</summary>
+    public BackupViewModel Backup { get; } = backup;
 
     public bool HasUnsavedChanges => false;
 
@@ -245,7 +249,7 @@ public sealed partial class SettingsViewModel(
         ReminderPlaySound = s.Reminders.PlaySound;
         ShutdownReminder = s.Reminders.OnShutdown;
         _loading = false;
-        return Task.CompletedTask;
+        return Backup.LoadAsync();
     }
 
     partial void OnPeriodicPromptsEnabledChanged(bool value) => Apply(s => s.Tracking.PeriodicPromptsEnabled = value);

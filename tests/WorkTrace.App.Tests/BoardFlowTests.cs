@@ -247,10 +247,8 @@ public class BoardFlowTests
         var card = await service.CreateAsync(Fields("From backup"), BoardStatus.Todo);
         var board = ctx.Get<BoardViewModel>();
         await board.ActivateAsync(null);
-        board.ShowBackup = true;
-        await WpfTestHost.SettleAsync(10);
-        var backup = board.Backup;
-        Assert.False(board.ShowColumns);
+        var backup = ctx.Get<BackupViewModel>(); // Settings › Backup & restore
+        await backup.LoadAsync();
         Assert.Single(backup.Months);
         Assert.True(backup.Months[0].Changed);
 
@@ -277,8 +275,7 @@ public class BoardFlowTests
         Assert.Equal("From backup", (await service.GetCardAsync(card.Id)).Title);
         Assert.False(backup.HasRestorePreview);
         await WpfTestHost.SettleAsync(10);
-        board.ShowBackup = false;
-        await WpfTestHost.SettleAsync(10);
+        await board.ReloadAsync();
         Assert.Equal(["From backup"], Titles(board, BoardStatus.Todo));
         File.Delete(zip);
     });

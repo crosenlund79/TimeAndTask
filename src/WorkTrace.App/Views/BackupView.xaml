@@ -4,14 +4,79 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:WorkTrace.App.ViewModels"
+             xmlns:controls="clr-namespace:WorkTrace.App.Controls"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
              d:DataContext="{d:DesignInstance Type=vm:BackupViewModel}">
-  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel>
+      <!-- Automatic backups -->
+      <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+        <StackPanel>
+          <TextBlock Text="Automatic backups" Style="{StaticResource SectionTitleText}" />
+          <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap" TextTrimming="None" Margin="0,4,0,0"
+                     Text="While WorkTrace runs, it backs up on the schedule below, but only when something changed. A folder and email are separate destinations; use either or both." />
+          <controls:SettingRow Header="Schedule">
+            <ComboBox Width="160" ItemsSource="{Binding FrequencyOptions}" DisplayMemberPath="Name" SelectedValuePath="Id"
+                      SelectedValue="{Binding FrequencyKey}" AutomationProperties.Name="Backup schedule" />
+          </controls:SettingRow>
+
+          <Border Style="{StaticResource SettingsDivider}" />
+          <controls:SettingRow Header="Back up to a folder"
+                               Description="A complete backup (database, settings, board, guides, attachments) plus one file per creation month. Works with local, network and OneDrive folders.">
+            <CheckBox IsChecked="{Binding FolderEnabled}" Content="On" AutomationProperties.Name="Back up to a folder" />
+          </controls:SettingRow>
+          <Grid Margin="0,4,0,0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Text="{Binding Folder, Mode=OneWay}" IsReadOnly="True" AutomationProperties.Name="Backup folder" />
+            <Button Grid.Column="1" Content="Browse…" Padding="12,5" Margin="8,0,0,0" Command="{Binding ChooseFolderCommand}" />
+            <Button Grid.Column="2" Style="{StaticResource IconButton}" Content="&#xE838;" Margin="4,0,0,0" ToolTip="Open the folder" Command="{Binding OpenFolderCommand}" />
+          </Grid>
+          <DockPanel Margin="0,8,0,0">
+            <Button DockPanel.Dock="Right" Content="Back up now" Padding="12,5" Command="{Binding BackupNowCommand}"
+                    IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}" />
+            <CheckBox IsChecked="{Binding FolderIncludeScreenshots}" Content="Include automatic screenshots" VerticalAlignment="Center" />
+          </DockPanel>
+          <TextBlock Text="{Binding FolderStatus}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" TextTrimming="None" Margin="0,6,0,0" />
+          <TextBlock Text="{Binding FolderError}" Style="{StaticResource ErrorText}" />
+
+          <Border Style="{StaticResource SettingsDivider}" />
+          <controls:SettingRow Header="Send backups by email"
+                               Description="The database backup and each changed creation month, as ZIP attachments (split into several emails when large). Sent with Resend: free, see the steps below.">
+            <CheckBox IsChecked="{Binding EmailEnabled}" Content="On" AutomationProperties.Name="Send backups by email" />
+          </controls:SettingRow>
+          <TextBlock Text="Send to" Style="{StaticResource FieldLabelText}" />
+          <TextBox Text="{Binding EmailTo, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Backup email address" />
+          <TextBlock Text="Resend API key" Style="{StaticResource FieldLabelText}" />
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <PasswordBox x:Name="KeyBox" AutomationProperties.Name="Resend API key" />
+            <Button Grid.Column="1" Content="Save key" Padding="12,5" Margin="8,0,0,0" Click="OnSaveKey" />
+            <Button Grid.Column="2" Style="{StaticResource IconButton}" Content="&#xE74D;" Margin="4,0,0,0" ToolTip="Remove the stored key"
+                    Command="{Binding RemoveEmailKeyCommand}" Visibility="{Binding HasEmailKey, Converter={StaticResource BoolToVisibility}}" />
+          </Grid>
+          <TextBlock Text="{Binding EmailKeyState}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" TextWrapping="Wrap" TextTrimming="None" />
+          <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap" TextTrimming="None" Margin="0,6,0,0"
+                     Text="Setup: create a free account at resend.com with the address above, then API Keys › Create API Key with Sending access, and paste it here. The key is kept in Windows Credential Manager, never in WorkTrace's files or backups." />
+          <DockPanel Margin="0,8,0,0">
+            <Button DockPanel.Dock="Right" Content="Send now" Padding="12,5" Command="{Binding SendNowCommand}"
+                    IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}" />
+            <TextBlock Text="{Binding EmailStatus}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" TextTrimming="None" VerticalAlignment="Center" />
+          </DockPanel>
+          <TextBlock Text="{Binding EmailError}" Style="{StaticResource ErrorText}" />
+        </StackPanel>
+      </Border>
+
       <!-- Backup -->
       <Border Style="{StaticResource Card}">
         <StackPanel>
-          <TextBlock Text="Back up" Style="{StaticResource SectionTitleText}" />
+          <TextBlock Text="Manual backup" Style="{StaticResource SectionTitleText}" />
           <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap" TextTrimming="None" Margin="0,4,0,0"
                      Text="Saves a ZIP file you can keep anywhere (e.g. OneDrive or a USB stick). Cards are grouped by the month they were created. Each ZIP restores on its own." />
           <TextBlock Text="{Binding ChangedSummary}" Margin="0,8,0,0" />
@@ -110,15 +175,5 @@
           </StackPanel>
         </StackPanel>
       </Border>
-
-      <!-- Email (pending) -->
-      <Border Style="{StaticResource Card}" Margin="0,12,0,0">
-        <StackPanel>
-          <TextBlock Text="Daily email backup" Style="{StaticResource SectionTitleText}" />
-          <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap" TextTrimming="None" Margin="0,4,0,0"
-                     Text="Not set up yet: waiting for your decision on how emails are sent (no passwords are stored until then). WorkTrace already tracks which months changed, so a daily backup will send only those." />
-        </StackPanel>
-      </Border>
     </StackPanel>
-  </ScrollViewer>
 </UserControl>

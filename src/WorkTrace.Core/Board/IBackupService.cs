@@ -13,9 +13,20 @@ public enum BackupKind
 
     /// <summary>Selected cards and their screenshots.</summary>
     Cards = 3,
+
+    /// <summary>The database snapshot, settings.json and guide files only (cards travel in monthly backups).</summary>
+    Database = 4,
 }
 
-public sealed record BackupRequest(BackupKind Kind, string? Month = null, IReadOnlyList<int>? CardIds = null);
+/// <param name="IncludeScreenshots">Complete backups: also the automatic screenshots folder.</param>
+/// <param name="RecordAs">Change tracking per destination: "month:" (manual), "folder-month:", "email-month:".</param>
+public sealed record BackupRequest(
+    BackupKind Kind, string? Month = null, IReadOnlyList<int>? CardIds = null, bool IncludeScreenshots = true, string RecordAs = BackupRequest.ManualScope)
+{
+    public const string ManualScope = "month:";
+}
+
+public sealed record MonthCard(int CardId, long AttachmentBytes);
 
 /// <summary>A creation month (UTC, "2026-10") and whether it changed since its last backup.</summary>
 public sealed record BackupMonth(string Month, int CardCount, int AttachmentCount, string ContentHash, DateTime? LastBackupAtUtc, bool ChangedSinceBackup);
@@ -29,8 +40,17 @@ public sealed record BackupResult(string Path, int CardCount, int AttachmentCoun
 /// </summary>
 public interface IBackupService
 {
-    /// <summary>Months that have cards, newest first, with change state since their last backup.</summary>
-    Task<IReadOnlyList<BackupMonth>> GetMonthsAsync(CancellationToken cancellationToken = default);
+    /// <summary>Months that have cards, newest first, with change state since their last backup to <paramref name="recordAs"/>.</summary>
+    Task<IReadOnlyList<BackupMonth>> GetMonthsAsync(string recordAs = BackupRequest.ManualScope, CancellationToken cancellationToken = default);
+
+    /// <summary>Cards created in a month with the size of their attachments (to split oversized email backups).</summary>
+    Task<IReadOnlyList<MonthCard>> GetMonthCardsAsync(string month, CancellationToken cancellationToken = default);
+
+    /// <summary>Marks a month as backed up to a destination with the given content hash (after a split backup was fully sent).</summary>
+    Task RecordMonthAsync(string month, string contentHash, string recordAs, string fileName, CancellationToken cancellationToken = default);
+
+    /// <summary>Changes whenever relevant data changes (time registrations, tasks, stakeholders, board, guides, screenshots).</summary>
+    Task<string> GetDataFingerprintAsync(CancellationToken cancellationToken = default);
 
     string DefaultFileName(BackupRequest request);
 

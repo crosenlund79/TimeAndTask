@@ -222,30 +222,13 @@ public abstract partial class BoardPageViewModel : ViewModelBase, ISectionViewMo
 /// <summary>The Kanban board: five columns, drag-and-drop, filters, the archive and Undo.</summary>
 public sealed partial class BoardViewModel : BoardPageViewModel
 {
-    public BoardViewModel(CardPanelServices services, BackupViewModel backup)
+    public BoardViewModel(CardPanelServices services)
         : base(services)
     {
-        Backup = backup;
         Columns = [.. BoardRules.Columns.Select(s => new BoardColumnViewModel(s))];
     }
 
-    public BackupViewModel Backup { get; }
-
-    /// <summary>Shows the Backup &amp; restore panel instead of the columns.</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowColumns))]
-    public partial bool ShowBackup { get; set; }
-
-    public bool ShowColumns => !ShowArchive && !ShowBackup;
-
-    partial void OnShowBackupChanged(bool value)
-    {
-        if (value)
-        {
-            ShowArchive = false;
-            _ = Backup.LoadAsync();
-        }
-    }
+    public bool ShowColumns => !ShowArchive;
 
     public IReadOnlyList<BoardColumnViewModel> Columns { get; }
 
@@ -281,11 +264,6 @@ public sealed partial class BoardViewModel : BoardPageViewModel
 
     partial void OnShowArchiveChanged(bool value)
     {
-        if (value)
-        {
-            ShowBackup = false;
-        }
-
         _ = ReloadAsync();
     }
 

@@ -24,22 +24,21 @@ internal sealed class BackupService(
     TimeProvider timeProvider,
     ILogger<BackupService> logger) : IBackupService
 {
-    private const string MonthScopePrefix = "month:";
 
     private sealed record Snapshot(List<WebCard> Cards, List<(BoardAttachment Row, WebCard Card)> Attachments, int NextId);
 
-    public async Task<IReadOnlyList<BackupMonth>> GetMonthsAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<BackupMonth>> GetMonthsAsync(string recordAs = BackupRequest.ManualScope, CancellationToken cancellationToken = default)
     {
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
         var snapshot = await LoadAsync(db, cancellationToken);
-        var records = await db.BackupRecords.AsNoTracking().Where(r => r.Scope.StartsWith(MonthScopePrefix))
+        var records = await db.BackupRecords.AsNoTracking().Where(r => r.Scope.StartsWith(recordAs))
             .ToListAsync(cancellationToken);
 
         return [.. snapshot.Cards.GroupBy(c => c.CreatedAt[..7]).OrderByDescending(g => g.Key, StringComparer.Ordinal).Select(g =>
         {
             var attachments = snapshot.Attachments.Where(a => g.Contains(a.Card)).ToList();
             var hash = ContentHash(g, attachments.Select(a => a.Row.Sha256));
-            var last = records.Where(r => r.Scope == MonthScopePrefix + g.Key).OrderByDescending(r => r.CreatedAtUtc).FirstOrDefault();
+            var last = records.Where(r => r.Scope == recordAs + g.Key).OrderByDescending(r => r.CreatedAtUtc).FirstOrDefault();
             return new BackupMonth(g.Key, g.Count(), attachments.Count, hash, last?.CreatedAtUtc, last is null || last.ContentHash != hash);
         })];
     }
@@ -51,6 +50,7 @@ internal sealed class BackupService(
         return request.Kind switch
         {
             BackupKind.Complete => $"worktrace-complete-{day}.zip",
+            BackupKind.Database => $"worktrace-database-{day}.zip",
             BackupKind.Month => $"worktrace-backup-{request.Month}.zip",
             BackupKind.Cards => $"worktrace-backup-{request.CardIds?.Count ?? 0}-cards-{day}.zip",
             _ => $"worktrace-backup-all-{day}.zip",
@@ -68,6 +68,7 @@ internal sealed class BackupService(
         var cards = request.Kind switch
         {
             BackupKind.Month => snapshot.Cards.Where(c => c.CreatedAt.StartsWith(request.Month ?? "-", StringComparison.Ordinal)).ToList(),
+            BackupKind.Database => [],
             _ => snapshot.Cards,
         };
         if (request.Kind == BackupKind.Cards)
@@ -77,7 +78,7 @@ internal sealed class BackupService(
             cards = [.. snapshot.Cards.Where(c => numbers.Contains(BoardRules.ParseNumber(c.Id)!.Value))];
         }
 
-        if (cards.Count == 0 && request.Kind != BackupKind.Complete)
+        if (cards.Count == 0 && request.Kind is not (BackupKind.Complete or BackupKind.Database))
         {
             throw new OperationNotAllowedException("There are no cards to back up for this choice.");
         }
@@ -87,7 +88,8 @@ internal sealed class BackupService(
         var directory = Path.GetDirectoryName(Path.GetFullPath(path))!;
         Directory.CreateDirectory(directory);
         var temp = Path.Combine(directory, $".{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
-        var databaseSnapshot = request.Kind == BackupKind.Complete ? Path.Combine(paths.BackupsDirectory, $"snapshot-{Guid.NewGuid():N}.db") : null;
+        var withDatabase = request.Kind is BackupKind.Complete or BackupKind.Database;
+        var databaseSnapshot = withDatabase ? Path.Combine(paths.BackupsDirectory, $"snapshot-{Guid.NewGuid():N}.db") : null;
         try
         {
             object? database = null;
@@ -160,6 +162,13 @@ internal sealed class BackupService(
                     {
                         await AddFileAsync(zip, "settings/settings.json", paths.SettingsPath, cancellationToken);
                     }
+
+                    // Files that live next to the database: guide PDFs and (optionally) automatic screenshots.
+                    await AddFolderAsync(zip, Path.Combine(paths.AttachmentsDirectory, "guides"), "files/guides", cancellationToken);
+                    if (request.Kind == BackupKind.Complete && request.IncludeScreenshots)
+                    {
+                        await AddFolderAsync(zip, paths.ScreenshotsDirectory, "files/screenshots", cancellationToken);
+                    }
                 }
             }
 
@@ -185,16 +194,16 @@ internal sealed class BackupService(
         WorkTraceDbContext db, BackupRequest request, List<WebCard> cards, List<(BoardAttachment Row, WebCard Card)> attachments,
         string fileName, long size, DateTime now, CancellationToken cancellationToken)
     {
-        if (request.Kind == BackupKind.Cards)
+        if (request.Kind is BackupKind.Cards or BackupKind.Database || string.IsNullOrEmpty(request.RecordAs))
         {
-            return;
+            return; // empty RecordAs: the caller records after delivery (email)
         }
 
         foreach (var month in cards.GroupBy(c => c.CreatedAt[..7]))
         {
             db.BackupRecords.Add(new BackupRecord
             {
-                Scope = MonthScopePrefix + month.Key,
+                Scope = request.RecordAs + month.Key,
                 ContentHash = ContentHash(month, attachments.Where(a => month.Contains(a.Card)).Select(a => a.Row.Sha256)),
                 FileName = fileName.Length > BackupRecord.FileNameMaxLength ? fileName[..BackupRecord.FileNameMaxLength] : fileName,
                 SizeBytes = size,
@@ -203,6 +212,60 @@ internal sealed class BackupService(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<MonthCard>> GetMonthCardsAsync(string month, CancellationToken cancellationToken = default)
+    {
+        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var snapshot = await LoadAsync(db, cancellationToken);
+        var ids = await db.BoardCards.AsNoTracking().Select(c => new { c.Id, c.Number }).ToDictionaryAsync(c => BoardCard.FormatKey(c.Number), c => c.Id, cancellationToken);
+        return [.. snapshot.Cards.Where(c => c.CreatedAt.StartsWith(month, StringComparison.Ordinal))
+            .Select(c => new MonthCard(ids[c.Id], snapshot.Attachments.Where(a => a.Card == c).Sum(a => a.Row.SizeBytes)))];
+    }
+
+    public async Task RecordMonthAsync(string month, string contentHash, string recordAs, string fileName, CancellationToken cancellationToken = default)
+    {
+        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+        db.BackupRecords.Add(new BackupRecord
+        {
+            Scope = recordAs + month,
+            ContentHash = contentHash,
+            FileName = fileName.Length > BackupRecord.FileNameMaxLength ? fileName[..BackupRecord.FileNameMaxLength] : fileName,
+            CreatedAtUtc = UtcTime.Now(timeProvider),
+        });
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<string> GetDataFingerprintAsync(CancellationToken cancellationToken = default)
+    {
+        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var parts = new object?[]
+        {
+            await db.Observations.CountAsync(cancellationToken), await db.Observations.MaxAsync(o => (DateTime?)o.ModifiedAtUtc, cancellationToken),
+            await db.Tasks.CountAsync(cancellationToken), await db.Tasks.MaxAsync(t => (DateTime?)t.ModifiedAtUtc, cancellationToken),
+            await db.Clients.CountAsync(cancellationToken), await db.Clients.MaxAsync(c => (DateTime?)c.ModifiedAtUtc, cancellationToken),
+            await db.ManualAllocations.CountAsync(cancellationToken), await db.ManualAllocations.MaxAsync(a => (DateTime?)a.ModifiedAtUtc, cancellationToken),
+            await db.TimesheetAdjustments.CountAsync(cancellationToken), await db.TimesheetAdjustments.MaxAsync(a => (DateTime?)a.ModifiedAtUtc, cancellationToken),
+            await db.BoardCards.CountAsync(cancellationToken), await db.BoardCards.MaxAsync(c => (DateTime?)c.ModifiedAtUtc, cancellationToken),
+            await db.Guides.CountAsync(cancellationToken), await db.Guides.MaxAsync(g => (DateTime?)g.ModifiedAtUtc, cancellationToken),
+            await db.GuideAttachments.CountAsync(cancellationToken), await db.Screenshots.CountAsync(cancellationToken),
+            await db.ChangeLog.CountAsync(cancellationToken), await db.CheckInPrompts.CountAsync(cancellationToken),
+        };
+        return BoardExchange.Sha256(Encoding.UTF8.GetBytes(string.Join("|", parts.Select(p => p is DateTime d ? d.Ticks.ToString(CultureInfo.InvariantCulture) : p?.ToString()))));
+    }
+
+    private static async Task AddFolderAsync(ZipArchive zip, string folder, string prefix, CancellationToken cancellationToken)
+    {
+        if (!Directory.Exists(folder))
+        {
+            return;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
+        {
+            var relative = Path.GetRelativePath(folder, file).Replace('\\', '/');
+            await AddFileAsync(zip, $"{prefix}/{relative}", file, cancellationToken);
+        }
     }
 
     /// <summary>All cards in the web format (ranks from the current order) and their attachment rows.</summary>
@@ -304,6 +367,7 @@ internal sealed class BackupService(
         {
             BackupKind.Complete => "everything: all cards, screenshots, the WorkTrace database (time tracking) and settings",
             BackupKind.Month => $"cards created in {request.Month} (UTC)",
+            BackupKind.Database => "the WorkTrace database (time tracking, tasks, stakeholders, board, guides) with settings and guide files",
             BackupKind.Cards => $"{cardCount} selected cards",
             _ => "all cards",
         };

@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:WorkTrace.App.ViewModels"
              xmlns:controls="clr-namespace:WorkTrace.App.Controls"
+             xmlns:views="clr-namespace:WorkTrace.App.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="900"
              d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}">
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -201,8 +202,9 @@
         </StackPanel>
       </Border>
 
-      <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="2,14,0,0"
-                 Text="Backups are set up on the Board page under Backup (folder and email, schedule, restore)." />
+      <!-- Backup & restore -->
+      <TextBlock Text="Backup &amp; restore" Style="{StaticResource SectionTitleText}" FontSize="20" Margin="0,28,0,12" />
+      <views:BackupView DataContext="{Binding Backup}" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>

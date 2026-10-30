@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using WorkTrace.App.Shell;
 using WorkTrace.Core.Board;
+using WorkTrace.Core.Settings;
 
 namespace WorkTrace.App.ViewModels;
 
@@ -59,12 +60,209 @@ public sealed partial class RestoreItemViewModel(ImportItem item) : ObservableOb
 /// Backup & restore panel (on the Board page): complete, all-card, monthly or selected-card ZIPs, and restore with a
 /// preview. Email delivery is prepared (per-month change tracking) but not implemented until a method is approved.
 /// </summary>
-public sealed partial class BackupViewModel(
-    IBackupService backups,
-    CardPanelServices services,
-    ILogger<BackupViewModel> logger) : ViewModelBase(services.Notifications, logger)
+public sealed partial class BackupViewModel : ViewModelBase
 {
+    private readonly IBackupService _backups;
+    private readonly CardPanelServices _services;
+    private readonly ISettingsStore _settings;
+    private readonly IAutomaticBackupService _automatic;
+    private readonly ISecretStore _secrets;
     private string? _restorePath;
+    private bool _loading;
+
+    public BackupViewModel(
+        IBackupService backups,
+        CardPanelServices services,
+        ISettingsStore settings,
+        IAutomaticBackupService automatic,
+        ISecretStore secrets,
+        ILogger<BackupViewModel> logger)
+        : base(services.Notifications, logger)
+    {
+        _backups = backups;
+        _services = services;
+        _settings = settings;
+        _automatic = automatic;
+        _secrets = secrets;
+        settings.Changed += (_, _) => System.Windows.Application.Current?.Dispatcher.BeginInvoke(LoadAutomatic);
+    }
+
+    // ---- Automatic backups (settings saved at once) ----
+
+    public IReadOnlyList<PickerOption> FrequencyOptions { get; } =
+        [new((int)BackupFrequency.Daily + 1, "Daily"), new((int)BackupFrequency.Weekly + 1, "Weekly")];
+
+    [ObservableProperty]
+    public partial int? FrequencyKey { get; set; }
+
+    [ObservableProperty]
+    public partial bool FolderEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial string? Folder { get; private set; }
+
+    [ObservableProperty]
+    public partial bool FolderIncludeScreenshots { get; set; }
+
+    [ObservableProperty]
+    public partial string? FolderStatus { get; private set; }
+
+    [ObservableProperty]
+    public partial string? FolderError { get; private set; }
+
+    [ObservableProperty]
+    public partial bool EmailEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial string? EmailTo { get; set; }
+
+    [ObservableProperty]
+    public partial string? EmailStatus { get; private set; }
+
+    [ObservableProperty]
+    public partial string? EmailError { get; private set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(EmailKeyState))]
+    public partial bool HasEmailKey { get; private set; }
+
+    public string EmailKeyState => HasEmailKey ? "A key is stored in Windows Credential Manager." : "No key stored yet.";
+
+    [ObservableProperty]
+    public partial bool IsRunning { get; private set; }
+
+    /// <summary>Reads the automatic-backup settings and status (also when the backup job updates them).</summary>
+    public void LoadAutomatic()
+    {
+        _loading = true;
+        var b = _settings.Current.Backup;
+        FrequencyKey = (int)b.Frequency + 1;
+        FolderEnabled = b.FolderEnabled;
+        Folder = b.Folder;
+        FolderIncludeScreenshots = b.FolderIncludeScreenshots;
+        FolderStatus = b.LastFolderUtc is { } f ? $"Last backup {CardText.DateTime(f)} · {b.LastFolderResult}" : "No backup to the folder yet.";
+        FolderError = b.LastFolderError;
+        EmailEnabled = b.EmailEnabled;
+        EmailTo = b.EmailTo;
+        EmailStatus = b.LastEmailUtc is { } e ? $"Last sent {CardText.DateTime(e)} · {b.LastEmailResult}" : "No backup emailed yet.";
+        EmailError = b.LastEmailError;
+        try
+        {
+            HasEmailKey = _secrets.Read(IAutomaticBackupService.EmailKeySecret) is not null;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Could not read the email key from Credential Manager");
+            HasEmailKey = false;
+        }
+
+        _loading = false;
+    }
+
+    partial void OnFrequencyKeyChanged(int? value)
+    {
+        if (value is { } key)
+        {
+            Save(b => b.Frequency = (BackupFrequency)(key - 1));
+        }
+    }
+
+    partial void OnFolderEnabledChanged(bool value) => Save(b => b.FolderEnabled = value);
+
+    partial void OnFolderIncludeScreenshotsChanged(bool value) => Save(b => b.FolderIncludeScreenshots = value);
+
+    partial void OnEmailEnabledChanged(bool value) => Save(b => b.EmailEnabled = value);
+
+    partial void OnEmailToChanged(string? value) => Save(b => b.EmailTo = string.IsNullOrWhiteSpace(value) ? null : value.Trim());
+
+    private void Save(Action<BackupSettings> change)
+    {
+        if (!_loading)
+        {
+            _ = RunAsync(() => _settings.UpdateAsync(s => change(s.Backup)), "Could not save the backup setting.");
+        }
+    }
+
+    [RelayCommand]
+    private void ChooseFolder()
+    {
+        if (_services.Files.ChooseFolder("Choose the backup folder (local, network or e.g. OneDrive)", Folder) is { } folder)
+        {
+            Folder = folder;
+            Save(b =>
+            {
+                b.Folder = folder;
+                b.FolderEnabled = true;
+            });
+        }
+    }
+
+    [RelayCommand]
+    private void OpenFolder()
+    {
+        if (Folder is { } folder && System.IO.Directory.Exists(folder))
+        {
+            _services.Files.OpenFile(folder);
+        }
+    }
+
+    [RelayCommand]
+    private Task BackupNowAsync() => RunNowAsync(BackupDestination.Folder);
+
+    [RelayCommand]
+    private Task SendNowAsync() => RunNowAsync(BackupDestination.Email);
+
+    private async Task RunNowAsync(BackupDestination destination)
+    {
+        IsRunning = true;
+        try
+        {
+            BackupRunResult? result = null;
+            await RunAsync(async () => result = await Task.Run(() => _automatic.RunNowAsync(destination)), "The backup could not run.");
+            if (result is not null)
+            {
+                Notifications.Show(result.Message, result.Succeeded ? NotificationKind.Success : NotificationKind.Error);
+            }
+        }
+        finally
+        {
+            IsRunning = false;
+            LoadAutomatic();
+            await LoadAsync();
+        }
+    }
+
+    /// <summary>Stores the email API key in Windows Credential Manager (called by the view with the password box text).</summary>
+    public void SaveEmailKey(string? key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return;
+        }
+
+        try
+        {
+            _secrets.Write(IAutomaticBackupService.EmailKeySecret, key.Trim());
+            Notifications.Show("Email key saved in Windows Credential Manager.", NotificationKind.Success);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Saving the email key failed");
+            Notifications.Show("The key could not be saved: " + ex.Message, NotificationKind.Error);
+        }
+
+        LoadAutomatic();
+    }
+
+    [RelayCommand]
+    private void RemoveEmailKey()
+    {
+        if (_services.Dialogs.Confirm("Remove email key", "Remove the stored email key? Email backups stop until you add a key again.", "Remove", destructive: true))
+        {
+            _secrets.Write(IAutomaticBackupService.EmailKeySecret, null);
+            LoadAutomatic();
+        }
+    }
 
     public ObservableCollection<MonthOptionViewModel> Months { get; } = [];
 
@@ -94,9 +292,10 @@ public sealed partial class BackupViewModel(
 
     public async Task LoadAsync()
     {
+        LoadAutomatic();
         await RunAsync(async () =>
         {
-            var months = await backups.GetMonthsAsync();
+            var months = await _backups.GetMonthsAsync();
             Months.Clear();
             foreach (var month in months)
             {
@@ -110,7 +309,7 @@ public sealed partial class BackupViewModel(
                 : $"{changed} of {months.Count} month(s) changed since their last backup.";
 
             Cards.Clear();
-            foreach (var card in await services.Board.GetCardRefsAsync())
+            foreach (var card in await _services.Board.GetCardRefsAsync())
             {
                 Cards.Add(new SelectableCardViewModel(card));
             }
@@ -142,14 +341,14 @@ public sealed partial class BackupViewModel(
 
     private async Task BackupAsync(BackupRequest request)
     {
-        var path = services.Files.SaveFile("Save backup", "WorkTrace backup (*.zip)|*.zip", backups.DefaultFileName(request));
+        var path = _services.Files.SaveFile("Save backup", "WorkTrace backup (*.zip)|*.zip", _backups.DefaultFileName(request));
         if (path is null)
         {
             return;
         }
 
         BackupResult? result = null;
-        if (await RunAsync(async () => result = await backups.CreateAsync(request, path), "Could not write the backup."))
+        if (await RunAsync(async () => result = await _backups.CreateAsync(request, path), "Could not write the backup."))
         {
             LastResult = $"Saved {Path.GetFileName(result!.Path)}: {result.CardCount} cards, {result.AttachmentCount} screenshots"
                 + (result.IncludesDatabase ? ", database and settings" : "") + $", {result.SizeBytes / 1024.0:N0} KB.";
@@ -163,7 +362,7 @@ public sealed partial class BackupViewModel(
     [RelayCommand]
     private async Task ChooseRestoreFileAsync()
     {
-        var files = services.Files.OpenFiles("Restore from a backup or board.json", "WorkTrace backup or board (*.zip;*.json)|*.zip;*.json", multiselect: false);
+        var files = _services.Files.OpenFiles("Restore from a backup or board.json", "WorkTrace backup or board (*.zip;*.json)|*.zip;*.json", multiselect: false);
         if (files.Count > 0)
         {
             await PreviewRestoreAsync(files[0]);
@@ -175,7 +374,7 @@ public sealed partial class BackupViewModel(
     {
         ClearRestore();
         ImportPreview? preview = null;
-        if (await RunAsync(async () => preview = await services.Board.PreviewImportAsync(path), "Could not read the backup."))
+        if (await RunAsync(async () => preview = await _services.Board.PreviewImportAsync(path), "Could not read the backup."))
         {
             _restorePath = path;
             RestorePreview = preview;
@@ -206,13 +405,13 @@ public sealed partial class BackupViewModel(
 
         var overwrite = RestoreItems.Where(i => i.Overwrite).Select(i => i.Item.Uid).ToList();
         ImportResult? result = null;
-        if (await RunAsync(async () => result = await services.Board.ImportAsync(_restorePath, overwrite), "Could not restore the backup."))
+        if (await RunAsync(async () => result = await _services.Board.ImportAsync(_restorePath, overwrite), "Could not restore the backup."))
         {
             ClearRestore();
             LastResult = $"Restored: {result!.Added} added, {result.Updated} updated, {result.Unchanged} unchanged, {result.Skipped} kept, "
                 + $"{result.AttachmentsAdded} screenshot(s)." + (result.Notes.Count > 0 ? " " + string.Join(" ", result.Notes) : "");
             Notifications.Show("Restore finished.", NotificationKind.Success);
-            services.Session.Announce();
+            _services.Session.Announce();
             await LoadAsync();
         }
     }

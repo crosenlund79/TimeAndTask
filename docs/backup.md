@@ -36,7 +36,17 @@ does not do it automatically (pending the owner's decision on an in-app flow):
    `settings/settings.json` over `settings.json`.
 4. Start WorkTrace. Attachments are restored with *Restore cards* above.
 
-## Email backups (prepared, not active)
-Each written backup records a content hash per month, so a daily job can send only months that changed. Sending
-is not implemented: the delivery method and where any credentials live are the owner's decision (board card
-WT-047). Until then nothing leaves this PC.
+## Automatic backups (Settings › Backup & restore)
+Runs daily or weekly while WorkTrace is running, and only when something changed. Each destination is optional:
+
+- **Folder** (local, network or OneDrive): `WorkTrace-complete-YYYY-MM-DD.zip` (database, settings, board, card
+  attachments, guide PDFs and optionally screenshots; the newest 14 are kept) and `WorkTrace-board-YYYY-MM.zip` per
+  creation month, rewritten when anything in that month changes. "Back up now" runs it at once.
+- **Email** (Resend): `WorkTrace-database-YYYY-MM-DD.zip` when data changed, and `WorkTrace-board-YYYY-MM.zip` for each
+  changed creation month (also when an older card changed). A month bigger than the size limit (20 MB) is sent as
+  several parts, each a complete, restorable backup of some of its cards; a single card too big for email is reported
+  as an error (it stays in the folder backup) and its month is retried, so nothing is dropped silently.
+  Setup: free account at resend.com with the receiving address, an API key with *Sending access*, pasted in WorkTrace;
+  it is stored in Windows Credential Manager (`WorkTrace/ResendApiKey`), never in files or backups.
+
+Last success, last result and any error are shown for each destination; failures also show a tray notification.

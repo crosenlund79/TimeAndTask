@@ -129,6 +129,7 @@ public partial class App : Application, IAppLifetime
         _ = StartEngineAsync(services.GetRequiredService<TrackingEngine>());
 
         services.GetRequiredService<ScreenshotCaptureService>().Start();
+        services.GetRequiredService<BackupScheduler>().Start();
 
         var reminders = services.GetRequiredService<TimeReminderService>();
         reminders.Start();
@@ -228,6 +229,7 @@ public partial class App : Application, IAppLifetime
             _host?.Services.GetService<SystemEventsBridge>()?.Dispose();
             _host?.Services.GetService<TimeReminderService>()?.Dispose();
             _host?.Services.GetService<ScreenshotCaptureService>()?.Dispose();
+            _host?.Services.GetService<BackupScheduler>()?.Dispose();
             _host?.Services.GetService<GlobalHotkey>()?.Dispose();
             _host?.Services.GetService<WindowManager>()?.CloseAll();
             _host?.Services.GetService<TrayIconService>()?.Dispose();

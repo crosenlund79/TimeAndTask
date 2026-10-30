@@ -119,6 +119,8 @@ internal sealed class FakeFileDialogService : IFileDialogService
 
     public string? SaveFile(string title, string filter, string defaultFileName) => SavePath;
 
+    public string? ChooseFolder(string title, string? initial) => SavePath;
+
     public void OpenUrl(string url) => Opened.Add(url);
 
     public void OpenFile(string path) => Opened.Add(path);

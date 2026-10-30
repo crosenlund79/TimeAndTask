@@ -22,6 +22,8 @@ public sealed class WorkTraceSettings
 
     public ReminderSettings Reminders { get; set; } = new();
 
+    public BackupSettings Backup { get; set; } = new();
+
     /// <summary>Deep copy, so editors can change settings without touching <see cref="ISettingsStore.Current"/>.</summary>
     public WorkTraceSettings Clone() =>
         System.Text.Json.JsonSerializer.Deserialize<WorkTraceSettings>(System.Text.Json.JsonSerializer.Serialize(this))!;
@@ -31,7 +33,7 @@ public sealed class WorkTraceSettings
     {
         var errors = new List<string>();
 
-        if (General is null || Tracking is null || Screenshots is null || Reporting is null || Board is null || Reminders is null)
+        if (General is null || Tracking is null || Screenshots is null || Reporting is null || Board is null || Reminders is null || Backup is null)
         {
             errors.Add("All settings groups must be present.");
             return errors;
@@ -46,6 +48,9 @@ public sealed class WorkTraceSettings
             errors.Add("Tracking.MaxEstimationHorizonMinutes must be at least the check-in interval.");
         }
 
+        Range(errors, "Backup.FolderKeep", Backup.FolderKeep, 1, 365);
+        Range(errors, "Backup.EmailMaxMegabytes", Backup.EmailMaxMegabytes, 1, 35);
+        Defined(errors, "Backup.Frequency", Backup.Frequency);
         Range(errors, "Reminders.IntervalMinutes", Reminders.IntervalMinutes, ReminderSettings.MinIntervalMinutes, ReminderSettings.MaxIntervalMinutes);
         Range(errors, "Screenshots.CaptureIntervalMinutes", Screenshots.CaptureIntervalMinutes, 1, 240);
         Range(errors, "Screenshots.RetentionDays", Screenshots.RetentionDays, 1, 3650);
@@ -245,4 +250,57 @@ public sealed class ReminderSettings
 
     /// <summary>Windows shut down on this day while time registration was outstanding: ask at the next start.</summary>
     public DateOnly? AskAfterShutdownForDay { get; set; }
+}
+
+public enum BackupFrequency
+{
+    Daily = 0,
+    Weekly = 1,
+}
+
+/// <summary>
+/// Automatic backups to a folder and/or by email (each optional). Status fields are written by the backup job.
+/// The email API key is not stored here: it lives in Windows Credential Manager.
+/// </summary>
+public sealed class BackupSettings
+{
+    public BackupFrequency Frequency { get; set; } = BackupFrequency.Daily;
+
+    // ---- Folder ----
+    public bool FolderEnabled { get; set; }
+
+    /// <summary>Local, network or cloud-synced folder (e.g. OneDrive).</summary>
+    public string? Folder { get; set; }
+
+    /// <summary>Complete backups kept in the folder (older ones are deleted).</summary>
+    public int FolderKeep { get; set; } = 14;
+
+    public bool FolderIncludeScreenshots { get; set; } = true;
+
+    public DateTime? LastFolderUtc { get; set; }
+
+    public string? LastFolderResult { get; set; }
+
+    public string? LastFolderError { get; set; }
+
+    public string? LastFolderFingerprint { get; set; }
+
+    // ---- Email ----
+    public bool EmailEnabled { get; set; }
+
+    public string? EmailTo { get; set; }
+
+    /// <summary>Sender; Resend's test sender works without a domain, but only to the Resend account's own address.</summary>
+    public string EmailFrom { get; set; } = "WorkTrace <onboarding@resend.dev>";
+
+    /// <summary>Largest attachment per email; bigger backups are split into several emails.</summary>
+    public int EmailMaxMegabytes { get; set; } = 20;
+
+    public DateTime? LastEmailUtc { get; set; }
+
+    public string? LastEmailResult { get; set; }
+
+    public string? LastEmailError { get; set; }
+
+    public string? LastEmailFingerprint { get; set; }
 }

@@ -26,12 +26,13 @@ internal sealed class TestDataDirectory : IDisposable
     public FakeTimeProvider Time { get; } = new(new DateTimeOffset(2026, 10, 28, 9, 0, 0, TimeSpan.Zero));
 
     /// <summary>Builds a new provider, simulating an application start against the same data directory.</summary>
-    public ServiceProvider BuildServices()
+    public ServiceProvider BuildServices(Action<IServiceCollection>? configure = null)
     {
         var services = new ServiceCollection();
         services.AddLogging(b => b.SetMinimumLevel(LogLevel.Debug));
         services.AddSingleton<TimeProvider>(Time);
         services.AddWorkTraceInfrastructure(Paths);
+        configure?.Invoke(services);
         return services.BuildServiceProvider();
     }
 

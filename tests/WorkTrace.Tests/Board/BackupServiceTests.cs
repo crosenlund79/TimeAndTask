@@ -83,20 +83,20 @@ public class BackupServiceTests : ManagementTestBase
         Time.Advance(TimeSpan.FromDays(40));
         var later = await Board.CaptureAsync("Next month", cancellationToken: Ct);
 
-        var months = await Backups.GetMonthsAsync(Ct);
+        var months = await Backups.GetMonthsAsync(cancellationToken: Ct);
         Assert.Equal(["2026-12", "2026-10"], months.Select(m => m.Month));
         Assert.All(months, m => Assert.True(m.ChangedSinceBackup));
 
         await Backups.CreateAsync(new BackupRequest(BackupKind.Month, "2026-10"), TempZip(), Ct);
-        months = await Backups.GetMonthsAsync(Ct);
+        months = await Backups.GetMonthsAsync(cancellationToken: Ct);
         Assert.False(months.Single(m => m.Month == "2026-10").ChangedSinceBackup);
         Assert.True(months.Single(m => m.Month == "2026-12").ChangedSinceBackup);
 
         await Backups.CreateAsync(new BackupRequest(BackupKind.AllCards), TempZip(), Ct);
-        Assert.All(await Backups.GetMonthsAsync(Ct), m => Assert.False(m.ChangedSinceBackup));
+        Assert.All(await Backups.GetMonthsAsync(cancellationToken: Ct), m => Assert.False(m.ChangedSinceBackup));
 
         await Board.AddCommentAsync(later.Id, "changed", Ct);
-        months = await Backups.GetMonthsAsync(Ct);
+        months = await Backups.GetMonthsAsync(cancellationToken: Ct);
         Assert.True(months.Single(m => m.Month == "2026-12").ChangedSinceBackup);
         Assert.False(months.Single(m => m.Month == "2026-10").ChangedSinceBackup);
     }

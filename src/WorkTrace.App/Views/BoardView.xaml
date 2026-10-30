@@ -127,12 +127,6 @@
             <TextBlock Text="Archive" />
           </StackPanel>
         </ToggleButton>
-        <ToggleButton Padding="12,5" Margin="8,0,0,0" IsChecked="{Binding ShowBackup}" ToolTip="Back up to a ZIP file, or restore from one">
-          <StackPanel Orientation="Horizontal">
-            <TextBlock Text="&#xE896;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
-            <TextBlock Text="Backup" />
-          </StackPanel>
-        </ToggleButton>
       </StackPanel>
     </Grid>
 
@@ -208,11 +202,6 @@
                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                      Visibility="{Binding EmptyMessage, Converter={StaticResource NullToCollapsed}}" />
         </Grid>
-      </Border>
-
-      <!-- Backup & restore -->
-      <Border Visibility="{Binding ShowBackup, Converter={StaticResource BoolToVisibility}}">
-        <views:BackupView DataContext="{Binding Backup}" />
       </Border>
 
       <!-- Open card -->

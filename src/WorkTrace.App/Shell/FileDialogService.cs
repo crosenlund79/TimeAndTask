@@ -13,6 +13,9 @@ public interface IFileDialogService
     /// <summary>Returns the chosen path, or null when cancelled.</summary>
     string? SaveFile(string title, string filter, string defaultFileName);
 
+    /// <summary>Returns the chosen folder, or null when cancelled.</summary>
+    string? ChooseFolder(string title, string? initial);
+
     /// <summary>Opens a web address in the default browser. Only http(s) addresses are opened.</summary>
     void OpenUrl(string url);
 
@@ -34,6 +37,12 @@ internal sealed class FileDialogService : IFileDialogService
     {
         var dialog = new SaveFileDialog { Title = title, Filter = filter, FileName = defaultFileName, AddExtension = true };
         return dialog.ShowDialog(Owner()) == true ? dialog.FileName : null;
+    }
+
+    public string? ChooseFolder(string title, string? initial)
+    {
+        var dialog = new OpenFolderDialog { Title = title, InitialDirectory = initial ?? "" };
+        return dialog.ShowDialog(Owner()) == true ? dialog.FolderName : null;
     }
 
     public void OpenUrl(string url)
