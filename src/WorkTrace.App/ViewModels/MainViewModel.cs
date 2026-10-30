@@ -20,6 +20,7 @@ public sealed partial class MainViewModel : ObservableObject
         BoardViewModel board,
         GuidesViewModel guides,
         TimesheetViewModel timesheet,
+        ScreenshotsViewModel screenshots,
         INavigationService navigation,
         NotificationService notifications)
     {
@@ -33,6 +34,7 @@ public sealed partial class MainViewModel : ObservableObject
             new(AppSection.Lists, "Lists", "", "Ctrl+4", lists),
             new(AppSection.Board, "Board", "\uE8A9", "Ctrl+6", board),
             new(AppSection.Guides, "Guides", "\uE82D", "Ctrl+7", guides),
+            new(AppSection.Screenshots, "Screenshots", "\uE722", "Ctrl+9", screenshots),
             new(AppSection.Settings, "Settings", "\uE713", "Ctrl+5", settings),
         ];
         navigation.NavigationRequested += (_, request) => NavigateTo(request.Section, request.Parameter);

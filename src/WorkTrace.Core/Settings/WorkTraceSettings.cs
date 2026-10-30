@@ -61,6 +61,7 @@ public sealed class WorkTraceSettings
         Defined(errors, "Tracking.PopupPosition", Tracking.PopupPosition);
         Defined(errors, "Tracking.LockedTimeHandling", Tracking.LockedTimeHandling);
         Defined(errors, "Screenshots.Format", Screenshots.Format);
+        Defined(errors, "Screenshots.Mode", Screenshots.Mode);
         Defined(errors, "General.Theme", General.Theme);
         Defined(errors, "Reporting.WeekStart", Reporting.WeekStart);
 
@@ -176,10 +177,20 @@ public enum ScreenshotFormat
     Jpeg = 1,
 }
 
+public enum ScreenshotMode
+{
+    Off = 0,
+    MainScreen = 1,
+    AllScreens = 2,
+}
+
 public sealed class ScreenshotSettings
 {
-    /// <summary>Screenshots require explicit opt-in.</summary>
+    /// <summary>Legacy flag (unused); <see cref="Mode"/> decides.</summary>
     public bool Enabled { get; set; }
+
+    /// <summary>Automatic screenshots require explicit opt-in: Off by default.</summary>
+    public ScreenshotMode Mode { get; set; } = ScreenshotMode.Off;
 
     public int CaptureIntervalMinutes { get; set; } = 10;
 

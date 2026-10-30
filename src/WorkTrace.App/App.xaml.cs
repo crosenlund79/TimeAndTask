@@ -128,6 +128,8 @@ public partial class App : Application, IAppLifetime
         services.GetRequiredService<SystemEventsBridge>().Start();
         _ = StartEngineAsync(services.GetRequiredService<TrackingEngine>());
 
+        services.GetRequiredService<ScreenshotCaptureService>().Start();
+
         var reminders = services.GetRequiredService<TimeReminderService>();
         reminders.Start();
         _ = reminders.AskAfterShutdownAsync();
@@ -225,6 +227,7 @@ public partial class App : Application, IAppLifetime
 
             _host?.Services.GetService<SystemEventsBridge>()?.Dispose();
             _host?.Services.GetService<TimeReminderService>()?.Dispose();
+            _host?.Services.GetService<ScreenshotCaptureService>()?.Dispose();
             _host?.Services.GetService<GlobalHotkey>()?.Dispose();
             _host?.Services.GetService<WindowManager>()?.CloseAll();
             _host?.Services.GetService<TrayIconService>()?.Dispose();

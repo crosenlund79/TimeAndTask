@@ -105,6 +105,56 @@ public sealed partial class SettingsViewModel(
     [ObservableProperty]
     public partial bool CloseToTray { get; set; }
 
+    // ---- Screenshots ----
+
+    public IReadOnlyList<PickerOption> ScreenshotModeOptions { get; } =
+    [
+        new((int)ScreenshotMode.Off + 1, "Off"), new((int)ScreenshotMode.MainScreen + 1, "Main screen"), new((int)ScreenshotMode.AllScreens + 1, "All screens"),
+    ];
+
+    public IReadOnlyList<PickerOption> ScreenshotIntervalOptions { get; } =
+    [
+        new(1, "Every minute"), new(2, "Every 2 minutes"), new(5, "Every 5 minutes"), new(10, "Every 10 minutes"), new(15, "Every 15 minutes"), new(30, "Every 30 minutes"),
+    ];
+
+    public IReadOnlyList<PickerOption> ScreenshotRetentionOptions { get; } =
+    [
+        new(7, "1 week"), new(14, "2 weeks"), new(30, "1 month"), new(90, "3 months"), new(365, "1 year"),
+    ];
+
+    [ObservableProperty]
+    public partial int? ScreenshotModeKey { get; set; }
+
+    [ObservableProperty]
+    public partial int? ScreenshotInterval { get; set; }
+
+    [ObservableProperty]
+    public partial int? ScreenshotRetention { get; set; }
+
+    partial void OnScreenshotModeKeyChanged(int? value)
+    {
+        if (value is { } key)
+        {
+            Apply(s => s.Screenshots.Mode = (ScreenshotMode)(key - 1));
+        }
+    }
+
+    partial void OnScreenshotIntervalChanged(int? value)
+    {
+        if (value is { } minutes)
+        {
+            Apply(s => s.Screenshots.CaptureIntervalMinutes = minutes);
+        }
+    }
+
+    partial void OnScreenshotRetentionChanged(int? value)
+    {
+        if (value is { } days)
+        {
+            Apply(s => s.Screenshots.RetentionDays = days);
+        }
+    }
+
     // ---- Timesheet ----
 
     public IReadOnlyList<PickerOption> RoundingOptions { get; } =
@@ -183,6 +233,9 @@ public sealed partial class SettingsViewModel(
         StartMinimized = s.General.StartMinimized;
         CloseToTray = s.General.CloseToTray;
         AutoAddTasksToBoard = s.Board.AutoAddTasks;
+        ScreenshotModeKey = (int)s.Screenshots.Mode + 1;
+        ScreenshotInterval = s.Screenshots.CaptureIntervalMinutes;
+        ScreenshotRetention = s.Screenshots.RetentionDays;
         RoundingKey = s.Reporting.RoundingMinutes == 0 ? 1 : s.Reporting.RoundingMinutes;
         RemindersEnabled = s.Reminders.Enabled;
         ReminderStart = s.Reminders.Start.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);

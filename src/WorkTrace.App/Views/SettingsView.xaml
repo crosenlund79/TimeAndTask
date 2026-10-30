@@ -142,6 +142,26 @@
         </StackPanel>
       </Border>
 
+      <!-- Screenshots -->
+      <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+        <StackPanel>
+          <TextBlock Text="Screenshots" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+          <controls:SettingRow Header="Automatic screenshots"
+                               Description="Silent captures while tracking runs (never while paused, asleep or locked). Unchanged screens are skipped. Stored only on this PC.">
+            <ComboBox Width="180" ItemsSource="{Binding ScreenshotModeOptions}" DisplayMemberPath="Name"
+                      SelectedValuePath="Id" SelectedValue="{Binding ScreenshotModeKey}" AutomationProperties.Name="Automatic screenshots" />
+          </controls:SettingRow>
+          <controls:SettingRow Header="Interval">
+            <ComboBox Width="180" ItemsSource="{Binding ScreenshotIntervalOptions}" DisplayMemberPath="Name"
+                      SelectedValuePath="Id" SelectedValue="{Binding ScreenshotInterval}" AutomationProperties.Name="Screenshot interval" />
+          </controls:SettingRow>
+          <controls:SettingRow Header="Keep screenshots for" Description="Older captures are deleted automatically.">
+            <ComboBox Width="180" ItemsSource="{Binding ScreenshotRetentionOptions}" DisplayMemberPath="Name"
+                      SelectedValuePath="Id" SelectedValue="{Binding ScreenshotRetention}" AutomationProperties.Name="Keep screenshots for" />
+          </controls:SettingRow>
+        </StackPanel>
+      </Border>
+
       <!-- Weekly timesheet -->
       <Border Style="{StaticResource Card}" Margin="0,16,0,0">
         <StackPanel>
@@ -182,7 +202,7 @@
       </Border>
 
       <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="2,14,0,0"
-                 Text="Start with Windows, screenshots, reporting and backup settings arrive in later phases." />
+                 Text="Backups are set up on the Board page under Backup (folder and email, schedule, restore)." />
     </StackPanel>
   </ScrollViewer>
 </UserControl>

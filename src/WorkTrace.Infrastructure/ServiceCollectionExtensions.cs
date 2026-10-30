@@ -37,6 +37,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ILookupService, LookupService>();
         services.AddSingleton<IBoardService, BoardService>();
         services.AddSingleton<IBackupService, BackupService>();
+        services.AddSingleton<WorkTrace.Core.Screenshots.IScreenshotService, Screenshots.ScreenshotService>();
         services.AddSingleton<WorkTrace.Core.Reporting.ITimesheetService, Reporting.TimesheetService>();
         services.AddSingleton<WorkTrace.Core.Guides.IGuideService, GuideService>();
         services.AddSingleton<ICheckInService, CheckInService>();

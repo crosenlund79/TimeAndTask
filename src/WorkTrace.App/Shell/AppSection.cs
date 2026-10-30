@@ -10,4 +10,5 @@ public enum AppSection
     Board,
     Guides,
     Timesheet,
+    Screenshots,
 }
