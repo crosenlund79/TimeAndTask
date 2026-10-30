@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 51,
+  "nextId": 52,
   "cards": [
     {
       "id": "WT-001",
@@ -1163,6 +1163,40 @@
       "createdAt": "2026-10-29T15:21:30Z",
       "updatedAt": "2026-10-29T15:28:27Z",
       "rev": 8
+    },
+    {
+      "id": "WT-051",
+      "uid": "d98a46ee-4864-4225-a008-29d70907b3ce",
+      "title": "Guides section: searchable, categorised, with last-modified dates and stale marker",
+      "category": "feature",
+      "priority": "normal",
+      "status": "review",
+      "rank": "zzzr",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Owner request 2026-10-30. Guides page (Ctrl+8) in WorkTrace: list grouped by category, search across titles and text, category filter, added/modified dates, 'Stale' after 6 months without changes, 'Only stale' filter. Auto-save. Testing by the owner.",
+      "acceptance": [
+        "Create, edit and delete guides; edits save automatically",
+        "Search finds words in titles and text; category filter works",
+        "Each guide shows when it was added and last modified; old ones show Stale"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "c3c25d1c-98f7-40f7-beba-a2797f6752a0",
+          "type": "created",
+          "at": "2026-10-30T12:24:02Z",
+          "by": "claude",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-10-30T12:24:02Z",
+      "updatedAt": "2026-10-30T12:24:02Z",
+      "rev": 1
     }
   ]
 }

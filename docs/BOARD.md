@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 16 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 17 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -293,6 +293,18 @@ Phase D (backup/restore, docs): commit 3ad2687, CI run 27 green on windows-lates
 - [Acceptance checklist](https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/acceptance/board-in-worktrace.md)
 - [Backups and restore](https://github.com/crosenlund79/TimeAndTask/blob/claude/keen-mccarthy-qr7q0p/docs/backup.md)
 - [CI run 27](https://github.com/crosenlund79/TimeAndTask/actions/runs/40900681188)
+
+### WT-051 · Guides section: searchable, categorised, with last-modified dates and stale marker
+
+`feature` · priority Normal
+
+Owner request 2026-10-30. Guides page (Ctrl+8) in WorkTrace: list grouped by category, search across titles and text, category filter, added/modified dates, 'Stale' after 6 months without changes, 'Only stale' filter. Auto-save. Testing by the owner.
+
+**Acceptance criteria**
+
+- Create, edit and delete guides; edits save automatically
+- Search finds words in titles and text; category filter works
+- Each guide shows when it was added and last modified; old ones show Stale
 
 ## To do
 
