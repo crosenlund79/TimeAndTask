@@ -24,7 +24,7 @@ src/WorkTrace.App             net10.0-windows  WPF + tray, ViewModels, Windows-o
 tests/WorkTrace.Tests         net10.0          unit + SQLite integration tests (run on Linux and Windows)
 tests/WorkTrace.App.Tests     net10.0-windows  WPF smoke (binding errors) + view-model flow tests; Windows only
 assets/icons                  SVG/ICO + generate_icons.py (Pillow)
-docs/                         architecture.md, requirements.md, decisions.md, backup.md, acceptance/ (board: see `board` branch)
+docs/                         architecture.md, requirements.md, decisions.md, backup.md, build-notifications.md, acceptance/ (board: see `board` branch)
 ```
 Windows-only capabilities (screen capture, power/lock events, hotkeys, Run key) live in the App
 project behind Core interfaces so Core/Infrastructure stay testable cross-platform (ADR-003).
@@ -42,7 +42,8 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
 - `WorkTrace.App.Tests` is skipped automatically on non-Windows hosts (its `Directory.Build.targets`);
   it runs in CI. It renders every page with the real theme and fails on WPF binding errors — keep it green
   and extend it whenever a view is added.
-- CI: `.github/workflows/ci.yml` on `windows-latest` (build, test, publish artifact).
+- CI: `.github/workflows/ci.yml` on `windows-latest` (build, test, publish artifact, then the "New version ready"
+  email via Resend when configured; see `docs/build-notifications.md`).
 - `WORKTRACE_DATA_DIR` overrides the data directory (default `%LocalAppData%\WorkTrace`).
 
 ## Domain rules (do not violate)
@@ -100,11 +101,15 @@ resource URIs are assembly-qualified (`pack://application:,,,/WorkTrace;componen
 
 ## Windows executable delivery (permanent rule, all sessions)
 Whenever changes are made to the WorkTrace Windows application:
-1. Build, test and push the changes.
+1. Build, test and push the changes. Write clear `feat:`/`fix:` commit subjects: they become the change summary in
+   the "New version ready" email.
 2. Verify that Windows CI (`.github/workflows/ci.yml` on `windows-latest`) succeeds.
 3. Confirm that the `WorkTrace-win-x64` artifact is available for that run.
-4. Include the commit hash and a brief summary of changes in the reply.
-5. Always place the clickable download link as the absolute last item in the reply.
+4. Check the run's email step: "Email \"New version ready\"" sent, or skipped (not configured, docs-only, already sent),
+   or warned. Mention it in one line if it did not send when it should have. Never print or change the secrets
+   (`RESEND_API_KEY`, `WORKTRACE_NOTIFY_EMAIL`), and keep the email conditions in `docs/build-notifications.md` intact.
+5. Include the commit hash and a brief summary of changes in the reply.
+6. Always place the clickable download link as the absolute last item in the reply (also now that emails exist).
 
 The link must point to the specific successful GitHub Actions run containing the latest Windows executable
 (e.g. `https://github.com/crosenlund79/TimeAndTask/actions/runs/<run id>`). Put no text, notes, questions or

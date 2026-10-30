@@ -22,6 +22,8 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: true
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the notification compares the pushed range to skip docs-only pushes
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -40,8 +42,108 @@ jobs:
         run: dotnet publish src/WorkTrace.App/WorkTrace.App.csproj -c Release -r win-x64 --self-contained false -o publish/WorkTrace
 
       - name: Upload build
+        id: upload
         uses: actions/upload-artifact@v4
         with:
           name: WorkTrace-win-x64
           path: publish/WorkTrace
           retention-days: 14
+          if-no-files-found: error
+
+      # ---- "New version ready" email (docs/build-notifications.md) ----
+      # Runs only when every step above succeeded (tests, publish, artifact upload), for pushes and manual runs of
+      # this repository (never pull requests, never the board branch), and when the secrets are configured.
+      - name: Check whether to notify
+        id: notify
+        if: success() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref != 'refs/heads/board'
+        shell: pwsh
+        env:
+          HAS_KEY: ${{ secrets.RESEND_API_KEY != '' }}
+          HAS_TO: ${{ secrets.WORKTRACE_NOTIFY_EMAIL != '' }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          $send = 'true'
+          if ($env:HAS_KEY -ne 'true' -or $env:HAS_TO -ne 'true') {
+            Write-Output "::notice::Build email not configured (RESEND_API_KEY / WORKTRACE_NOTIFY_EMAIL secrets); skipped."
+            $send = 'false'
+          }
+          elseif ($env:BEFORE -and $env:BEFORE -notmatch '^0+$') {
+            # Docs/board-only pushes (no file outside docs/ or *.md changed) do not announce a new version.
+            $changed = git diff --name-only $env:BEFORE $env:AFTER 2>$null
+            if ($LASTEXITCODE -eq 0 -and $changed -and -not ($changed | Where-Object { $_ -notmatch '^docs/' -and $_ -notmatch '\.md$' })) {
+              Write-Output "::notice::Only documentation changed; no build email."
+              $send = 'false'
+            }
+          }
+          "send=$send" >> $env:GITHUB_OUTPUT
+
+      # One email per commit: a marker in the Actions cache survives re-runs; Resend's idempotency key covers races.
+      - name: Look up notification marker
+        id: marker
+        if: steps.notify.outputs.send == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: .notified
+          key: build-email-${{ github.sha }}
+          lookup-only: true
+
+      - name: Email "New version ready"
+        id: email
+        if: steps.notify.outputs.send == 'true' && steps.marker.outputs.cache-hit != 'true'
+        shell: pwsh
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NOTIFY_TO: ${{ secrets.WORKTRACE_NOTIFY_EMAIL }}
+          NOTIFY_FROM: ${{ vars.WORKTRACE_NOTIFY_FROM || 'WorkTrace CI <onboarding@resend.dev>' }}
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BRANCH: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          function Esc([string] $t) { [System.Net.WebUtility]::HtmlEncode($t) }
+          $subjects = @()
+          if ($env:BEFORE -and $env:BEFORE -notmatch '^0+$') {
+            $subjects = @(git log --no-merges --format=%s "$($env:BEFORE)..$($env:SHA)" 2>$null | Select-Object -First 15)
+          }
+          if ($subjects.Count -eq 0) { $subjects = @(git log -1 --format=%s $env:SHA) }
+          $items = ($subjects | ForEach-Object { "<li>$(Esc $_)</li>" }) -join ''
+          $short = $env:SHA.Substring(0, 7)
+          $html = @"
+          <p>A new WorkTrace build passed all tests on Windows.</p>
+          <p><a href="$($env:ARTIFACT_URL)"><b>Download WorkTrace-win-x64</b></a> (sign in to GitHub; kept 14 days)</p>
+          <p><b>Changes</b></p><ul>$items</ul>
+          <p>Commit <code>$short</code> ($(Esc $env:SHA)) on <code>$(Esc $env:BRANCH)</code><br>
+          <a href="$($env:RUN_URL)">CI run</a></p>
+          "@
+          $text = "A new WorkTrace build passed all tests on Windows.`n`nDownload: $($env:ARTIFACT_URL)`n`nChanges:`n" +
+            (($subjects | ForEach-Object { "- $_" }) -join "`n") + "`n`nCommit $($env:SHA) on $($env:BRANCH)`nCI run: $($env:RUN_URL)"
+          $body = @{
+            from = $env:NOTIFY_FROM
+            to = @($env:NOTIFY_TO -split '[,;]' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+            subject = "✅ WorkTrace — New version ready"
+            html = $html
+            text = $text
+          } | ConvertTo-Json -Depth 4
+          $headers = @{ Authorization = "Bearer $($env:RESEND_API_KEY)"; 'Idempotency-Key' = "worktrace-build-$($env:SHA)" }
+          try {
+            $result = Invoke-RestMethod -Method Post -Uri 'https://api.resend.com/emails' -Headers $headers `
+              -ContentType 'application/json; charset=utf-8' -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
+            Write-Output "Build email sent (id $($result.id))."
+            New-Item -ItemType Directory -Force .notified | Out-Null
+            Set-Content .notified/sent $env:SHA
+          }
+          catch {
+            # Never print the request (it holds the key); the status code is enough to diagnose.
+            $status = $_.Exception.Response.StatusCode.value__
+            Write-Output "::warning::Build email failed (HTTP $status). See docs/build-notifications.md."
+            exit 0
+          }
+
+      - name: Save notification marker
+        if: steps.email.outcome == 'success' && hashFiles('.notified/sent') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: .notified
+          key: build-email-${{ github.sha }}
