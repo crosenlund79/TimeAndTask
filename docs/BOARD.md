@@ -359,6 +359,10 @@ Owner request 2026-10-30. Version 0.2.39 (CI run 39). Commits 93ad85a (stakehold
 - Screenshots: Off by default; captures at the interval while tracking; browse by day; delete
 - Backups: folder backup on schedule and Back up now; email via Resend after entering key; status and errors shown
 
+**Links**
+
+- [CI run 39 (installer 0.2.39)](https://github.com/crosenlund79/TimeAndTask/actions/runs/41077966928)
+
 ## To do
 
 ### WT-030 · Estimation engine

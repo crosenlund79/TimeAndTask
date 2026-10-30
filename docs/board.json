@@ -1300,7 +1300,12 @@
       "notes": "",
       "evidence": "",
       "blockedBy": [],
-      "links": [],
+      "links": [
+        {
+          "label": "CI run 39 (installer 0.2.39)",
+          "url": "https://github.com/crosenlund79/TimeAndTask/actions/runs/41077966928"
+        }
+      ],
       "comments": [],
       "history": [
         {
@@ -1312,8 +1317,8 @@
         }
       ],
       "createdAt": "2026-10-30T15:17:16Z",
-      "updatedAt": "2026-10-30T15:17:16Z",
-      "rev": 1
+      "updatedAt": "2026-10-30T15:17:19Z",
+      "rev": 2
     }
   ]
 }
