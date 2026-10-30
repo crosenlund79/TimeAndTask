@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 54,
+  "nextId": 55,
   "cards": [
     {
       "id": "WT-001",
@@ -1278,6 +1278,42 @@
       "createdAt": "2026-10-30T13:58:14Z",
       "updatedAt": "2026-10-30T13:58:17Z",
       "rev": 2
+    },
+    {
+      "id": "WT-054",
+      "uid": "172050ec-c1b2-427b-a857-8018ed2ff000",
+      "title": "Stakeholders, bulk delete, weekly timesheet + export, automatic screenshots, automatic backups",
+      "category": "feature",
+      "priority": "high",
+      "status": "review",
+      "rank": "zzzz",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Owner request 2026-10-30. Version 0.2.39 (CI run 39). Commits 93ad85a (stakeholders, bulk delete), 6926f0c (estimation engine + timesheet + Excel/CSV), fe44f47 (screenshots), 1893b93 (folder/email backups), 25e047b (CI fix). Timesheet columns are based on a D365-style project timesheet because the reference screenshot was not received; adjust after the owner compares.",
+      "acceptance": [
+        "UI says Stakeholders everywhere; existing data intact",
+        "Tasks, stakeholders and guides: multi-select, Select all, Delete selected; referenced records archived/deactivated with a clear message",
+        "Timesheet shows Mon-Sun hours per task with stakeholder/reference, totals, unclassified time; cell corrections; Excel and CSV export open correctly",
+        "Screenshots: Off by default; captures at the interval while tracking; browse by day; delete",
+        "Backups: folder backup on schedule and Back up now; email via Resend after entering key; status and errors shown"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "c8a70715-b0f2-4bfa-9344-a850913f0335",
+          "type": "created",
+          "at": "2026-10-30T15:17:16Z",
+          "by": "claude",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-10-30T15:17:16Z",
+      "updatedAt": "2026-10-30T15:17:16Z",
+      "rev": 1
     }
   ]
 }

@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 19 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 20 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -344,6 +344,20 @@ Owner request 2026-10-30. Inno Setup per-user installer, fixed AppId, closes run
 **Links**
 
 - [CI run 33](https://github.com/crosenlund79/TimeAndTask/actions/runs/41066590479)
+
+### WT-054 · Stakeholders, bulk delete, weekly timesheet + export, automatic screenshots, automatic backups
+
+`feature` · priority High
+
+Owner request 2026-10-30. Version 0.2.39 (CI run 39). Commits 93ad85a (stakeholders, bulk delete), 6926f0c (estimation engine + timesheet + Excel/CSV), fe44f47 (screenshots), 1893b93 (folder/email backups), 25e047b (CI fix). Timesheet columns are based on a D365-style project timesheet because the reference screenshot was not received; adjust after the owner compares.
+
+**Acceptance criteria**
+
+- UI says Stakeholders everywhere; existing data intact
+- Tasks, stakeholders and guides: multi-select, Select all, Delete selected; referenced records archived/deactivated with a clear message
+- Timesheet shows Mon-Sun hours per task with stakeholder/reference, totals, unclassified time; cell corrections; Excel and CSV export open correctly
+- Screenshots: Off by default; captures at the interval while tracking; browse by day; delete
+- Backups: folder backup on schedule and Back up now; email via Resend after entering key; status and errors shown
 
 ## To do
 
