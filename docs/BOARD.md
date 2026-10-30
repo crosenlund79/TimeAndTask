@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 17 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 18 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -309,6 +309,20 @@ Owner request 2026-10-30. Guides page (Ctrl+8) in WorkTrace: list grouped by cat
 **Evidence**
 
 Commit 8ace37a, Windows CI run 28 green; latest build run 29 (ca6ee54) green with WorkTrace-win-x64 artifact
+
+### WT-052 · Workday improvements: time registration reminders, task cards on Board, Inbox in Tasks, PDFs on guides
+
+`feature` · priority High
+
+Owner request 2026-10-30. Commit 43f8654, Windows CI run 31 green. Shutdown reminder: Windows does not allow an interactive question during shutdown without delaying it, so an outstanding day is asked about at the next start; tray Exit asks immediately.
+
+**Acceptance criteria**
+
+- Time tracking works without touching the Board
+- New tasks get a Board card when 'Automatically add tasks to Board' is on; 'Show on Board' per task hides/restores the same card
+- Inbox is reachable as Tasks › Inbox; Ctrl+Shift+C captures from anywhere
+- Guides: attach, open and remove PDFs
+- Reminders in the configured period (crossing midnight), answers survive restart; test button works
 
 ## To do
 

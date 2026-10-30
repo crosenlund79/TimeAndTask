@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 52,
+  "nextId": 53,
   "cards": [
     {
       "id": "WT-001",
@@ -1197,6 +1197,42 @@
       "createdAt": "2026-10-30T12:24:02Z",
       "updatedAt": "2026-10-30T12:37:21Z",
       "rev": 2
+    },
+    {
+      "id": "WT-052",
+      "uid": "921f11dc-1a53-4d18-b45d-2097f02f8746",
+      "title": "Workday improvements: time registration reminders, task cards on Board, Inbox in Tasks, PDFs on guides",
+      "category": "feature",
+      "priority": "high",
+      "status": "review",
+      "rank": "zzzw",
+      "archived": false,
+      "archivedAt": null,
+      "description": "Owner request 2026-10-30. Commit 43f8654, Windows CI run 31 green. Shutdown reminder: Windows does not allow an interactive question during shutdown without delaying it, so an outstanding day is asked about at the next start; tray Exit asks immediately.",
+      "acceptance": [
+        "Time tracking works without touching the Board",
+        "New tasks get a Board card when 'Automatically add tasks to Board' is on; 'Show on Board' per task hides/restores the same card",
+        "Inbox is reachable as Tasks › Inbox; Ctrl+Shift+C captures from anywhere",
+        "Guides: attach, open and remove PDFs",
+        "Reminders in the configured period (crossing midnight), answers survive restart; test button works"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "14ffd2cf-d41f-41e7-93f1-e796c035cae3",
+          "type": "created",
+          "at": "2026-10-30T13:15:34Z",
+          "by": "claude",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-10-30T13:15:34Z",
+      "updatedAt": "2026-10-30T13:15:34Z",
+      "rev": 1
     }
   ]
 }
