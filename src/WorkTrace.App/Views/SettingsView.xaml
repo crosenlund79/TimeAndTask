@@ -142,6 +142,17 @@
         </StackPanel>
       </Border>
 
+      <!-- Weekly timesheet -->
+      <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+        <StackPanel>
+          <TextBlock Text="Weekly timesheet and export" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+          <controls:SettingRow Header="Round hours" Description="Applies to each day of each task in the timesheet and its Excel/CSV export. Hours are exported as decimals (1.50 = 1 h 30 min).">
+            <ComboBox Width="200" ItemsSource="{Binding RoundingOptions}" DisplayMemberPath="Name"
+                      SelectedValuePath="Id" SelectedValue="{Binding RoundingKey}" AutomationProperties.Name="Round hours" />
+          </controls:SettingRow>
+        </StackPanel>
+      </Border>
+
       <!-- Board -->
       <Border Style="{StaticResource Card}" Margin="0,16,0,0">
         <StackPanel>

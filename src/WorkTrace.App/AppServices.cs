@@ -53,6 +53,7 @@ public static class AppServices
         services.AddSingleton<BoardViewModel>();
         services.AddSingleton<InboxViewModel>();
         services.AddSingleton<GuidesViewModel>();
+        services.AddSingleton<TimesheetViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddTransient<MainWindow>();
 

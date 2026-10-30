@@ -105,6 +105,25 @@ public sealed partial class SettingsViewModel(
     [ObservableProperty]
     public partial bool CloseToTray { get; set; }
 
+    // ---- Timesheet ----
+
+    public IReadOnlyList<PickerOption> RoundingOptions { get; } =
+    [
+        new(1, "No rounding"), new(5, "Nearest 5 minutes"), new(10, "Nearest 10 minutes"), new(15, "Nearest quarter hour"), new(30, "Nearest half hour"),
+    ];
+
+    /// <summary>Rounding of each day cell (1 = none; 0 is the picker's "none" key, so "no rounding" is stored as 0 but shown as 1).</summary>
+    [ObservableProperty]
+    public partial int? RoundingKey { get; set; }
+
+    partial void OnRoundingKeyChanged(int? value)
+    {
+        if (value is { } key)
+        {
+            Apply(s => s.Reporting.RoundingMinutes = key == 1 ? 0 : key);
+        }
+    }
+
     // ---- Board ----
 
     [ObservableProperty]
@@ -164,6 +183,7 @@ public sealed partial class SettingsViewModel(
         StartMinimized = s.General.StartMinimized;
         CloseToTray = s.General.CloseToTray;
         AutoAddTasksToBoard = s.Board.AutoAddTasks;
+        RoundingKey = s.Reporting.RoundingMinutes == 0 ? 1 : s.Reporting.RoundingMinutes;
         RemindersEnabled = s.Reminders.Enabled;
         ReminderStart = s.Reminders.Start.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
         ReminderEnd = s.Reminders.End.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);

@@ -25,6 +25,12 @@ public class UiSmokeTests
         var missed = await ctx.Get<WorkTrace.Core.Tracking.ITrackingStore>().CreatePromptAsync(ctx.Time.GetUtcNow().UtcDateTime, ctx.Time.GetUtcNow().UtcDateTime, WorkTrace.Core.Entities.CheckInOutcome.Pending);
         await ctx.Get<WorkTrace.Core.Tracking.ITrackingStore>().ResolvePromptAsync(missed, WorkTrace.Core.Entities.CheckInOutcome.Missed, ctx.Time.GetUtcNow().UtcDateTime);
         await ctx.Get<ITaskService>().SetArchivedAsync(archived.Id, true);
+        await using (var db = await ctx.Get<Microsoft.EntityFrameworkCore.IDbContextFactory<WorkTrace.Infrastructure.Persistence.WorkTraceDbContext>>().CreateDbContextAsync())
+        {
+            var now = ctx.Time.GetUtcNow().UtcDateTime;
+            db.TrackingSegments.Add(new WorkTrace.Core.Entities.TrackingSegment { StartUtc = now.AddHours(-1), EndUtc = now.AddMinutes(30), LastHeartbeatUtc = now });
+            await db.SaveChangesAsync();
+        }
 
         // Board: cards in every column, a blocked card with links, comments and a screenshot, an archived card and Inbox items.
         var board = ctx.Get<WorkTrace.Core.Board.IBoardService>();
@@ -132,6 +138,10 @@ public class UiSmokeTests
             inboxPage.SelectedItem = inboxPage.Items[0];
             await WpfTestHost.SettleAsync(10);
             Assert.NotNull(inboxPage.Detail);
+
+            window.ViewModel.NavigateTo(AppSection.Timesheet);
+            await WpfTestHost.SettleAsync(10);
+            Assert.Contains(ctx.Get<TimesheetViewModel>().Rows, r => r.Kind == TimesheetRowKind.Task); // editable task cells rendered
 
             window.ViewModel.NavigateTo(AppSection.Home);
             await WpfTestHost.SettleAsync(10);

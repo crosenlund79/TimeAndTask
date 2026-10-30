@@ -21,6 +21,7 @@
     <KeyBinding Modifiers="Ctrl" Key="D5" Command="{Binding GoToSectionCommand}" CommandParameter="{x:Static shell:AppSection.Settings}" />
     <KeyBinding Modifiers="Ctrl" Key="D6" Command="{Binding GoToSectionCommand}" CommandParameter="{x:Static shell:AppSection.Board}" />
     <KeyBinding Modifiers="Ctrl" Key="D7" Command="{Binding GoToSectionCommand}" CommandParameter="{x:Static shell:AppSection.Guides}" />
+    <KeyBinding Modifiers="Ctrl" Key="D8" Command="{Binding GoToSectionCommand}" CommandParameter="{x:Static shell:AppSection.Timesheet}" />
     <KeyBinding Modifiers="Ctrl+Shift" Key="C" Command="{Binding QuickCaptureCommand}" />
   </Window.InputBindings>
 
@@ -45,6 +46,9 @@
     </DataTemplate>
     <DataTemplate DataType="{x:Type vm:GuidesViewModel}">
       <views:GuidesView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:TimesheetViewModel}">
+      <views:TimesheetView />
     </DataTemplate>
   </Window.Resources>
 

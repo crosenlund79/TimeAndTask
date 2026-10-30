@@ -9,4 +9,5 @@ public enum AppSection
     Settings,
     Board,
     Guides,
+    Timesheet,
 }

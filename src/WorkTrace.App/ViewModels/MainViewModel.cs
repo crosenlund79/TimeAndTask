@@ -19,6 +19,7 @@ public sealed partial class MainViewModel : ObservableObject
         SettingsViewModel settings,
         BoardViewModel board,
         GuidesViewModel guides,
+        TimesheetViewModel timesheet,
         INavigationService navigation,
         NotificationService notifications)
     {
@@ -26,6 +27,7 @@ public sealed partial class MainViewModel : ObservableObject
         Sections =
         [
             new(AppSection.Home, "Overview", "", "Ctrl+1", home),
+            new(AppSection.Timesheet, "Timesheet", "\uE787", "Ctrl+8", timesheet),
             new(AppSection.Tasks, "Tasks", "", "Ctrl+2", tasks),
             new(AppSection.Clients, "Stakeholders", "", "Ctrl+3", clients),
             new(AppSection.Lists, "Lists", "", "Ctrl+4", lists),
