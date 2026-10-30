@@ -482,6 +482,37 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                     b.ToTable("CommunicationChannels", (string)null);
                 });
 
+            modelBuilder.Entity("WorkTrace.Core.Entities.Guide", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ModifiedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Guides", (string)null);
+                });
+
             modelBuilder.Entity("WorkTrace.Core.Entities.LockPeriod", b =>
                 {
                     b.Property<int>("Id")

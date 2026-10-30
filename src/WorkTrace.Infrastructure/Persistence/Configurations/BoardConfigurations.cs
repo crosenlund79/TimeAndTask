@@ -96,6 +96,16 @@ internal sealed class BackupRecordConfiguration : IEntityTypeConfiguration<Backu
     }
 }
 
+internal sealed class GuideConfiguration : IEntityTypeConfiguration<Guide>
+{
+    public void Configure(EntityTypeBuilder<Guide> builder)
+    {
+        builder.ToTable("Guides");
+        builder.Property(g => g.Title).HasMaxLength(Guide.TitleMaxLength);
+        builder.Property(g => g.Category).HasMaxLength(Guide.CategoryMaxLength);
+    }
+}
+
 internal sealed class BoardStateConfiguration : IEntityTypeConfiguration<BoardState>
 {
     public void Configure(EntityTypeBuilder<BoardState> builder)

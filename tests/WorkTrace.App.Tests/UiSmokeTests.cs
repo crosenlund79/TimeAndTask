@@ -43,6 +43,8 @@ public class UiSmokeTests
         await board.SetWorkTaskAsync(cards[1].Id, archived.Id);
         var archivedCard = await board.CreateAsync(new WorkTrace.Core.Board.CardFields("Archived card", null, WorkTrace.Core.Entities.BoardPriority.Low, null, null, null, null), WorkTrace.Core.Entities.BoardStatus.Done);
         await board.SetArchivedAsync(archivedCard.Id, true);
+        var guide = await ctx.Get<WorkTrace.Core.Guides.IGuideService>().CreateAsync("Release checklist", "Deployment");
+        await ctx.Get<WorkTrace.Core.Guides.IGuideService>().UpdateAsync(guide.Id, guide.Title, guide.Category, "Step 1\nStep 2");
         await board.CaptureAsync("Inbox thought");
         await board.CaptureAsync("https://example.com/captured");
 
