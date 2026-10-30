@@ -1181,7 +1181,7 @@
         "Each guide shows when it was added and last modified; old ones show Stale"
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Commit 8ace37a, Windows CI run 28 green; latest build run 29 (ca6ee54) green with WorkTrace-win-x64 artifact",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -1195,8 +1195,8 @@
         }
       ],
       "createdAt": "2026-10-30T12:24:02Z",
-      "updatedAt": "2026-10-30T12:24:02Z",
-      "rev": 1
+      "updatedAt": "2026-10-30T12:37:21Z",
+      "rev": 2
     }
   ]
 }

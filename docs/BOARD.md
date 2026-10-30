@@ -306,6 +306,10 @@ Owner request 2026-10-30. Guides page (Ctrl+8) in WorkTrace: list grouped by cat
 - Search finds words in titles and text; category filter works
 - Each guide shows when it was added and last modified; old ones show Stale
 
+**Evidence**
+
+Commit 8ace37a, Windows CI run 28 green; latest build run 29 (ca6ee54) green with WorkTrace-win-x64 artifact
+
 ## To do
 
 ### WT-030 · Estimation engine
