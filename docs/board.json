@@ -992,6 +992,12 @@
           "author": "claude",
           "at": "2026-10-29T15:22:09Z",
           "text": "Update after WT-050: screenshot storage is decided by the move into WorkTrace (local files, in backups). Still open: email delivery for daily backups. WorkTrace already records a content hash per month, so a daily job can send only changed months; nothing is sent and no credentials are stored until you choose a method. My recommendation is unchanged for the sender (transactional email API, send-only key); with the board now local, the job would run inside WorkTrace (Windows Credential Manager for the key) instead of GitHub Actions."
+        },
+        {
+          "id": "e9722797-3264-4b2f-b291-ea5b9d604c24",
+          "author": "claude",
+          "at": "2026-10-30T15:17:21Z",
+          "text": "Email delivery implemented in WorkTrace (WT-054) with Resend; the API key is stored in Windows Credential Manager. Needs the owner's Resend account and key to activate."
         }
       ],
       "history": [
@@ -1004,8 +1010,8 @@
         }
       ],
       "createdAt": "2026-10-29T13:41:26Z",
-      "updatedAt": "2026-10-29T15:22:09Z",
-      "rev": 4
+      "updatedAt": "2026-10-30T15:17:21Z",
+      "rev": 5
     },
     {
       "id": "WT-048",
