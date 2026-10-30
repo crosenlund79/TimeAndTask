@@ -341,6 +341,10 @@ Owner request 2026-10-30. Inno Setup per-user installer, fixed AppId, closes run
 - Time registrations, board, guides, settings and backups are preserved; uninstall keeps them
 - Version shown in WorkTrace and Installed Apps matches
 
+**Links**
+
+- [CI run 33](https://github.com/crosenlund79/TimeAndTask/actions/runs/41066590479)
+
 ## To do
 
 ### WT-030 · Estimation engine
