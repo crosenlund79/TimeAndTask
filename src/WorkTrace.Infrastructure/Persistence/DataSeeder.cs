@@ -27,7 +27,7 @@ public sealed class DataSeeder(TimeProvider timeProvider, ILogger<DataSeeder> lo
                 CreatedAtUtc = now,
                 ModifiedAtUtc = now,
             });
-            seeded.Add("Clients");
+            seeded.Add("Stakeholders");
         }
 
         if (!await db.TaskSystems.AnyAsync(cancellationToken))

@@ -24,9 +24,9 @@
     </Grid.RowDefinitions>
 
     <StackPanel>
-      <TextBlock Text="Clients" Style="{StaticResource PageTitleText}" />
+      <TextBlock Text="Stakeholders" Style="{StaticResource PageTitleText}" />
       <TextBlock Style="{StaticResource PageSubtitleText}"
-                 Text="Every task belongs to a client. Mark internal clients for non-billable work." />
+                 Text="Every task belongs to a stakeholder. Mark internal stakeholders for non-billable work." />
     </StackPanel>
 
     <!-- Toolbar -->
@@ -41,10 +41,10 @@
       <Grid>
         <TextBox x:Name="SearchBox" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
                  Padding="32,6,8,6" VerticalContentAlignment="Center"
-                 AutomationProperties.Name="Filter clients" PreviewKeyDown="OnSearchPreviewKeyDown" />
+                 AutomationProperties.Name="Filter stakeholders" PreviewKeyDown="OnSearchPreviewKeyDown" />
         <TextBlock Text="&#xE721;" Style="{StaticResource IconText}" Margin="11,0,0,0" IsHitTestVisible="False"
                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Left" />
-        <TextBlock Text="Filter clients   (Ctrl+F)" Margin="33,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
+        <TextBlock Text="Filter stakeholders   (Ctrl+F)" Margin="33,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                    Visibility="{Binding Text, ElementName=SearchBox, Converter={StaticResource NullToCollapsed}, ConverterParameter=invert}" />
       </Grid>
@@ -52,10 +52,10 @@
       <CheckBox Grid.Column="1" Content="Show inactive" Margin="14,0,0,0" VerticalAlignment="Center" IsChecked="{Binding ShowInactive}" />
 
       <Button Grid.Column="3" Padding="14,6" Style="{DynamicResource AccentButtonStyle}" Command="{Binding NewClientCommand}"
-              ToolTip="New client (Ctrl+N)">
+              ToolTip="New stakeholder (Ctrl+N)">
         <StackPanel Orientation="Horizontal">
           <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
-          <TextBlock Text="New client" />
+          <TextBlock Text="New stakeholder" />
         </StackPanel>
       </Button>
     </Grid>
@@ -74,14 +74,24 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
-          <TextBlock Grid.Row="1" Text="{Binding ResultSummary}" Style="{StaticResource CaptionText}" Margin="12,6,12,4"
-                     Visibility="{Binding ResultSummary, Converter={StaticResource NullToCollapsed}}" />
-          <ListBox x:Name="ClientList" Style="{StaticResource RowListBox}"
+          <DockPanel Grid.Row="1" Margin="8,6,8,2">
+            <Button DockPanel.Dock="Right" Style="{StaticResource SubtleButton}" Command="{Binding DeleteSelectedCommand}" IsEnabled="{Binding IsListEnabled}"
+                    ToolTip="Delete the selected stakeholder (Del). Ctrl+click or Shift+click selects several.">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#xE74D;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,6,0" />
+                <TextBlock><Run Text="Delete selected" /> <Run Text="{Binding SelectionCount, Mode=OneWay, StringFormat='({0})'}" /></TextBlock>
+              </StackPanel>
+            </Button>
+            <Button DockPanel.Dock="Right" Style="{StaticResource SubtleButton}" Margin="0,0,6,0" Content="Select all" Click="OnSelectAll"
+                    IsEnabled="{Binding IsListEnabled}" ToolTip="Select every stakeholder in the list (Ctrl+A)" />
+            <TextBlock Text="{Binding ResultSummary}" Style="{StaticResource CaptionText}" VerticalAlignment="Center" />
+          </DockPanel>
+          <ListBox x:Name="ClientList" Style="{StaticResource RowListBox}" SelectionMode="Extended" SelectionChanged="OnListSelectionChanged"
                    ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}"
                    IsEnabled="{Binding IsListEnabled}" KeyDown="OnListKeyDown"
-                   AutomationProperties.Name="Clients">
+                   AutomationProperties.Name="Stakeholders">
             <ListBox.InputBindings>
-              <KeyBinding Key="Delete" Command="{Binding DeleteCommand}" />
+              <KeyBinding Key="Delete" Command="{Binding DeleteSelectedCommand}" />
             </ListBox.InputBindings>
             <ListBox.ItemTemplate>
               <DataTemplate DataType="{x:Type vm:ClientItemViewModel}">
@@ -138,7 +148,7 @@
                       Visibility="{Binding HasEditor, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
             <TextBlock Text="&#xE70F;" Style="{StaticResource IconText}" FontSize="28" HorizontalAlignment="Center"
                        Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-            <TextBlock Text="Select a client to edit it" Margin="0,10,0,0" HorizontalAlignment="Center" />
+            <TextBlock Text="Select a stakeholder to edit it" Margin="0,10,0,0" HorizontalAlignment="Center" />
             <TextBlock Text="or press Ctrl+N to create one" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" />
           </StackPanel>
 
@@ -172,7 +182,7 @@
               </StackPanel>
               <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top"
                           Visibility="{Binding IsNew, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
-                <Button Style="{StaticResource IconButton}" Content="&#xE9D5;" ToolTip="Show this client's tasks"
+                <Button Style="{StaticResource IconButton}" Content="&#xE9D5;" ToolTip="Show this stakeholder's tasks"
                         Command="{Binding DataContext.ShowTasksCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
                 <Button Command="{Binding DataContext.ToggleActiveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}">
                   <Button.Style>
@@ -197,18 +207,18 @@
               <StackPanel>
                 <TextBlock Text="Name" Style="{StaticResource FieldLabelText}" />
                 <TextBox x:Name="NameBox" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" MaxLength="200"
-                         AutomationProperties.Name="Client name" />
+                         AutomationProperties.Name="Stakeholder name" />
                 <TextBlock Text="{Binding NameError}" Style="{StaticResource ErrorText}" />
 
                 <TextBlock Text="Description (optional)" Style="{StaticResource FieldLabelText}" />
                 <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap"
                          MinHeight="72" MaxHeight="200" VerticalScrollBarVisibility="Auto" MaxLength="2000"
-                         AutomationProperties.Name="Client description" />
+                         AutomationProperties.Name="Stakeholder description" />
                 <TextBlock Text="{Binding DescriptionError}" Style="{StaticResource ErrorText}" />
 
                 <CheckBox Margin="0,16,0,0" IsChecked="{Binding IsInternal}">
                   <StackPanel>
-                    <TextBlock Text="Internal client" />
+                    <TextBlock Text="Internal stakeholder" />
                     <TextBlock Text="Your own organisation: meetings, admin, training." Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
                   </StackPanel>
                 </CheckBox>

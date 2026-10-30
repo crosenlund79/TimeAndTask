@@ -128,7 +128,7 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
 
     public async Task ActivateAsync(object? parameter)
     {
-        await RunAsync(LoadPickersAsync, "Could not load clients and lists.");
+        await RunAsync(LoadPickersAsync, "Could not load stakeholders and lists.");
 
         _suppressReload = true;
         if (parameter is ClientTasksFilter filter)
@@ -279,6 +279,87 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         }
     }
 
+    /// <summary>All selected rows (the list allows Ctrl/Shift multi-selection); set by the view.</summary>
+    public IReadOnlyList<TaskItemViewModel> SelectedItems { get; private set; } = [];
+
+    [ObservableProperty]
+    public partial int SelectionCount { get; private set; }
+
+    public void SetSelection(IEnumerable<TaskItemViewModel> items)
+    {
+        SelectedItems = [.. items];
+        SelectionCount = SelectedItems.Count;
+    }
+
+    /// <summary>
+    /// Deletes the selected tasks. Tasks with recorded time can't be deleted: they are archived instead (their time stays),
+    /// and the confirmation says so up front.
+    /// </summary>
+    [RelayCommand]
+    private async Task DeleteSelectedAsync()
+    {
+        var items = SelectedItems.Count > 0 ? SelectedItems : SelectedItem is { } one ? [one] : [];
+        if (items.Count == 0 || HasUnsavedChanges)
+        {
+            return;
+        }
+
+        if (items.Count == 1)
+        {
+            SelectedItem = items[0];
+            await DeleteAsync();
+            return;
+        }
+
+        var deletable = new List<TaskItemViewModel>();
+        var used = new List<TaskItemViewModel>();
+        if (!await RunAsync(async () =>
+            {
+                foreach (var item in items)
+                {
+                    (await _tasks.CanDeleteAsync(item.Id) ? deletable : used).Add(item);
+                }
+            }, "Could not check the tasks."))
+        {
+            return;
+        }
+
+        var toArchive = used.Where(i => !i.IsArchived).ToList();
+        var message = $"{deletable.Count} task(s) will be deleted permanently.";
+        if (used.Count > 0)
+        {
+            message += $"\n\n{used.Count} task(s) have recorded time and can't be deleted"
+                + (toArchive.Count > 0 ? $": {toArchive.Count} will be archived instead, so their time stays in your history." : " (already archived).");
+        }
+
+        if (deletable.Count + toArchive.Count == 0)
+        {
+            Notifications.Show("The selected tasks have recorded time and are already archived; nothing to delete.", NotificationKind.Info);
+            return;
+        }
+
+        if (!_dialogs.Confirm($"Delete {items.Count} tasks", message, deletable.Count > 0 ? "Delete" : "Archive", destructive: deletable.Count > 0))
+        {
+            return;
+        }
+
+        await RunAsync(async () =>
+        {
+            foreach (var item in deletable)
+            {
+                await _tasks.DeleteAsync(item.Id);
+            }
+
+            foreach (var item in toArchive)
+            {
+                await _tasks.SetArchivedAsync(item.Id, true);
+            }
+        }, "Could not delete all selected tasks.");
+        SetEditor(null);
+        await ReloadAsync(null);
+        Notifications.Show($"Deleted {deletable.Count} task(s)" + (toArchive.Count > 0 ? $", archived {toArchive.Count} with recorded time." : "."), NotificationKind.Success);
+    }
+
     [RelayCommand(CanExecute = nameof(CanModifySelected))]
     private async Task DeleteAsync()
     {
@@ -328,7 +409,7 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         ClientSummary? created = null;
         try
         {
-            if (!await RunAsync(async () => created = await _clients.CreateAsync(new ClientInput(editor.ClientText, null, false)), "Could not create the client."))
+            if (!await RunAsync(async () => created = await _clients.CreateAsync(new ClientInput(editor.ClientText, null, false)), "Could not create the stakeholder."))
             {
                 return;
             }
@@ -341,7 +422,7 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         }
 
         // Rebuild the editor with the new client available, preserving everything typed so far.
-        await RunAsync(LoadPickersAsync, "Could not reload clients.");
+        await RunAsync(LoadPickersAsync, "Could not reload stakeholders.");
         var input = editor.ToInput();
         var rebuilt = CreateEditor(editor.Existing, created!.Id);
         rebuilt.ClientId = created.Id;
@@ -352,7 +433,7 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         rebuilt.DefaultChannelId = input.DefaultChannelId;
         rebuilt.ShowOnBoard = input.ShowOnBoard ?? rebuilt.ShowOnBoard;
         SetEditor(rebuilt);
-        Notifications.Show($"Client “{created.Name}” created.", NotificationKind.Success);
+        Notifications.Show($"Stakeholder “{created.Name}” created.", NotificationKind.Success);
     }
 
     private async Task LoadPickersAsync()
@@ -373,7 +454,7 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         var filter = ClientFilterKey;
         _suppressReload = true;
         ClientFilterOptions.Clear();
-        ClientFilterOptions.Add(new PickerOption(PickerOption.NoneKey, "All clients"));
+        ClientFilterOptions.Add(new PickerOption(PickerOption.NoneKey, "All stakeholders"));
         foreach (var client in clients.OrderBy(c => c.Name, StringComparer.CurrentCultureIgnoreCase))
         {
             ClientFilterOptions.Add(new PickerOption(client.Id, client.Name, client.IsActive));

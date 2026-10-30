@@ -216,6 +216,46 @@ public sealed partial class GuidesViewModel(
         }
     }
 
+    /// <summary>All selected guides (Ctrl/Shift multi-selection); set by the view.</summary>
+    public IReadOnlyList<GuideItemViewModel> SelectedItems { get; private set; } = [];
+
+    [ObservableProperty]
+    public partial int SelectionCount { get; private set; }
+
+    public void SetSelection(IEnumerable<GuideItemViewModel> items)
+    {
+        SelectedItems = [.. items];
+        SelectionCount = SelectedItems.Count;
+    }
+
+    [RelayCommand]
+    private async Task DeleteSelectedAsync()
+    {
+        if (SelectedItems.Count <= 1)
+        {
+            await DeleteAsync();
+            return;
+        }
+
+        var items = SelectedItems.ToList();
+        if (!dialogs.Confirm($"Delete {items.Count} guides", $"Delete {items.Count} guides and their attached files permanently? This cannot be undone.", "Delete", destructive: true))
+        {
+            return;
+        }
+
+        _dirty = false;
+        await RunAsync(async () =>
+        {
+            foreach (var item in items)
+            {
+                await guides.DeleteAsync(item.Id);
+            }
+        }, "Could not delete all selected guides.");
+        Show(null);
+        await ReloadAsync();
+        Notifications.Show($"Deleted {items.Count} guides.", NotificationKind.Success);
+    }
+
     [RelayCommand]
     private async Task DeleteAsync()
     {

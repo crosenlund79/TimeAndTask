@@ -38,7 +38,7 @@
       </StackPanel>
       <StackPanel>
         <TextBlock Text="Tasks" Style="{StaticResource PageTitleText}" />
-        <TextBlock Style="{StaticResource PageSubtitleText}" Text="Reusable work items. Type a title, ticket number or client to find one." />
+        <TextBlock Style="{StaticResource PageSubtitleText}" Text="Reusable work items. Type a title, ticket number or stakeholder to find one." />
       </StackPanel>
     </DockPanel>
 
@@ -77,7 +77,7 @@
       <ComboBox Grid.Column="1" Width="200" Margin="10,0,0,0" VerticalAlignment="Center"
                 ItemsSource="{Binding ClientFilterOptions}" DisplayMemberPath="DisplayName"
                 SelectedValuePath="Id" SelectedValue="{Binding ClientFilterKey}"
-                AutomationProperties.Name="Filter by client" />
+                AutomationProperties.Name="Filter by stakeholder" />
 
       <CheckBox Grid.Column="2" Content="Show archived" Margin="14,0,0,0" VerticalAlignment="Center"
                 IsChecked="{Binding ShowArchived}" />
@@ -106,12 +106,12 @@
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
 
-          <ListBox x:Name="TaskList" Style="{StaticResource RowListBox}"
+          <ListBox x:Name="TaskList" Style="{StaticResource RowListBox}" SelectionMode="Extended" SelectionChanged="OnListSelectionChanged"
                    ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}"
                    IsEnabled="{Binding IsListEnabled}" KeyDown="OnListKeyDown"
                    AutomationProperties.Name="Tasks">
             <ListBox.InputBindings>
-              <KeyBinding Key="Delete" Command="{Binding DeleteCommand}" />
+              <KeyBinding Key="Delete" Command="{Binding DeleteSelectedCommand}" />
             </ListBox.InputBindings>
             <ListBox.ItemTemplate>
               <DataTemplate DataType="{x:Type vm:TaskItemViewModel}">
@@ -156,8 +156,18 @@
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
           </StackPanel>
 
-          <TextBlock Grid.Row="1" Text="{Binding ResultSummary}" Style="{StaticResource CaptionText}" Margin="12,6,12,4"
-                     Visibility="{Binding ResultSummary, Converter={StaticResource NullToCollapsed}}" />
+          <DockPanel Grid.Row="1" Margin="8,6,8,2">
+            <Button DockPanel.Dock="Right" Style="{StaticResource SubtleButton}" Command="{Binding DeleteSelectedCommand}" IsEnabled="{Binding IsListEnabled}"
+                    ToolTip="Delete the selected task (Del). Ctrl+click or Shift+click selects several.">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#xE74D;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,6,0" />
+                <TextBlock><Run Text="Delete selected" /> <Run Text="{Binding SelectionCount, Mode=OneWay, StringFormat='({0})'}" /></TextBlock>
+              </StackPanel>
+            </Button>
+            <Button DockPanel.Dock="Right" Style="{StaticResource SubtleButton}" Margin="0,0,6,0" Content="Select all" Click="OnSelectAll"
+                    IsEnabled="{Binding IsListEnabled}" ToolTip="Select every task in the list (Ctrl+A)" />
+            <TextBlock Text="{Binding ResultSummary}" Style="{StaticResource CaptionText}" VerticalAlignment="Center" />
+          </DockPanel>
         </Grid>
       </Border>
 
@@ -230,12 +240,12 @@
                          AutomationProperties.Name="Task description" />
                 <TextBlock Text="{Binding TitleError}" Style="{StaticResource ErrorText}" />
 
-                <TextBlock Text="Client" Style="{StaticResource FieldLabelText}" />
+                <TextBlock Text="Stakeholder" Style="{StaticResource FieldLabelText}" />
                 <ComboBox IsEditable="True" IsTextSearchEnabled="True" TextSearch.TextPath="Name"
                           ItemsSource="{Binding ClientOptions}" DisplayMemberPath="DisplayName"
                           SelectedValuePath="Id" SelectedValue="{Binding ClientId}"
                           Text="{Binding ClientText, UpdateSourceTrigger=PropertyChanged}"
-                          AutomationProperties.Name="Client" />
+                          AutomationProperties.Name="Stakeholder" />
                 <TextBlock Text="{Binding ClientError}" Style="{StaticResource ErrorText}" />
                 <Button Style="{StaticResource LinkButton}" Margin="0,6,0,0" HorizontalAlignment="Left"
                         Content="{Binding CreateClientLabel}"

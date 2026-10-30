@@ -77,9 +77,26 @@
       </Grid.ColumnDefinitions>
 
       <Border Style="{StaticResource Card}" Padding="6">
-        <ListBox Style="{StaticResource RowListBox}" ItemsSource="{Binding Source={StaticResource GroupedGuides}}"
+        <DockPanel>
+        <DockPanel DockPanel.Dock="Bottom" Margin="8,6,8,2">
+          <Button DockPanel.Dock="Right" Style="{StaticResource SubtleButton}" Command="{Binding DeleteSelectedCommand}"
+                  ToolTip="Delete the selected guides (Del). Ctrl+click or Shift+click selects several.">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="&#xE74D;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,6,0" />
+              <TextBlock><Run Text="Delete selected" /> <Run Text="{Binding SelectionCount, Mode=OneWay, StringFormat='({0})'}" /></TextBlock>
+            </StackPanel>
+          </Button>
+          <Button DockPanel.Dock="Right" Style="{StaticResource SubtleButton}" Margin="0,0,6,0" Content="Select all" Click="OnSelectAll"
+                  ToolTip="Select every guide in the list (Ctrl+A)" />
+          <TextBlock />
+        </DockPanel>
+        <ListBox x:Name="GuideList" Style="{StaticResource RowListBox}" ItemsSource="{Binding Source={StaticResource GroupedGuides}}"
                  SelectedItem="{Binding SelectedItem}" VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                 SelectionMode="Extended" SelectionChanged="OnListSelectionChanged"
                  AutomationProperties.Name="Guides">
+          <ListBox.InputBindings>
+            <KeyBinding Key="Delete" Command="{Binding DeleteSelectedCommand}" />
+          </ListBox.InputBindings>
           <ListBox.GroupStyle>
             <GroupStyle>
               <GroupStyle.HeaderTemplate>
@@ -109,6 +126,7 @@
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>
+        </DockPanel>
       </Border>
 
       <Border Grid.Column="2" Style="{StaticResource Card}" Padding="0">

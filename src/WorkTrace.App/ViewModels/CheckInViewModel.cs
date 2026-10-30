@@ -228,7 +228,7 @@ public sealed partial class CheckInViewModel(
         {
             _clients = await clients.GetClientsForPickerAsync();
             ClientOptions.Clear();
-            ClientOptions.Add(new PickerOption(PickerOption.NoneKey, "Any client"));
+            ClientOptions.Add(new PickerOption(PickerOption.NoneKey, "Any stakeholder"));
             foreach (var client in _clients)
             {
                 ClientOptions.Add(new PickerOption(client.Id, client.Name));
@@ -407,7 +407,7 @@ public sealed partial class CheckInViewModel(
             {
                 if (NewTaskClientId is not { } clientId)
                 {
-                    ErrorMessage = "Choose a client for the new task.";
+                    ErrorMessage = "Choose a stakeholder for the new task.";
                     return;
                 }
 

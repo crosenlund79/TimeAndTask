@@ -16,7 +16,7 @@
 
     <StackPanel>
       <TextBlock Text="Overview" Style="{StaticResource PageTitleText}" />
-      <TextBlock Style="{StaticResource PageSubtitleText}" Text="What WorkTrace has recorded today, and quick access to your tasks and clients." />
+      <TextBlock Style="{StaticResource PageSubtitleText}" Text="What WorkTrace has recorded today, and quick access to your tasks and stakeholders." />
     </StackPanel>
 
     <!-- Tracking status -->
@@ -141,7 +141,7 @@
               </Button>
               <StackPanel Orientation="Horizontal" Margin="6,6,0,2">
                 <Button Content="New task" Padding="12,4" Margin="0,0,8,0" Command="{Binding NewTaskCommand}" />
-                <Button Content="New client" Padding="12,4" Command="{Binding NewClientCommand}" />
+                <Button Content="New stakeholder" Padding="12,4" Command="{Binding NewClientCommand}" />
               </StackPanel>
             </StackPanel>
           </Border>

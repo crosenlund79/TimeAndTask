@@ -53,7 +53,7 @@ check-in attempt with its outcome; scheduled popups show a small countdown (paus
 |---|---|
 | **Overview** | Tracking status, record/pause, today's check-ins and gaps, data folder |
 | **Tasks** | Search-as-you-type by title, ticket ID (`42` finds `BUG-0042`) or client; edit on the right; archive tasks you no longer use |
-| **Clients** | Customers and internal work; deactivate instead of delete once tasks exist |
+| **Stakeholders** | Customers and internal work; deactivate instead of delete once tasks exist |
 | **Lists** | Task systems and communication channels: rename inline, hide, reorder, add |
 | **Settings** | Check-in interval, popup mode (focused/unobtrusive), position, auto-close, shortcut, theme, time registration reminders, automatic Board cards for new tasks |
 | **Board** | Kanban (Backlog, To do, In progress, Review / Test, Done): drag cards, open one to edit notes, links, dependencies, comments and screenshots; Archive; Backup & restore |

@@ -27,7 +27,7 @@ public sealed partial class ClientEditorViewModel : ObservableObject
 
     public bool IsActive => Existing?.IsActive ?? true;
 
-    public string Header => IsNew ? "New client" : Existing!.Name;
+    public string Header => IsNew ? "New stakeholder" : Existing!.Name;
 
     public string? UsageText => Existing switch
     {

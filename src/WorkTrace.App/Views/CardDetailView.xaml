@@ -227,9 +227,9 @@
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <ComboBox ItemsSource="{Binding ClientOptions}" DisplayMemberPath="DisplayName" SelectedValuePath="Id"
-                    SelectedValue="{Binding ClientKey}" AutomationProperties.Name="Client for a new task" />
+                    SelectedValue="{Binding ClientKey}" AutomationProperties.Name="Stakeholder for a new task" />
           <Button Grid.Column="1" Style="{StaticResource SubtleButton}" Margin="6,0,0,0" Command="{Binding CreateTaskCommand}"
-                  Content="Create task" ToolTip="Create a task with this card's title for the chosen client and link it" />
+                  Content="Create task" ToolTip="Create a task with this card's title for the chosen stakeholder and link it" />
         </Grid>
 
         <!-- Comments -->

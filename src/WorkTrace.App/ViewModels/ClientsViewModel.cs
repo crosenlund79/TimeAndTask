@@ -110,7 +110,7 @@ public sealed partial class ClientsViewModel(
         {
             if (!await RunAsync(
                     async () => saved = editor.IsNew ? await clients.CreateAsync(editor.ToInput()) : await clients.UpdateAsync(editor.Id!.Value, editor.ToInput()),
-                    "Could not save the client.",
+                    "Could not save the stakeholder.",
                     () => ReloadAsync(null)))
             {
                 return;
@@ -124,7 +124,7 @@ public sealed partial class ClientsViewModel(
 
         SetEditor(null);
         await ReloadAsync(saved!.Id);
-        Notifications.Show(editor.IsNew ? $"Client “{saved.Name}” created." : "Changes saved.", NotificationKind.Success);
+        Notifications.Show(editor.IsNew ? $"Stakeholder “{saved.Name}” created." : "Changes saved.", NotificationKind.Success);
     }
 
     private bool CanSave() => Editor?.IsDirty == true;
@@ -143,7 +143,7 @@ public sealed partial class ClientsViewModel(
         }
 
         var activate = !item.IsActive;
-        if (await RunAsync(() => clients.SetActiveAsync(item.Id, activate), "Could not update the client.", () => ReloadAsync(null)))
+        if (await RunAsync(() => clients.SetActiveAsync(item.Id, activate), "Could not update the stakeholder.", () => ReloadAsync(null)))
         {
             SetEditor(null);
             await ReloadAsync(item.Id);
@@ -162,40 +162,106 @@ public sealed partial class ClientsViewModel(
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanModifySelected))]
-    private async Task DeleteAsync()
+    /// <summary>All selected rows (Ctrl/Shift multi-selection); set by the view.</summary>
+    public IReadOnlyList<ClientItemViewModel> SelectedItems { get; private set; } = [];
+
+    [ObservableProperty]
+    public partial int SelectionCount { get; private set; }
+
+    public void SetSelection(IEnumerable<ClientItemViewModel> items)
     {
-        if (SelectedItem is not { } item)
+        SelectedItems = [.. items];
+        SelectionCount = SelectedItems.Count;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanModifySelected))]
+    private Task DeleteAsync() => SelectedItem is { } item ? DeleteManyAsync([item]) : Task.CompletedTask;
+
+    /// <summary>
+    /// Deletes the selected stakeholders. One whose tasks have no recorded time is deleted together with those tasks;
+    /// one with recorded time can't be deleted and is deactivated instead. The confirmation lists both cases.
+    /// </summary>
+    [RelayCommand]
+    private Task DeleteSelectedAsync() =>
+        DeleteManyAsync(SelectedItems.Count > 0 ? SelectedItems : SelectedItem is { } one ? [one] : []);
+
+    private async Task DeleteManyAsync(IReadOnlyList<ClientItemViewModel> items)
+    {
+        if (items.Count == 0 || HasUnsavedChanges)
         {
             return;
         }
 
-        var canDelete = false;
-        if (!await RunAsync(async () => canDelete = await clients.CanDeleteAsync(item.Id), "Could not check the client."))
-        {
-            return;
-        }
-
-        if (!canDelete)
-        {
-            if (item.IsActive && dialogs.Confirm(
-                    "Client has tasks",
-                    $"“{item.Name}” has tasks and is kept for history. Deactivate it instead? It will be hidden from pickers and can be reactivated at any time.",
-                    "Deactivate"))
+        var usage = new Dictionary<ClientItemViewModel, StakeholderUsage>();
+        if (!await RunAsync(async () =>
             {
-                await ToggleActiveAsync();
+                foreach (var item in items)
+                {
+                    usage[item] = await clients.GetUsageAsync(item.Id);
+                }
+            }, "Could not check the stakeholders."))
+        {
+            return;
+        }
+
+        var empty = items.Where(i => usage[i].Tasks == 0).ToList();
+        var withUnusedTasks = items.Where(i => usage[i].Tasks > 0 && usage[i].CanDeleteWithTasks).ToList();
+        var used = items.Where(i => !usage[i].CanDeleteWithTasks).ToList();
+        var toDeactivate = used.Where(i => i.IsActive).ToList();
+
+        var name = items.Count == 1 ? $"“{items[0].Name}”" : $"{items.Count} stakeholders";
+        var lines = new List<string>();
+        if (empty.Count > 0)
+        {
+            lines.Add(items.Count == 1 ? $"{name} will be deleted permanently." : $"{empty.Count} will be deleted permanently.");
+        }
+
+        if (withUnusedTasks.Count > 0)
+        {
+            lines.Add($"{(items.Count == 1 ? name : withUnusedTasks.Count.ToString(System.Globalization.CultureInfo.CurrentCulture))} will be deleted together with "
+                + $"{withUnusedTasks.Sum(i => usage[i].Tasks)} task(s) that have no recorded time.");
+        }
+
+        if (used.Count > 0)
+        {
+            lines.Add($"{(items.Count == 1 ? name : used.Count.ToString(System.Globalization.CultureInfo.CurrentCulture))} "
+                + $"{(items.Count == 1 ? "has" : "have")} tasks with recorded time and can't be deleted"
+                + (toDeactivate.Count > 0 ? ": deactivated instead (hidden from pickers; history kept)." : " (already inactive)."));
+        }
+
+        var deleting = empty.Count + withUnusedTasks.Count;
+        if (deleting + toDeactivate.Count == 0)
+        {
+            Notifications.Show(string.Join(" ", lines), NotificationKind.Info);
+            return;
+        }
+
+        if (!dialogs.Confirm(items.Count == 1 ? "Delete stakeholder" : $"Delete {items.Count} stakeholders", string.Join("\n\n", lines),
+                deleting > 0 ? "Delete" : "Deactivate", destructive: deleting > 0))
+        {
+            return;
+        }
+
+        await RunAsync(async () =>
+        {
+            foreach (var item in empty)
+            {
+                await clients.DeleteAsync(item.Id);
             }
 
-            return;
-        }
+            foreach (var item in withUnusedTasks)
+            {
+                await clients.DeleteWithUnusedTasksAsync(item.Id);
+            }
 
-        if (dialogs.Confirm("Delete client", $"Delete “{item.Name}” permanently? This can't be undone.", "Delete", destructive: true)
-            && await RunAsync(() => clients.DeleteAsync(item.Id), "Could not delete the client.", () => ReloadAsync(null)))
-        {
-            SetEditor(null);
-            await ReloadAsync(null);
-            Notifications.Show($"Deleted “{item.Name}”.");
-        }
+            foreach (var item in toDeactivate)
+            {
+                await clients.SetActiveAsync(item.Id, false);
+            }
+        }, "Could not delete all selected stakeholders.", () => ReloadAsync(null));
+        SetEditor(null);
+        await ReloadAsync(null);
+        Notifications.Show($"Deleted {deleting}" + (toDeactivate.Count > 0 ? $", deactivated {toDeactivate.Count} with recorded time." : "."), NotificationKind.Success);
     }
 
     [RelayCommand(CanExecute = nameof(CanModifySelected))]
@@ -211,7 +277,7 @@ public sealed partial class ClientsViewModel(
 
     private async Task ReloadAsync(int? selectId)
     {
-        if (await RunAsync(async () => _all = await clients.GetClientsAsync(includeInactive: true), "Could not load clients."))
+        if (await RunAsync(async () => _all = await clients.GetClientsAsync(includeInactive: true), "Could not load stakeholders."))
         {
             ApplyFilter(selectId, refreshEditor: true);
         }
@@ -233,10 +299,10 @@ public sealed partial class ClientsViewModel(
             Items.Add(new ClientItemViewModel(client, RelativeTime.Format(client.LastUsedAtUtc, now, TimeZoneInfo.Local)));
         }
 
-        EmptyMessage = Items.Count > 0 ? null : filter is null ? "No clients yet. Press Ctrl+N to add one." : "No clients match your filter.";
+        EmptyMessage = Items.Count > 0 ? null : filter is null ? "No stakeholders yet. Press Ctrl+N to add one." : "No stakeholders match your filter.";
         ResultSummary = Items.Count == _all.Count
-            ? (Items.Count == 1 ? "1 client" : $"{Items.Count} clients")
-            : $"{Items.Count} of {_all.Count} clients";
+            ? (Items.Count == 1 ? "1 stakeholder" : $"{Items.Count} stakeholders")
+            : $"{Items.Count} of {_all.Count} stakeholders";
 
         var target = Items.FirstOrDefault(i => i.Id == selectId);
         if (refreshEditor && !HasUnsavedChanges)

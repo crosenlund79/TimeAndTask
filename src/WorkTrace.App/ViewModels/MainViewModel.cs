@@ -27,7 +27,7 @@ public sealed partial class MainViewModel : ObservableObject
         [
             new(AppSection.Home, "Overview", "", "Ctrl+1", home),
             new(AppSection.Tasks, "Tasks", "", "Ctrl+2", tasks),
-            new(AppSection.Clients, "Clients", "", "Ctrl+3", clients),
+            new(AppSection.Clients, "Stakeholders", "", "Ctrl+3", clients),
             new(AppSection.Lists, "Lists", "", "Ctrl+4", lists),
             new(AppSection.Board, "Board", "\uE8A9", "Ctrl+6", board),
             new(AppSection.Guides, "Guides", "\uE82D", "Ctrl+7", guides),

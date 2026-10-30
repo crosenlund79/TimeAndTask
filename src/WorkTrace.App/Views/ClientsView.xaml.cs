@@ -57,4 +57,18 @@ public partial class ClientsView : UserControl
             e.Handled = true;
         }
     }
+
+    private void OnListSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (DataContext is ClientsViewModel vm)
+        {
+            vm.SetSelection(ClientList.SelectedItems.OfType<ClientItemViewModel>());
+        }
+    }
+
+    private void OnSelectAll(object sender, RoutedEventArgs e)
+    {
+        ClientList.SelectAll();
+        ClientList.Focus();
+    }
 }

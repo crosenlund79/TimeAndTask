@@ -87,15 +87,15 @@
                    AutomationProperties.Name="Search tasks" />
           <TextBlock Text="&#xE721;" Style="{StaticResource IconText}" Margin="11,0,0,0" IsHitTestVisible="False"
                      Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Left" />
-          <TextBlock Text="Task, ticket ID or client…" Margin="33,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
+          <TextBlock Text="Task, ticket ID or stakeholder…" Margin="33,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
                      Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                      Visibility="{Binding Text, ElementName=SearchBox, Converter={StaticResource NullToCollapsed}, ConverterParameter=invert}" />
         </Grid>
         <ComboBox Grid.Column="1" Width="130" Margin="8,0,0,0" VerticalAlignment="Center" IsTextSearchEnabled="True"
                   ItemsSource="{Binding ClientOptions}" DisplayMemberPath="Name" TextSearch.TextPath="Name"
                   SelectedValuePath="Id" SelectedValue="{Binding ClientKey}"
-                  ToolTip="Limit the search to one client; also the client of a newly created task"
-                  AutomationProperties.Name="Client" />
+                  ToolTip="Limit the search to one stakeholder; also the stakeholder of a newly created task"
+                  AutomationProperties.Name="Stakeholder" />
       </Grid>
 
       <!-- Search results -->

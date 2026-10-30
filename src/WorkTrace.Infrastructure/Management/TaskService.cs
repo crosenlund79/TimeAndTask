@@ -99,7 +99,7 @@ internal sealed class TaskService(
         var task = await FindAsync(db, id, cancellationToken);
         if (!isArchived && !await db.Clients.AnyAsync(c => c.Id == task.ClientId && c.IsActive, cancellationToken))
         {
-            throw new OperationNotAllowedException("The task's client is inactive. Reactivate the client first.");
+            throw new OperationNotAllowedException("The task's stakeholder is inactive. Reactivate the stakeholder first.");
         }
 
         task.IsArchived = isArchived;
@@ -211,11 +211,11 @@ internal sealed class TaskService(
             var client = await db.Clients.Where(c => c.Id == clientId).Select(c => new { c.IsActive }).SingleOrDefaultAsync(cancellationToken);
             if (client is null)
             {
-                errors.Add(nameof(TaskInput.ClientId), "The selected client no longer exists.");
+                errors.Add(nameof(TaskInput.ClientId), "The selected stakeholder no longer exists.");
             }
             else if (!client.IsActive && existing?.ClientId != clientId)
             {
-                errors.Add(nameof(TaskInput.ClientId), "The selected client is inactive.");
+                errors.Add(nameof(TaskInput.ClientId), "The selected stakeholder is inactive.");
             }
         }
 

@@ -58,4 +58,18 @@ public partial class TasksView : UserControl
             e.Handled = true;
         }
     }
+
+    private void OnListSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (DataContext is TasksViewModel vm)
+        {
+            vm.SetSelection(TaskList.SelectedItems.OfType<TaskItemViewModel>());
+        }
+    }
+
+    private void OnSelectAll(object sender, RoutedEventArgs e)
+    {
+        TaskList.SelectAll();
+        TaskList.Focus();
+    }
 }

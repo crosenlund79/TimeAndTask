@@ -133,4 +133,22 @@ public class ClientServiceTests : ManagementTestBase
         Assert.NotEqual(log[0].BatchId, log[1].BatchId);
         Assert.Equal(DateTimeKind.Utc, log[1].ChangedAtUtc.Kind);
     }
+
+    [Fact]
+    public async Task DeleteWithUnusedTasks_RemovesTasksWithoutTime_ButNeverRecordedTime()
+    {
+        var unused = await Clients.CreateAsync(new ClientInput("Prospect", null, false), Ct);
+        await Tasks.CreateAsync(new TaskInput(unused.Id, null, null, "Draft offer", null, null), Ct);
+        Assert.Equal(new StakeholderUsage(1, 0), await Clients.GetUsageAsync(unused.Id, Ct));
+
+        await Clients.DeleteWithUnusedTasksAsync(unused.Id, Ct);
+        Assert.DoesNotContain(await Clients.GetClientsAsync(cancellationToken: Ct), c => c.Id == unused.Id);
+
+        var used = await Clients.CreateAsync(new ClientInput("Contoso", null, false), Ct);
+        var task = await Tasks.CreateAsync(new TaskInput(used.Id, null, null, "Invoicing", null, null), Ct);
+        await AddObservationAsync(task.Id);
+        Assert.Equal(new StakeholderUsage(1, 1), await Clients.GetUsageAsync(used.Id, Ct));
+        await Assert.ThrowsAsync<OperationNotAllowedException>(() => Clients.DeleteWithUnusedTasksAsync(used.Id, Ct));
+        Assert.Single(await Tasks.SearchAsync(new TaskQuery(ClientId: used.Id), Ct));
+    }
 }

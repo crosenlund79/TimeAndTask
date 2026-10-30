@@ -553,7 +553,7 @@ public sealed partial class CardDetailViewModel : ViewModelBase, IDisposable
     {
         if (PickerOption.FromKey(ClientKey) is not { } clientId)
         {
-            Notifications.Show("Choose a client for the new task.", NotificationKind.Warning);
+            Notifications.Show("Choose a stakeholder for the new task.", NotificationKind.Warning);
             return;
         }
 

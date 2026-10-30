@@ -15,7 +15,7 @@ public static class ManagementValidator
         var name = Text.Clean(input.Name);
         if (name is null)
         {
-            errors.Add(nameof(ClientInput.Name), "Enter a client name.");
+            errors.Add(nameof(ClientInput.Name), "Enter a stakeholder name.");
         }
         else if (name.Length > Client.NameMaxLength)
         {
@@ -35,7 +35,7 @@ public static class ManagementValidator
         var errors = new ValidationErrors();
         if (input.ClientId is null)
         {
-            errors.Add(nameof(TaskInput.ClientId), "Choose a client.");
+            errors.Add(nameof(TaskInput.ClientId), "Choose a stakeholder.");
         }
 
         var title = Text.Clean(input.Title);

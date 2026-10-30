@@ -10,6 +10,7 @@ namespace WorkTrace.Infrastructure.Management;
 
 internal sealed class ClientService(
     IDbContextFactory<WorkTraceDbContext> contextFactory,
+    ITaskService tasks,
     TimeProvider timeProvider,
     ILogger<ClientService> logger) : IClientService
 {
@@ -46,7 +47,7 @@ internal sealed class ClientService(
         };
         db.Clients.Add(client);
         await db.SaveChangesAsync(cancellationToken);
-        logger.LogInformation("Client {ClientId} created", client.Id);
+        logger.LogInformation("Stakeholder {ClientId} created", client.Id);
         return await GetSummaryAsync(db, client.Id, cancellationToken);
     }
 
@@ -69,7 +70,7 @@ internal sealed class ClientService(
         var client = await FindAsync(db, id, cancellationToken);
         client.IsActive = isActive;
         await SaveIfChangedAsync(db, client, cancellationToken);
-        logger.LogInformation("Client {ClientId} {State}", id, isActive ? "activated" : "deactivated");
+        logger.LogInformation("Stakeholder {ClientId} {State}", id, isActive ? "activated" : "deactivated");
         return await GetSummaryAsync(db, id, cancellationToken);
     }
 
@@ -79,23 +80,60 @@ internal sealed class ClientService(
         return !await db.Tasks.AnyAsync(t => t.ClientId == id, cancellationToken);
     }
 
+    public async Task<StakeholderUsage> GetUsageAsync(int id, CancellationToken cancellationToken = default)
+    {
+        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var taskIds = await db.Tasks.Where(t => t.ClientId == id).Select(t => t.Id).ToListAsync(cancellationToken);
+        var withTime = 0;
+        foreach (var taskId in taskIds)
+        {
+            if (!await tasks.CanDeleteAsync(taskId, cancellationToken))
+            {
+                withTime++;
+            }
+        }
+
+        return new StakeholderUsage(taskIds.Count, withTime);
+    }
+
+    public async Task DeleteWithUnusedTasksAsync(int id, CancellationToken cancellationToken = default)
+    {
+        if (!(await GetUsageAsync(id, cancellationToken)).CanDeleteWithTasks)
+        {
+            throw new OperationNotAllowedException("This stakeholder has tasks with recorded time and is kept for history. Deactivate it instead.");
+        }
+
+        List<int> taskIds;
+        await using (var db = await contextFactory.CreateDbContextAsync(cancellationToken))
+        {
+            taskIds = await db.Tasks.Where(t => t.ClientId == id).Select(t => t.Id).ToListAsync(cancellationToken);
+        }
+
+        foreach (var taskId in taskIds)
+        {
+            await tasks.DeleteAsync(taskId, cancellationToken);
+        }
+
+        await DeleteAsync(id, cancellationToken);
+    }
+
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
         var client = await FindAsync(db, id, cancellationToken);
         if (await db.Tasks.AnyAsync(t => t.ClientId == id, cancellationToken))
         {
-            throw new OperationNotAllowedException("This client has tasks and is kept for history. Deactivate it instead.");
+            throw new OperationNotAllowedException("This stakeholder has tasks and is kept for history. Deactivate it instead.");
         }
 
         if (client.IsInternal && await db.Clients.CountAsync(c => c.IsInternal && c.IsActive, cancellationToken) == 1 && client.IsActive)
         {
-            throw new OperationNotAllowedException("Keep at least one active internal client for internal work.");
+            throw new OperationNotAllowedException("Keep at least one active internal stakeholder for internal work.");
         }
 
         db.Clients.Remove(client);
         await db.SaveChangesAsync(cancellationToken);
-        logger.LogInformation("Client {ClientId} deleted", id);
+        logger.LogInformation("Stakeholder {ClientId} deleted", id);
     }
 
     private async Task SaveIfChangedAsync(WorkTraceDbContext db, Client client, CancellationToken cancellationToken)
@@ -118,7 +156,7 @@ internal sealed class ClientService(
             var names = await db.Clients.Where(c => c.Id != existingId).Select(c => c.Name).ToListAsync(cancellationToken);
             if (names.Any(n => Text.SameName(n, name)))
             {
-                errors.Add(nameof(ClientInput.Name), $"A client named '{name}' already exists.");
+                errors.Add(nameof(ClientInput.Name), $"A stakeholder named '{name}' already exists.");
             }
         }
 
@@ -127,7 +165,7 @@ internal sealed class ClientService(
 
     private static async Task<Client> FindAsync(WorkTraceDbContext db, int id, CancellationToken cancellationToken) =>
         await db.Clients.SingleOrDefaultAsync(c => c.Id == id, cancellationToken)
-        ?? throw new EntityNotFoundException("Client", id);
+        ?? throw new EntityNotFoundException("Stakeholder", id);
 
     private static async Task<ClientSummary> GetSummaryAsync(WorkTraceDbContext db, int id, CancellationToken cancellationToken) =>
         await Summaries(db.Clients.Where(c => c.Id == id)).SingleAsync(cancellationToken);

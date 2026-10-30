@@ -66,7 +66,7 @@ public sealed partial class TaskEditorViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsDirty), nameof(CanCreateClient), nameof(CreateClientLabel))]
     public partial int? ClientId { get; set; }
 
-    /// <summary>Text typed into the editable client box; used to offer "create client".</summary>
+    /// <summary>Text typed into the editable client box; used to offer "create stakeholder".</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanCreateClient), nameof(CreateClientLabel))]
     public partial string? ClientText { get; set; }
@@ -154,7 +154,7 @@ public sealed partial class TaskEditorViewModel : ObservableObject
         && Text.Clean(ClientText) is { } name
         && !ClientOptions.Any(o => Text.SameName(o.Name, name));
 
-    public string CreateClientLabel => $"Create client “{Text.Clean(ClientText)}”";
+    public string CreateClientLabel => $"Create stakeholder “{Text.Clean(ClientText)}”";
 
     public TaskInput ToInput() => new(ClientId, TaskSystemId, ExternalId, Title, Notes, DefaultChannelId, ShowOnBoard);
 

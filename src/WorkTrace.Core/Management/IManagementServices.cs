@@ -19,6 +19,18 @@ public interface IClientService
 
     /// <exception cref="Validation.OperationNotAllowedException">The client is referenced.</exception>
     Task DeleteAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>The stakeholder's tasks, and how many of them have recorded time (those block deletion).</summary>
+    Task<StakeholderUsage> GetUsageAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>Deletes the stakeholder together with its tasks, none of which may have recorded time.</summary>
+    /// <exception cref="Validation.OperationNotAllowedException">A task has recorded time.</exception>
+    Task DeleteWithUnusedTasksAsync(int id, CancellationToken cancellationToken = default);
+}
+
+public sealed record StakeholderUsage(int Tasks, int TasksWithTime)
+{
+    public bool CanDeleteWithTasks => TasksWithTime == 0;
 }
 
 /// <summary>Reusable work items. Tasks referenced by time records are archived, never deleted.</summary>
