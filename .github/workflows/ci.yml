@@ -63,6 +63,28 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed ($LASTEXITCODE)" }
           Get-Item installer-output\WorkTrace-Setup.exe | Format-Table Name, Length
 
+      # Install, upgrade (second run) and uninstall silently on the runner: one Installed Apps entry, right version.
+      - name: Check installer
+        shell: pwsh
+        run: |
+          $setup = (Resolve-Path installer-output\WorkTrace-Setup.exe).Path
+          $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{5B0E2C71-8E4F-4C3A-9A7D-2F61C0D4E8A3}_is1'
+          $exe = "$env:LOCALAPPDATA\Programs\WorkTrace\WorkTrace.exe"
+          foreach ($round in 1, 2) {
+            $p = Start-Process $setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/LOG=installer-output\setup.log' -Wait -PassThru
+            if ($p.ExitCode -ne 0 -or -not (Test-Path $exe)) { Get-Content installer-output\setup.log -Tail 30; throw "Install round $round failed ($($p.ExitCode))" }
+          }
+          $entry = Get-ItemProperty $key
+          if ($entry.DisplayVersion -ne '${{ steps.version.outputs.version }}') { throw "Installed Apps shows $($entry.DisplayVersion)" }
+          $file = (Get-Item $exe).VersionInfo.ProductVersion
+          if (-not $file.StartsWith('${{ steps.version.outputs.version }}')) { throw "WorkTrace.exe reports $file" }
+          $entries = @(Get-ChildItem 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall' | Where-Object { $_.GetValue('DisplayName') -eq 'WorkTrace' })
+          if ($entries.Count -ne 1) { throw "Expected one WorkTrace entry in Installed Apps, found $($entries.Count)" }
+          $p = Start-Process "$env:LOCALAPPDATA\Programs\WorkTrace\unins000.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART' -Wait -PassThru
+          Start-Sleep -Seconds 2
+          if ((Test-Path $exe) -or (Test-Path $key)) { throw 'Uninstall left WorkTrace behind' }
+          Write-Output "Installer OK: WorkTrace $($entry.DisplayVersion) installed, upgraded in place and uninstalled."
+
       - name: Upload installer
         id: upload_setup
         uses: actions/upload-artifact@v4
