@@ -324,6 +324,10 @@ Owner request 2026-10-30. Commit 43f8654, Windows CI run 31 green. Shutdown remi
 - Guides: attach, open and remove PDFs
 - Reminders in the configured period (crossing midnight), answers survive restart; test button works
 
+**Links**
+
+- [CI run 31](https://github.com/crosenlund79/TimeAndTask/actions/runs/41060738855)
+
 ## To do
 
 ### WT-030 · Estimation engine

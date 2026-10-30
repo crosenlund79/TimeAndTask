@@ -1219,7 +1219,12 @@
       "notes": "",
       "evidence": "",
       "blockedBy": [],
-      "links": [],
+      "links": [
+        {
+          "label": "CI run 31",
+          "url": "https://github.com/crosenlund79/TimeAndTask/actions/runs/41060738855"
+        }
+      ],
       "comments": [],
       "history": [
         {
@@ -1231,8 +1236,8 @@
         }
       ],
       "createdAt": "2026-10-30T13:15:34Z",
-      "updatedAt": "2026-10-30T13:15:34Z",
-      "rev": 1
+      "updatedAt": "2026-10-30T13:15:37Z",
+      "rev": 2
     }
   ]
 }
