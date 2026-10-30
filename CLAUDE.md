@@ -98,6 +98,19 @@ editable ComboBoxes binding `SelectedValue` + `Text` must initialise the text (e
 resource URIs are assembly-qualified (`pack://application:,,,/WorkTrace;component/...`) ·
 `TimeProvider` for all clock access · central package versions in `Directory.Packages.props`.
 
+## Windows executable delivery (permanent rule, all sessions)
+Whenever changes are made to the WorkTrace Windows application:
+1. Build, test and push the changes.
+2. Verify that Windows CI (`.github/workflows/ci.yml` on `windows-latest`) succeeds.
+3. Confirm that the `WorkTrace-win-x64` artifact is available for that run.
+4. Include the commit hash and a brief summary of changes in the reply.
+5. Always place the clickable download link as the absolute last item in the reply.
+
+The link must point to the specific successful GitHub Actions run containing the latest Windows executable
+(e.g. `https://github.com/crosenlund79/TimeAndTask/actions/runs/<run id>`). Put no text, notes, questions or
+summaries after the link. If the build fails or no artifact exists, state this clearly instead of linking to an
+older version.
+
 ## Known limitations
 - Development container is Linux: the WPF app cannot be run or UI-tested there; Windows behaviour is
   verified manually by the owner and built/tested by CI on `windows-latest`.
