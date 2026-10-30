@@ -58,9 +58,11 @@ check-in attempt with its outcome; scheduled popups show a small countdown (paus
 | **Settings** | Check-in interval, popup mode (focused/unobtrusive), position, auto-close, shortcut, theme, time registration reminders, automatic Board cards for new tasks |
 | **Board** | Kanban (Backlog, To do, In progress, Review / Test, Done): drag cards, open one to edit notes, links, dependencies, comments and screenshots; Archive; Backup & restore |
 | **Tasks › Inbox** | Quick capture of thoughts, links and pasted screenshots (`Ctrl+Shift+C` from anywhere); organise later ("To board", archive) |
+| **Timesheet** | Monday–Sunday hours per task (estimated from check-ins), stakeholder and reference, corrections in the cells, unclassified hours; export to Excel or CSV |
+| **Screenshots** | Automatic captures by day (opt-in in Settings), with the task you were on; open, delete |
 | **Guides** | Your how-tos grouped by category; search titles and text; attached PDFs; added/modified dates, "Stale" after six months without changes |
 
-Keyboard: `Ctrl+1…7` switch pages · Board: `Alt+←/→/↑/↓` move the selected card · `Ctrl+Z` undo ·
+Keyboard: `Ctrl+1…9` switch pages · Board: `Alt+←/→/↑/↓` move the selected card · `Ctrl+Z` undo ·
 `Ctrl+Shift+C` capture · `Ctrl+V` pastes a screenshot into the open card · `Esc` closes it.
 Lists: `Ctrl+F` search · `↓` from search into the list · `Enter` edit ·
 `Ctrl+N` new · `Ctrl+S` save · `Esc` discard/clear · `Del` delete (offers archive/deactivate when in use).

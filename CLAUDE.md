@@ -169,5 +169,9 @@ Screenshots are stored in the owner's browser only (never commit images to this 
   level). Scheduled check-ins must be confirmed on the owner's machine before Phase 4.
 - **Board consolidation** (owner request 2026-10-29, ADR-033–036): Board, Inbox, Archive, screenshots, Undo and
   backup/restore inside WorkTrace; import from the browser board. Awaiting the owner's acceptance
-  (`docs/acceptance/board-in-worktrace.md`). Email backups pending a delivery decision (WT-047). **Next: Phase 4 — estimation
-  engine and activity log** (inputs: segments, lock periods, observations, prompts, manual allocations).
+  (`docs/acceptance/board-in-worktrace.md`).
+- **2026-10-30 iteration:** "Clients" are called **Stakeholders** in the UI (code/tables keep Client*); bulk delete;
+  Phase 4 estimation engine (`Core/Reporting/TimeEstimator`) with the **Weekly timesheet** + Excel/CSV export
+  (Phase 6 core); **automatic screenshots** (Phase 5); **automatic backups** to a folder and by email (Resend; key in
+  Windows Credential Manager via `ISecretStore`). Awaiting the owner's testing. Not yet: activity log page, manual
+  allocation editor (corrections are per-day timesheet adjustments).
