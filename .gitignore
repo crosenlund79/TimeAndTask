@@ -489,6 +489,10 @@ $RECYCLE.BIN/
 *.db-journal
 worktrace-data/
 Screenshots/
+# ...except source-code folders named Screenshots (C# only; images stay ignored)
+!src/**/Screenshots/
+src/**/Screenshots/*
+!src/**/Screenshots/*.cs
 logs/
 settings.json
 *.local.json
