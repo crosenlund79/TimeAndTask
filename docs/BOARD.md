@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 18 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 19 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -327,6 +327,19 @@ Owner request 2026-10-30. Commit 43f8654, Windows CI run 31 green. Shutdown remi
 **Links**
 
 - [CI run 31](https://github.com/crosenlund79/TimeAndTask/actions/runs/41060738855)
+
+### WT-053 · Windows installer (WorkTrace-Setup.exe) with in-place upgrades and versioning
+
+`feature` · priority High
+
+Owner request 2026-10-30. Inno Setup per-user installer, fixed AppId, closes running WorkTrace via exit signal, data in %LocalAppData%\WorkTrace untouched. Version 0.2.<CI run>. Commits 0cce036, 91b366a; CI run 33 green incl. silent install/upgrade/uninstall check.
+
+**Acceptance criteria**
+
+- Setup installs, adds Start menu entry and Installed Apps entry
+- Running a newer setup upgrades in place and closes the running (tray) WorkTrace
+- Time registrations, board, guides, settings and backups are preserved; uninstall keeps them
+- Version shown in WorkTrace and Installed Apps matches
 
 ## To do
 
