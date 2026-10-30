@@ -47,7 +47,7 @@ public partial class App : Application, IAppLifetime
 
             _host = BuildHost(paths, e.Args);
             _logger = _host.Services.GetRequiredService<ILogger<App>>();
-            _logger.LogInformation("WorkTrace {Version} starting", typeof(App).Assembly.GetName().Version);
+            _logger.LogInformation("WorkTrace {Version} starting", AppVersion.Text);
 
             await _host.StartAsync();
 
@@ -62,6 +62,13 @@ public partial class App : Application, IAppLifetime
 
             var windows = _host.Services.GetRequiredService<WindowManager>();
             _singleInstance.ListenForActivation(() => Dispatcher.BeginInvoke(windows.ShowMainWindow));
+
+            // The installer closes WorkTrace this way before an upgrade: a normal, quiet shutdown (no exit reminder).
+            _singleInstance.ListenForExit(() => Dispatcher.BeginInvoke(() =>
+            {
+                _logger?.LogInformation("Closing at the installer's request");
+                ShutdownCore(exitCode: 0);
+            }));
 
             if (firstRun || !settings.General.StartMinimized || e.Args.Contains("--show", StringComparer.OrdinalIgnoreCase))
             {

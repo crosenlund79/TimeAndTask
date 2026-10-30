@@ -12,6 +12,9 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <Company>WorkTrace</Company>
     <Product>WorkTrace</Product>
-    <Version>0.1.0</Version>
+    <!-- Versioning: Major.Minor here, Patch = CI run number (CI passes -p:Version=0.2.<run>). Local builds are .0.
+         The installer gets the same number. Raise Major.Minor here for bigger releases. -->
+    <WorkTraceVersionBase>0.2</WorkTraceVersionBase>
+    <Version>$(WorkTraceVersionBase).0</Version>
   </PropertyGroup>
 </Project>

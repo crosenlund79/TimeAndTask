@@ -65,12 +65,16 @@ Keyboard: `Ctrl+1…7` switch pages · Board: `Alt+←/→/↑/↓` move the sel
 Lists: `Ctrl+F` search · `↓` from search into the list · `Enter` edit ·
 `Ctrl+N` new · `Ctrl+S` save · `Esc` discard/clear · `Del` delete (offers archive/deactivate when in use).
 
-## Publish
-```powershell
-dotnet publish src/WorkTrace.App/WorkTrace.App.csproj -c Release -r win-x64 --self-contained false -o publish/WorkTrace
-```
-Run `publish/WorkTrace/WorkTrace.exe`. CI (`.github/workflows/ci.yml`) produces the same output as the
-`WorkTrace-win-x64` build artifact on every push. An installer is planned for Phase 7.
+## Install
+Download `WorkTrace-Setup-<version>` from the latest successful **CI** run (Actions tab), unzip it and run
+`WorkTrace-Setup.exe`. It installs per user (no admin prompt) to `%LocalAppData%\Programs\WorkTrace`, adds a Start
+menu entry (desktop shortcut optional) and an entry in Settings › Apps › Installed apps. Running a newer setup
+upgrades in place: it closes a running WorkTrace (also the tray-only one), replaces the program files and keeps the
+install location. Your data in `%LocalAppData%\WorkTrace` is never touched, also not by uninstalling.
+Requires the Microsoft .NET 10 Desktop Runtime (x64); setup offers the download page when it is missing.
+
+The version (Major.Minor from `Directory.Build.props` + CI run number) is shown at the bottom of the navigation
+rail and in Installed apps. A portable ZIP (`WorkTrace-win-x64`) is still produced by CI.
 
 ## Local storage
 | What | Location |

@@ -12,14 +12,20 @@ internal sealed class SingleInstanceGuard : IDisposable
     private const string MutexName = @"Local\WorkTrace.SingleInstance.6E1B9F4A";
     private const string ActivateEventName = @"Local\WorkTrace.Activate.6E1B9F4A";
 
+    // Set by the installer (installer/WorkTrace.iss) to close the running instance before replacing files.
+    private const string ExitEventName = @"Local\WorkTrace.Exit.6E1B9F4A";
+
     private readonly Mutex _mutex;
     private readonly EventWaitHandle _activateEvent;
+    private readonly EventWaitHandle _exitEvent;
     private RegisteredWaitHandle? _registration;
+    private RegisteredWaitHandle? _exitRegistration;
 
-    private SingleInstanceGuard(Mutex mutex, EventWaitHandle activateEvent)
+    private SingleInstanceGuard(Mutex mutex, EventWaitHandle activateEvent, EventWaitHandle exitEvent)
     {
         _mutex = mutex;
         _activateEvent = activateEvent;
+        _exitEvent = exitEvent;
     }
 
     /// <summary>Returns a guard if this is the first instance; otherwise null.</summary>
@@ -33,7 +39,8 @@ internal sealed class SingleInstanceGuard : IDisposable
         }
 
         var activateEvent = new EventWaitHandle(false, EventResetMode.AutoReset, ActivateEventName);
-        return new SingleInstanceGuard(mutex, activateEvent);
+        var exitEvent = new EventWaitHandle(false, EventResetMode.AutoReset, ExitEventName);
+        return new SingleInstanceGuard(mutex, activateEvent, exitEvent);
     }
 
     /// <summary>Asks the running instance to show itself. Returns false if it could not be reached.</summary>
@@ -59,10 +66,19 @@ internal sealed class SingleInstanceGuard : IDisposable
             _activateEvent, (_, _) => onActivate(), null, Timeout.Infinite, executeOnlyOnce: false);
     }
 
+    /// <summary>Invokes <paramref name="onExit"/> (on a thread-pool thread) when the installer asks WorkTrace to close.</summary>
+    public void ListenForExit(Action onExit)
+    {
+        _exitRegistration = ThreadPool.RegisterWaitForSingleObject(
+            _exitEvent, (_, _) => onExit(), null, Timeout.Infinite, executeOnlyOnce: true);
+    }
+
     public void Dispose()
     {
         _registration?.Unregister(null);
+        _exitRegistration?.Unregister(null);
         _activateEvent.Dispose();
+        _exitEvent.Dispose();
         _mutex.ReleaseMutex();
         _mutex.Dispose();
     }

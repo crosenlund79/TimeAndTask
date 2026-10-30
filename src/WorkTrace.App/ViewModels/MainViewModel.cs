@@ -40,6 +40,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     public NotificationService Notifications { get; }
 
+    public string VersionText { get; } = $"WorkTrace {AppVersion.Text}";
+
     [ObservableProperty]
     public partial NavigationItem? SelectedSection { get; set; }
 

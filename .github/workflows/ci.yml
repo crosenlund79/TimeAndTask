@@ -29,19 +29,50 @@ jobs:
         with:
           global-json-file: global.json
 
+      # Version = Major.Minor from Directory.Build.props + this workflow's run number (app and installer match).
+      - name: Version
+        id: version
+        shell: pwsh
+        run: |
+          $base = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.WorkTraceVersionBase | Where-Object { $_ } | Select-Object -First 1
+          $version = "$base.${{ github.run_number }}"
+          "version=$version" >> $env:GITHUB_OUTPUT
+          Write-Output "WorkTrace $version"
+
       - name: Restore
         run: dotnet restore TimeAndTask.slnx
 
       - name: Build
-        run: dotnet build TimeAndTask.slnx -c Release --no-restore
+        run: dotnet build TimeAndTask.slnx -c Release --no-restore -p:Version=${{ steps.version.outputs.version }}
 
       - name: Test
         run: dotnet test --solution TimeAndTask.slnx -c Release --no-build
 
       - name: Publish (framework-dependent, win-x64)
-        run: dotnet publish src/WorkTrace.App/WorkTrace.App.csproj -c Release -r win-x64 --self-contained false -o publish/WorkTrace
+        run: dotnet publish src/WorkTrace.App/WorkTrace.App.csproj -c Release -r win-x64 --self-contained false -o publish/WorkTrace -p:Version=${{ steps.version.outputs.version }}
 
-      - name: Upload build
+      - name: Build installer (Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) {
+            choco install innosetup --yes --no-progress | Out-Null
+            $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          }
+          & $iscc /Qp "/DAppVersion=${{ steps.version.outputs.version }}" "/DSourceDir=$PWD\publish\WorkTrace" installer\WorkTrace.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed ($LASTEXITCODE)" }
+          Get-Item installer-output\WorkTrace-Setup.exe | Format-Table Name, Length
+
+      - name: Upload installer
+        id: upload_setup
+        uses: actions/upload-artifact@v4
+        with:
+          name: WorkTrace-Setup-${{ steps.version.outputs.version }}
+          path: installer-output/WorkTrace-Setup.exe
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload portable build (secondary)
         id: upload
         uses: actions/upload-artifact@v4
         with:
@@ -96,7 +127,8 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           NOTIFY_TO: ${{ secrets.WORKTRACE_NOTIFY_EMAIL }}
           NOTIFY_FROM: ${{ vars.WORKTRACE_NOTIFY_FROM || 'WorkTrace CI <onboarding@resend.dev>' }}
-          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          ARTIFACT_URL: ${{ steps.upload_setup.outputs.artifact-url }}
+          VERSION: ${{ steps.version.outputs.version }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           BRANCH: ${{ github.ref_name }}
           SHA: ${{ github.sha }}
@@ -111,13 +143,13 @@ jobs:
           $items = ($subjects | ForEach-Object { "<li>$(Esc $_)</li>" }) -join ''
           $short = $env:SHA.Substring(0, 7)
           $html = @"
-          <p>A new WorkTrace build passed all tests on Windows.</p>
-          <p><a href="$($env:ARTIFACT_URL)"><b>Download WorkTrace-win-x64</b></a> (sign in to GitHub; kept 14 days)</p>
+          <p>WorkTrace $($env:VERSION) passed all tests on Windows.</p>
+          <p><a href="$($env:ARTIFACT_URL)"><b>Download WorkTrace-Setup $($env:VERSION)</b></a> (sign in to GitHub; kept 30 days). Run it to install or upgrade; your data is kept.</p>
           <p><b>Changes</b></p><ul>$items</ul>
           <p>Commit <code>$short</code> ($(Esc $env:SHA)) on <code>$(Esc $env:BRANCH)</code><br>
           <a href="$($env:RUN_URL)">CI run</a></p>
           "@
-          $text = "A new WorkTrace build passed all tests on Windows.`n`nDownload: $($env:ARTIFACT_URL)`n`nChanges:`n" +
+          $text = "WorkTrace $($env:VERSION) passed all tests on Windows.`n`nInstaller: $($env:ARTIFACT_URL)`n`nChanges:`n" +
             (($subjects | ForEach-Object { "- $_" }) -join "`n") + "`n`nCommit $($env:SHA) on $($env:BRANCH)`nCI run: $($env:RUN_URL)"
           $body = @{
             from = $env:NOTIFY_FROM

@@ -1,13 +1,13 @@
 # "New version ready" emails
 
 After every successful Windows build, CI (`.github/workflows/ci.yml`) can email you a link to the new
-`WorkTrace-win-x64` download.
+installer (`WorkTrace-Setup-<version>`).
 
 ## When an email is sent
 Only when **all** of these hold:
 - the run was a push (or a manual *Run workflow*) on `main`, `feature/**` or `claude/**`. Pull requests and the `board`
   branch never send.
-- restore, build, **all tests**, publish and the **artifact upload** succeeded. A failed or cancelled run stops before
+- restore, build, **all tests**, publish, the **installer** and the **artifact uploads** succeeded. A failed or cancelled run stops before
   the email step.
 - the push changed something besides documentation (files under `docs/` or `*.md`).
 - no email was sent for this commit before. A cache entry `build-email-<commit>` marks a sent commit, so re-runs
@@ -42,6 +42,6 @@ To stop the emails, delete either secret. To revoke the key, delete it in Resend
 
 ## The email
 - **Subject:** ✅ WorkTrace — New version ready
-- **Link:** the artifact of that exact run (`…/actions/runs/<run>/artifacts/<id>`). Downloading needs a GitHub
-  sign-in, and artifacts are kept 14 days.
+- **Link:** the installer artifact of that exact run (`…/actions/runs/<run>/artifacts/<id>`). Downloading needs a
+  GitHub sign-in, and installers are kept 30 days. The email also names the version.
 - **Changes:** the commit subjects of the push (up to 15), then the full commit hash, the branch and a link to the CI run.

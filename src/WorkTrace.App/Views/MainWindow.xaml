@@ -61,6 +61,8 @@
         <TextBlock Text="WorkTrace" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
       </StackPanel>
 
+      <TextBlock DockPanel.Dock="Bottom" Margin="12,2,0,0" Style="{StaticResource CaptionText}" FontSize="11"
+                 Text="{Binding VersionText}" AutomationProperties.Name="Version" />
       <TextBlock DockPanel.Dock="Bottom" Margin="12,8,0,0" Style="{StaticResource CaptionText}" FontSize="11"
                  Text="Data is stored only on this PC" ToolTip="All data lives under %LocalAppData%\WorkTrace" />
 

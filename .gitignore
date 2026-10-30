@@ -496,3 +496,4 @@ settings.json
 # Publish output
 publish/
 artifacts/
+installer-output/
