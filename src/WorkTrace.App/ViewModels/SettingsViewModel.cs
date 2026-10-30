@@ -13,6 +13,7 @@ namespace WorkTrace.App.ViewModels;
 public sealed partial class SettingsViewModel(
     ISettingsStore settings,
     TrackingController tracking,
+    TimeReminderService reminders,
     INotificationService notifications,
     ILogger<SettingsViewModel> logger) : ViewModelBase(notifications, logger), ISectionViewModel
 {
@@ -104,6 +105,42 @@ public sealed partial class SettingsViewModel(
     [ObservableProperty]
     public partial bool CloseToTray { get; set; }
 
+    // ---- Board ----
+
+    [ObservableProperty]
+    public partial bool AutoAddTasksToBoard { get; set; }
+
+    // ---- Time registration reminders ----
+
+    public IReadOnlyList<PickerOption> ReminderIntervalOptions { get; } =
+    [
+        new(15, "Every 15 minutes"), new(30, "Every 30 minutes"), new(60, "Every hour"), new(90, "Every 90 minutes"), new(120, "Every 2 hours"),
+    ];
+
+    [ObservableProperty]
+    public partial bool RemindersEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial string? ReminderStart { get; set; }
+
+    [ObservableProperty]
+    public partial string? ReminderEnd { get; set; }
+
+    [ObservableProperty]
+    public partial string? ReminderTimeError { get; private set; }
+
+    [ObservableProperty]
+    public partial int? ReminderIntervalMinutes { get; set; }
+
+    [ObservableProperty]
+    public partial bool ReminderPlaySound { get; set; }
+
+    [ObservableProperty]
+    public partial bool ShutdownReminder { get; set; }
+
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private Task TestReminderAsync() => reminders.ShowAsync(test: true);
+
     public Task ActivateAsync(object? parameter)
     {
         _loading = true;
@@ -126,6 +163,14 @@ public sealed partial class SettingsViewModel(
         ThemeKey = (int)s.General.Theme;
         StartMinimized = s.General.StartMinimized;
         CloseToTray = s.General.CloseToTray;
+        AutoAddTasksToBoard = s.Board.AutoAddTasks;
+        RemindersEnabled = s.Reminders.Enabled;
+        ReminderStart = s.Reminders.Start.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+        ReminderEnd = s.Reminders.End.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+        ReminderTimeError = null;
+        ReminderIntervalMinutes = s.Reminders.IntervalMinutes;
+        ReminderPlaySound = s.Reminders.PlaySound;
+        ShutdownReminder = s.Reminders.OnShutdown;
         _loading = false;
         return Task.CompletedTask;
     }
@@ -219,6 +264,44 @@ public sealed partial class SettingsViewModel(
             Apply(s => s.General.Theme = (ThemePreference)key);
         }
     }
+
+    partial void OnAutoAddTasksToBoardChanged(bool value) => Apply(s => s.Board.AutoAddTasks = value);
+
+    partial void OnRemindersEnabledChanged(bool value) => Apply(s => s.Reminders.Enabled = value);
+
+    partial void OnReminderStartChanged(string? value) => ApplyTime(value, (s, t) => s.Reminders.Start = t);
+
+    partial void OnReminderEndChanged(string? value) => ApplyTime(value, (s, t) => s.Reminders.End = t);
+
+    private void ApplyTime(string? text, Action<WorkTraceSettings, TimeOnly> set)
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        if (!TimeOnly.TryParse(text?.Trim(), System.Globalization.CultureInfo.CurrentCulture, out var time)
+            && !TimeOnly.TryParse(text?.Trim(), System.Globalization.CultureInfo.InvariantCulture, out time))
+        {
+            ReminderTimeError = "Use a time such as 15:00 or 08:00.";
+            return;
+        }
+
+        ReminderTimeError = null;
+        Apply(s => set(s, time));
+    }
+
+    partial void OnReminderIntervalMinutesChanged(int? value)
+    {
+        if (value is { } minutes)
+        {
+            Apply(s => s.Reminders.IntervalMinutes = minutes);
+        }
+    }
+
+    partial void OnReminderPlaySoundChanged(bool value) => Apply(s => s.Reminders.PlaySound = value);
+
+    partial void OnShutdownReminderChanged(bool value) => Apply(s => s.Reminders.OnShutdown = value);
 
     partial void OnStartMinimizedChanged(bool value) => Apply(s => s.General.StartMinimized = value);
 

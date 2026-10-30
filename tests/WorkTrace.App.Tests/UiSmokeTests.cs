@@ -103,13 +103,13 @@ public class UiSmokeTests
             window.ViewModel.NavigateTo(AppSection.Board);
             await WpfTestHost.SettleAsync(10);
             var boardPage = ctx.Get<BoardViewModel>();
-            Assert.All(boardPage.Columns, c => Assert.Single(c.Cards));
-            boardPage.SelectedCard = boardPage.Columns[1].Cards[0];
+            Assert.All(boardPage.Columns, c => Assert.NotEmpty(c.Cards)); // incl. cards added automatically for new tasks
+            boardPage.SelectedCard = boardPage.Columns[1].Cards.Single(c => c.Id == cards[1].Id);
             await WpfTestHost.SettleAsync(10);
             Assert.Equal(2, boardPage.Detail!.Attachments.Count);
             boardPage.ShowArchive = true;
             await WpfTestHost.SettleAsync(10);
-            Assert.Single(boardPage.ArchiveItems);
+            Assert.NotEmpty(boardPage.ArchiveItems);
             boardPage.ShowArchive = false;
             boardPage.ShowBackup = true;
             await WpfTestHost.SettleAsync(10);
@@ -124,8 +124,9 @@ public class UiSmokeTests
             await boardPage.CloseCardCommand.ExecuteAsync(null);
             await WpfTestHost.SettleAsync();
 
-            window.ViewModel.NavigateTo(AppSection.Inbox);
+            window.ViewModel.NavigateTo(AppSection.Tasks, new CaptureRequest()); // Inbox lives on the Tasks page
             await WpfTestHost.SettleAsync(10);
+            Assert.True(ctx.Get<TasksViewModel>().ShowInbox);
             var inboxPage = ctx.Get<InboxViewModel>();
             Assert.Equal(2, inboxPage.Items.Count);
             inboxPage.SelectedItem = inboxPage.Items[0];

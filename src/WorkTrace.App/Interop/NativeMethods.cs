@@ -174,4 +174,22 @@ internal static partial class NativeMethods
         var corner = DWMWCP_ROUND;
         _ = DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref corner, sizeof(int));
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct LastInputInfo
+    {
+        public uint Size;
+        public uint Time;
+    }
+
+    [LibraryImport("user32.dll", EntryPoint = "GetLastInputInfo")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetLastInputInfoNative(ref LastInputInfo info);
+
+    /// <summary>Time since the last keyboard or mouse input in this session, or null if unknown.</summary>
+    internal static TimeSpan? IdleTime()
+    {
+        var info = new LastInputInfo { Size = (uint)Marshal.SizeOf<LastInputInfo>() };
+        return GetLastInputInfoNative(ref info) ? TimeSpan.FromMilliseconds(unchecked((uint)Environment.TickCount - info.Time)) : null;
+    }
 }

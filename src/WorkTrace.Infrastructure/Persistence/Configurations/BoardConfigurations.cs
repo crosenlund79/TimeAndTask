@@ -106,6 +106,17 @@ internal sealed class GuideConfiguration : IEntityTypeConfiguration<Guide>
     }
 }
 
+internal sealed class GuideAttachmentConfiguration : IEntityTypeConfiguration<GuideAttachment>
+{
+    public void Configure(EntityTypeBuilder<GuideAttachment> builder)
+    {
+        builder.ToTable("GuideAttachments");
+        builder.Property(a => a.FileName).HasMaxLength(GuideAttachment.FileNameMaxLength);
+        builder.Property(a => a.RelativePath).HasMaxLength(ScreenshotRecord.RelativePathMaxLength);
+        builder.HasOne<Guide>().WithMany().HasForeignKey(a => a.GuideId);
+    }
+}
+
 internal sealed class BoardStateConfiguration : IEntityTypeConfiguration<BoardState>
 {
     public void Configure(EntityTypeBuilder<BoardState> builder)

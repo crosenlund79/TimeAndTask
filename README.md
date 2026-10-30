@@ -55,12 +55,12 @@ check-in attempt with its outcome; scheduled popups show a small countdown (paus
 | **Tasks** | Search-as-you-type by title, ticket ID (`42` finds `BUG-0042`) or client; edit on the right; archive tasks you no longer use |
 | **Clients** | Customers and internal work; deactivate instead of delete once tasks exist |
 | **Lists** | Task systems and communication channels: rename inline, hide, reorder, add |
-| **Settings** | Check-in interval, popup mode (focused/unobtrusive), position, auto-close, shortcut, theme |
+| **Settings** | Check-in interval, popup mode (focused/unobtrusive), position, auto-close, shortcut, theme, time registration reminders, automatic Board cards for new tasks |
 | **Board** | Kanban (Backlog, To do, In progress, Review / Test, Done): drag cards, open one to edit notes, links, dependencies, comments and screenshots; Archive; Backup & restore |
-| **Inbox** | Quick capture of thoughts, links and pasted screenshots; organise later ("To board", archive) |
-| **Guides** | Your how-tos grouped by category; search titles and text; added/modified dates, "Stale" after six months without changes |
+| **Tasks › Inbox** | Quick capture of thoughts, links and pasted screenshots (`Ctrl+Shift+C` from anywhere); organise later ("To board", archive) |
+| **Guides** | Your how-tos grouped by category; search titles and text; attached PDFs; added/modified dates, "Stale" after six months without changes |
 
-Keyboard: `Ctrl+1…8` switch pages · Board: `Alt+←/→/↑/↓` move the selected card · `Ctrl+Z` undo ·
+Keyboard: `Ctrl+1…7` switch pages · Board: `Alt+←/→/↑/↓` move the selected card · `Ctrl+Z` undo ·
 `Ctrl+Shift+C` capture · `Ctrl+V` pastes a screenshot into the open card · `Esc` closes it.
 Lists: `Ctrl+F` search · `↓` from search into the list · `Enter` edit ·
 `Ctrl+N` new · `Ctrl+S` save · `Esc` discard/clear · `Del` delete (offers archive/deactivate when in use).

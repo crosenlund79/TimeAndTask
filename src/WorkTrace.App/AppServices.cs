@@ -27,6 +27,7 @@ public static class AppServices
         services.AddSingleton<TrackingController>();
         services.AddSingleton<GlobalHotkey>();
         services.AddSingleton<SystemEventsBridge>();
+        services.AddSingleton<TimeReminderService>();
         services.AddSingleton<WorkTrace.Core.Tracking.ISessionStateProbe, SessionStateProbe>();
         services.AddTransient<CheckInViewModel>(); // the presenter creates popups untracked; registered for tests
 

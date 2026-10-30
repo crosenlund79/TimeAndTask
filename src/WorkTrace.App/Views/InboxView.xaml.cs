@@ -8,8 +8,18 @@ public partial class InboxView : UserControl
     public InboxView()
     {
         InitializeComponent();
-        Loaded += (_, _) => Capture.FocusBox();
+
+        // Embedded in the Tasks page: take focus only when shown, never while hidden behind the task list.
+        IsVisibleChanged += (_, e) =>
+        {
+            if (e.NewValue is true)
+            {
+                Capture.FocusBox();
+            }
+        };
     }
+
+    public void FocusCapture() => Capture.FocusBox();
 
     private void OnPagePreviewKeyDown(object sender, KeyEventArgs e)
     {

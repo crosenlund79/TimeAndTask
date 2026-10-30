@@ -561,7 +561,7 @@ public sealed partial class CardDetailViewModel : ViewModelBase, IDisposable
         {
             await RunAsync(async () =>
             {
-                var task = await _s.Tasks.CreateAsync(new TaskInput(clientId, null, Key, Title, null, null));
+                var task = await _s.Tasks.CreateAsync(new TaskInput(clientId, null, Key, Title, null, null, ShowOnBoard: false));
                 _s.Session.Record(await _s.Board.SetWorkTaskAsync(Id, task.Id), this);
                 await LoadPickersAsync();
                 Notifications.Show($"Task created for {Key}. Pick it in check-ins to track time.", NotificationKind.Success);

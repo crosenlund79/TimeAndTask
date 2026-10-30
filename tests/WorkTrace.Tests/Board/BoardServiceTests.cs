@@ -266,4 +266,28 @@ public class BoardServiceTests : ManagementTestBase
         Assert.Empty((await Board.GetCardAsync(a.Id, Ct)).Attachments);
         await Assert.ThrowsAsync<OperationNotAllowedException>(() => Board.AddAttachmentAsync(a.Id, "x.png", "image/png", [], cancellationToken: Ct));
     }
+
+    [Fact]
+    public async Task Tasks_GetALinkedCard_ThatFollowsShowOnBoard_AndKeepsItsColumn()
+    {
+        var clientId = await InternalClientIdAsync();
+        var task = await Tasks.CreateAsync(new TaskInput(clientId, null, null, "Invoice export", null, null), Ct);
+        Assert.True(task.IsOnBoard);
+        var card = Assert.Single(await Board.GetCardsAsync(new CardFilter(), Ct));
+        Assert.Equal((task.Id, "Invoice export"), (card.WorkTaskId, card.Title));
+
+        await Board.MoveAsync(card.Id, BoardStatus.Doing, null, cancellationToken: Ct);
+        var renamed = await Tasks.UpdateAsync(task.Id, new TaskInput(clientId, null, null, "Invoice export v2", null, null, ShowOnBoard: false), Ct);
+        Assert.False(renamed.IsOnBoard);
+        Assert.Empty(await Board.GetCardsAsync(new CardFilter(), Ct));
+
+        await Tasks.UpdateAsync(task.Id, new TaskInput(clientId, null, null, "Invoice export v2", null, null, ShowOnBoard: true), Ct);
+        var back = Assert.Single(await Board.GetCardsAsync(new CardFilter(), Ct));
+        Assert.Equal((card.Id, BoardStatus.Doing, "Invoice export v2"), (back.Id, back.Status, back.Title)); // same card, same column
+
+        var hidden = await Tasks.CreateAsync(new TaskInput(clientId, null, null, "Not on the board", null, null, ShowOnBoard: false), Ct);
+        Assert.False(hidden.IsOnBoard);
+        await Tasks.DeleteAsync(task.Id, Ct); // unused task: deleting it leaves an archived, unlinked card
+        Assert.Single(await Board.GetCardsAsync(new CardFilter(Archived: true), Ct));
+    }
 }

@@ -105,6 +105,54 @@
         </StackPanel>
       </Border>
 
+      <!-- Time registration reminders -->
+      <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+        <StackPanel>
+          <TextBlock Text="Time registration reminders" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+          <controls:SettingRow Header="Remind me to register my time"
+                               Description="During the period below, asks now and then &#x201C;Have you registered your time today?&#x201D; until you answer Yes or Remind me tomorrow.">
+            <CheckBox IsChecked="{Binding RemindersEnabled}" Content="On" AutomationProperties.Name="Time registration reminders" />
+          </controls:SettingRow>
+          <controls:SettingRow Header="Reminder period" Description="May cross midnight, e.g. 15:00 to 08:00 the next morning.">
+            <StackPanel>
+              <StackPanel Orientation="Horizontal">
+                <TextBox Width="70" Text="{Binding ReminderStart, UpdateSourceTrigger=LostFocus}" HorizontalContentAlignment="Center"
+                         AutomationProperties.Name="Reminder start time" />
+                <TextBlock Text="to" Margin="8,0" VerticalAlignment="Center" />
+                <TextBox Width="70" Text="{Binding ReminderEnd, UpdateSourceTrigger=LostFocus}" HorizontalContentAlignment="Center"
+                         AutomationProperties.Name="Reminder end time" />
+              </StackPanel>
+              <TextBlock Text="{Binding ReminderTimeError}" Style="{StaticResource ErrorText}" />
+            </StackPanel>
+          </controls:SettingRow>
+          <controls:SettingRow Header="Repeat" Description="After &#x201C;Not yet&#x201D; or an ignored reminder. No reminders while the PC is locked or nobody is at it.">
+            <ComboBox Width="180" ItemsSource="{Binding ReminderIntervalOptions}" DisplayMemberPath="Name"
+                      SelectedValuePath="Id" SelectedValue="{Binding ReminderIntervalMinutes}" AutomationProperties.Name="Reminder interval" />
+          </controls:SettingRow>
+          <controls:SettingRow Header="Sound">
+            <CheckBox IsChecked="{Binding ReminderPlaySound}" Content="On" AutomationProperties.Name="Reminder sound" />
+          </controls:SettingRow>
+          <controls:SettingRow Header="Remind me when shutting down Windows"
+                               Description="Windows does not allow a question while it shuts down, so WorkTrace asks the next time it starts. Exit from the tray asks right away.">
+            <CheckBox IsChecked="{Binding ShutdownReminder}" Content="On" AutomationProperties.Name="Shutdown reminder" />
+          </controls:SettingRow>
+          <controls:SettingRow Header="Try it" Description="Shows a reminder now; your answer is not recorded.">
+            <Button Content="Test reminder" Padding="12,5" Command="{Binding TestReminderCommand}" />
+          </controls:SettingRow>
+        </StackPanel>
+      </Border>
+
+      <!-- Board -->
+      <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+        <StackPanel>
+          <TextBlock Text="Board" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+          <controls:SettingRow Header="Automatically add tasks to Board"
+                               Description="New tasks get a linked card in To do. Each task's &#x201C;Show on Board&#x201D; can still be switched off. Time tracking never needs the Board.">
+            <CheckBox IsChecked="{Binding AutoAddTasksToBoard}" Content="On" AutomationProperties.Name="Automatically add tasks to Board" />
+          </controls:SettingRow>
+        </StackPanel>
+      </Border>
+
       <!-- General -->
       <Border Style="{StaticResource Card}" Margin="0,16,0,0">
         <StackPanel>

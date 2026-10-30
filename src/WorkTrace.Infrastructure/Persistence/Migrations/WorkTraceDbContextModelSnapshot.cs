@@ -513,6 +513,38 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                     b.ToTable("Guides", (string)null);
                 });
 
+            modelBuilder.Entity("WorkTrace.Core.Entities.GuideAttachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("GuideId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RelativePath")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuideId");
+
+                    b.ToTable("GuideAttachments", (string)null);
+                });
+
             modelBuilder.Entity("WorkTrace.Core.Entities.LockPeriod", b =>
                 {
                     b.Property<int>("Id")
@@ -895,6 +927,15 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Observation");
+                });
+
+            modelBuilder.Entity("WorkTrace.Core.Entities.GuideAttachment", b =>
+                {
+                    b.HasOne("WorkTrace.Core.Entities.Guide", null)
+                        .WithMany()
+                        .HasForeignKey("GuideId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("WorkTrace.Core.Entities.ManualAllocation", b =>

@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:WorkTrace.App.ViewModels"
+             xmlns:views="clr-namespace:WorkTrace.App.Views"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
              d:DataContext="{d:DesignInstance Type=vm:TasksViewModel}">
 
@@ -23,14 +24,30 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
-    <!-- Header -->
-    <StackPanel>
-      <TextBlock Text="Tasks" Style="{StaticResource PageTitleText}" />
-      <TextBlock Style="{StaticResource PageSubtitleText}" Text="Reusable work items. Type a title, ticket number or client to find one." />
-    </StackPanel>
+    <!-- Header: Tasks and the Inbox (captured notes) share this page -->
+    <DockPanel>
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+        <ToggleButton Padding="14,5" Command="{Binding ShowTasksViewCommand}"
+                      IsChecked="{Binding ShowInbox, Converter={StaticResource InverseBool}, Mode=OneWay}" Content="Tasks" />
+        <ToggleButton Padding="14,5" Margin="6,0,0,0" Command="{Binding ShowInboxViewCommand}" IsChecked="{Binding ShowInbox, Mode=OneWay}"
+                      ToolTip="Captured notes, links and screenshots (Ctrl+Shift+C captures from anywhere)">
+          <TextBlock>
+            <Run Text="Inbox" /> <Run Text="{Binding Inbox.Items.Count, Mode=OneWay}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+          </TextBlock>
+        </ToggleButton>
+      </StackPanel>
+      <StackPanel>
+        <TextBlock Text="Tasks" Style="{StaticResource PageTitleText}" />
+        <TextBlock Style="{StaticResource PageSubtitleText}" Text="Reusable work items. Type a title, ticket number or client to find one." />
+      </StackPanel>
+    </DockPanel>
+
+    <!-- Inbox view -->
+    <views:InboxView x:Name="InboxPanel" Grid.Row="1" Grid.RowSpan="2" Margin="0,14,0,0" DataContext="{Binding Inbox}"
+                     Visibility="{Binding DataContext.ShowInbox, RelativeSource={RelativeSource AncestorType=UserControl, AncestorLevel=1}, Converter={StaticResource BoolToVisibility}}" />
 
     <!-- Toolbar -->
-    <Grid Grid.Row="1" Margin="0,18,0,14">
+    <Grid Grid.Row="1" Margin="0,18,0,14" Visibility="{Binding ShowInbox, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*" MaxWidth="420" />
         <ColumnDefinition Width="Auto" />
@@ -74,7 +91,7 @@
       </Button>
     </Grid>
 
-    <Grid Grid.Row="2">
+    <Grid Grid.Row="2" Visibility="{Binding ShowInbox, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="3*" MinWidth="300" />
         <ColumnDefinition Width="16" />
@@ -266,6 +283,9 @@
                          MinHeight="72" MaxHeight="200" VerticalScrollBarVisibility="Auto" MaxLength="8000"
                          AutomationProperties.Name="Notes" />
                 <TextBlock Text="{Binding NotesError}" Style="{StaticResource ErrorText}" />
+
+                <CheckBox Content="Show on Board" IsChecked="{Binding ShowOnBoard}" Margin="0,14,0,0"
+                          ToolTip="Off takes the task's card off the Board (archived); the task and its recorded time stay. On brings the same card back." />
               </StackPanel>
             </ScrollViewer>
 

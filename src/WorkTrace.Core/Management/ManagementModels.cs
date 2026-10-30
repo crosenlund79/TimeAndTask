@@ -10,7 +10,8 @@ public sealed record TaskInput(
     string? ExternalId,
     string? Title,
     string? Notes,
-    int? DefaultChannelId);
+    int? DefaultChannelId,
+    bool? ShowOnBoard = null);
 
 // ---- Read models (what lists and pickers show) ----
 
@@ -40,7 +41,8 @@ public sealed record TaskSummary(
     bool IsArchived,
     DateTime CreatedAtUtc,
     DateTime ModifiedAtUtc,
-    DateTime? LastUsedAtUtc);
+    DateTime? LastUsedAtUtc,
+    bool IsOnBoard = false);
 
 public enum LookupKind
 {

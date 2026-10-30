@@ -8,6 +8,13 @@ using WorkTrace.Core.Guides;
 
 namespace WorkTrace.App.ViewModels;
 
+/// <summary>A file attached to the open guide.</summary>
+public sealed record GuideFileViewModel(GuideAttachmentItem Item)
+{
+    public string Info => (Item.SizeBytes < 1024 * 1024 ? $"{Math.Max(1, Item.SizeBytes / 1024)} KB" : $"{Item.SizeBytes / (1024.0 * 1024):0.0} MB")
+        + $" · added {CardText.Date(Item.CreatedAtUtc)}";
+}
+
 /// <summary>A row in the guide list, grouped by category.</summary>
 public sealed class GuideItemViewModel(GuideSummary summary, DateTime nowUtc)
 {
@@ -33,6 +40,7 @@ public sealed class GuideItemViewModel(GuideSummary summary, DateTime nowUtc)
 public sealed partial class GuidesViewModel(
     IGuideService guides,
     IDialogService dialogs,
+    IFileDialogService files,
     INotificationService notifications,
     TimeProvider timeProvider,
     ILogger<GuidesViewModel> logger) : ViewModelBase(notifications, logger), ISectionViewModel, IDisposable
@@ -52,6 +60,8 @@ public sealed partial class GuidesViewModel(
     public ObservableCollection<string> CategoryFilterOptions { get; } = [AllCategories];
 
     public ObservableCollection<string> Categories { get; } = [];
+
+    public ObservableCollection<GuideFileViewModel> Attachments { get; } = [];
 
     [ObservableProperty]
     public partial string? SearchText { get; set; }
@@ -181,6 +191,12 @@ public sealed partial class GuidesViewModel(
         Content = guide?.Content ?? "";
         Dates = guide is null ? null : $"Added {CardText.DateTime(guide.CreatedAtUtc)} · modified {CardText.DateTime(guide.ModifiedAtUtc)}";
         SaveState = guide is null ? null : "Saved";
+        Attachments.Clear();
+        foreach (var a in guide?.Attachments ?? [])
+        {
+            Attachments.Add(new GuideFileViewModel(a));
+        }
+
         _dirty = false;
         _loading = false;
     }
@@ -218,6 +234,47 @@ public sealed partial class GuidesViewModel(
 
     [RelayCommand]
     private void ClearSearch() => SearchText = null;
+
+    // ---- PDF attachments ----
+
+    [RelayCommand]
+    private async Task AttachPdfAsync()
+    {
+        if (Guide is not { } guide)
+        {
+            return;
+        }
+
+        foreach (var path in files.OpenFiles("Attach PDF documents", "PDF documents (*.pdf)|*.pdf|All files|*.*"))
+        {
+            if (await RunAsync(async () => Attachments.Add(new GuideFileViewModel(await guides.AddAttachmentAsync(guide.Id, path))), "Could not attach the file."))
+            {
+                Notifications.Show($"Attached {System.IO.Path.GetFileName(path)}.", NotificationKind.Success);
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void OpenAttachment(GuideFileViewModel file)
+    {
+        if (!System.IO.File.Exists(file.Item.FullPath))
+        {
+            Notifications.Show($"{file.Item.FileName} is missing from the data folder.", NotificationKind.Warning);
+            return;
+        }
+
+        files.OpenFile(file.Item.FullPath);
+    }
+
+    [RelayCommand]
+    private async Task RemoveAttachmentAsync(GuideFileViewModel file)
+    {
+        if (dialogs.Confirm("Remove attachment", $"Remove {file.Item.FileName} from this guide? The copy in WorkTrace's data folder is deleted.", "Remove", destructive: true)
+            && await RunAsync(() => guides.RemoveAttachmentAsync(file.Item.Id), "Could not remove the attachment."))
+        {
+            Attachments.Remove(file);
+        }
+    }
 
     // ---- Auto-save ----
 

@@ -12,7 +12,7 @@ internal sealed class WindowManager(IServiceProvider services)
     public void ShowMainWindow() => ShowMainWindow(null);
 
     /// <summary>Shows the main window, optionally switching to <paramref name="section"/>.</summary>
-    public void ShowMainWindow(AppSection? section)
+    public void ShowMainWindow(AppSection? section, object? parameter = null)
     {
         if (_mainWindow is null)
         {
@@ -22,7 +22,7 @@ internal sealed class WindowManager(IServiceProvider services)
 
         if (section is { } target)
         {
-            _mainWindow.ViewModel.NavigateTo(target);
+            _mainWindow.ViewModel.NavigateTo(target, parameter);
         }
         else if (_mainWindow.ViewModel.SelectedSection is null)
         {

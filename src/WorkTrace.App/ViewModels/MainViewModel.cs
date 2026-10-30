@@ -18,7 +18,6 @@ public sealed partial class MainViewModel : ObservableObject
         ListsViewModel lists,
         SettingsViewModel settings,
         BoardViewModel board,
-        InboxViewModel inbox,
         GuidesViewModel guides,
         INavigationService navigation,
         NotificationService notifications)
@@ -31,8 +30,7 @@ public sealed partial class MainViewModel : ObservableObject
             new(AppSection.Clients, "Clients", "", "Ctrl+3", clients),
             new(AppSection.Lists, "Lists", "", "Ctrl+4", lists),
             new(AppSection.Board, "Board", "\uE8A9", "Ctrl+6", board),
-            new(AppSection.Inbox, "Inbox", "\uE70B", "Ctrl+7", inbox),
-            new(AppSection.Guides, "Guides", "\uE82D", "Ctrl+8", guides),
+            new(AppSection.Guides, "Guides", "\uE82D", "Ctrl+7", guides),
             new(AppSection.Settings, "Settings", "\uE713", "Ctrl+5", settings),
         ];
         navigation.NavigationRequested += (_, request) => NavigateTo(request.Section, request.Parameter);
@@ -60,6 +58,10 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void GoToSection(AppSection section) => NavigateTo(section);
+
+    /// <summary>Ctrl+Shift+C anywhere in the window: Tasks › Inbox, cursor in the capture box.</summary>
+    [RelayCommand]
+    private void QuickCapture() => NavigateTo(AppSection.Tasks, new CaptureRequest());
 
     partial void OnSelectedSectionChanging(NavigationItem? oldValue, NavigationItem? newValue)
     {

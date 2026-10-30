@@ -29,11 +29,8 @@
     <DockPanel>
       <Button DockPanel.Dock="Right" VerticalAlignment="Top" Style="{StaticResource IconButton}" Content="&#xE7A7;" Command="{Binding UndoCommand}"
               ToolTip="{Binding Session.UndoToolTip}" IsEnabled="{Binding Session.CanUndo}" AutomationProperties.Name="Undo" />
-      <StackPanel>
-        <TextBlock Text="Inbox" Style="{StaticResource PageTitleText}" />
-        <TextBlock Style="{StaticResource PageSubtitleText}"
-                   Text="Capture first, organise later. Open an item to add notes, links or screenshots, then put it on the board or archive it." />
-      </StackPanel>
+      <TextBlock Style="{StaticResource PageSubtitleText}" VerticalAlignment="Center"
+                 Text="Capture first, organise later. Open an item to add notes, links or screenshots, then put it on the Board or archive it." />
     </DockPanel>
 
     <views:CaptureBar x:Name="Capture" Grid.Row="1" Margin="0,14,0,0" />

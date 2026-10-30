@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using WorkTrace.App.Shell;
 using WorkTrace.Core.Common;
 using WorkTrace.Core.Management;
+using WorkTrace.Core.Settings;
 using WorkTrace.Core.Validation;
 
 namespace WorkTrace.App.ViewModels;
@@ -24,6 +25,7 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
     private readonly ILookupService _lookups;
     private readonly IDialogService _dialogs;
     private readonly TimeProvider _timeProvider;
+    private readonly ISettingsStore _settings;
 
     private IReadOnlyList<PickerOption> _clientOptions = [];
     private IReadOnlyList<PickerOption> _systemOptions = [];
@@ -39,9 +41,13 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         IDialogService dialogs,
         INotificationService notifications,
         TimeProvider timeProvider,
+        ISettingsStore settings,
+        InboxViewModel inbox,
         ILogger<TasksViewModel> logger)
         : base(notifications, logger)
     {
+        _settings = settings;
+        Inbox = inbox;
         _tasks = tasks;
         _clients = clients;
         _lookups = lookups;
@@ -53,6 +59,37 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
     public event EventHandler? EditorFocusRequested;
 
     public ObservableCollection<TaskItemViewModel> Items { get; } = [];
+
+    /// <summary>Captured notes and ideas (Board Inbox), shown as a second view of this page.</summary>
+    public InboxViewModel Inbox { get; }
+
+    [ObservableProperty]
+    public partial bool ShowInbox { get; set; }
+
+    /// <summary>Raised when the view should put the cursor in the Inbox capture box.</summary>
+    public event EventHandler? CaptureFocusRequested;
+
+    partial void OnShowInboxChanged(bool value)
+    {
+        if (value)
+        {
+            _ = Inbox.ActivateAsync(null);
+        }
+    }
+
+    [RelayCommand]
+    private void ShowTasksView()
+    {
+        ShowInbox = false;
+        OnPropertyChanged(nameof(ShowInbox)); // re-sync the toggle buttons after a click on the active one
+    }
+
+    [RelayCommand]
+    private void ShowInboxView()
+    {
+        ShowInbox = true;
+        OnPropertyChanged(nameof(ShowInbox));
+    }
 
     public ObservableCollection<PickerOption> ClientFilterOptions { get; } = [];
 
@@ -107,7 +144,15 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
 
         if (parameter is CreateNewRequest)
         {
+            ShowInbox = false;
             NewTask();
+        }
+
+        await Inbox.ReloadAsync(); // keeps the Inbox count current
+        if (parameter is CaptureRequest)
+        {
+            ShowInbox = true;
+            CaptureFocusRequested?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -305,6 +350,7 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         rebuilt.Title = input.Title;
         rebuilt.Notes = input.Notes;
         rebuilt.DefaultChannelId = input.DefaultChannelId;
+        rebuilt.ShowOnBoard = input.ShowOnBoard ?? rebuilt.ShowOnBoard;
         SetEditor(rebuilt);
         Notifications.Show($"Client “{created.Name}” created.", NotificationKind.Success);
     }
@@ -422,7 +468,7 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
     }
 
     private TaskEditorViewModel CreateEditor(TaskSummary? existing, int? defaultClientId = null) =>
-        new(existing, defaultClientId, _clientOptions, _systemOptions, _channelOptions);
+        new(existing, defaultClientId, _clientOptions, _systemOptions, _channelOptions, _settings.Current.Board.AutoAddTasks);
 
     private void SetEditor(TaskEditorViewModel? editor)
     {

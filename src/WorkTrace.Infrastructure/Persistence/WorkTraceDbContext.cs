@@ -51,6 +51,8 @@ public sealed class WorkTraceDbContext(DbContextOptions<WorkTraceDbContext> opti
 
     public DbSet<Guide> Guides => Set<Guide>();
 
+    public DbSet<GuideAttachment> GuideAttachments => Set<GuideAttachment>();
+
     public override int SaveChanges(bool acceptAllChangesOnSuccess) =>
         SaveChangesAsync(acceptAllChangesOnSuccess).GetAwaiter().GetResult();
 

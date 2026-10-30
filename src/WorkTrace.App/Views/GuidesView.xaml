@@ -126,6 +126,7 @@
               <RowDefinition Height="Auto" />
               <RowDefinition Height="Auto" />
               <RowDefinition Height="*" />
+              <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <DockPanel>
               <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE74D;" ToolTip="Delete guide"
@@ -150,6 +151,42 @@
             <TextBox Grid.Row="2" Text="{Binding Content, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" AcceptsTab="True"
                      TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top"
                      AutomationProperties.Name="Guide text" />
+
+            <!-- Attached PDFs -->
+            <StackPanel Grid.Row="3" Margin="0,12,0,0">
+              <DockPanel>
+                <Button DockPanel.Dock="Right" Style="{StaticResource SubtleButton}" Command="{Binding AttachPdfCommand}" ToolTip="Attach one or more PDF files">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE723;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,6,0" />
+                    <TextBlock Text="Attach PDF…" />
+                  </StackPanel>
+                </Button>
+                <TextBlock Text="Attachments" Style="{StaticResource FieldLabelText}" Margin="0" VerticalAlignment="Center" />
+              </DockPanel>
+              <ItemsControl ItemsSource="{Binding Attachments}" Margin="0,6,0,0" MaxHeight="160" AutomationProperties.Name="Attachments">
+                <ItemsControl.Template>
+                  <ControlTemplate TargetType="ItemsControl">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                      <ItemsPresenter />
+                    </ScrollViewer>
+                  </ControlTemplate>
+                </ItemsControl.Template>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:GuideFileViewModel}">
+                    <DockPanel Margin="0,0,0,2">
+                      <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Width="28" Height="28" Content="&#xE74D;" ToolTip="Remove"
+                              Command="{Binding DataContext.RemoveAttachmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                      <TextBlock Text="&#xEA90;" Style="{StaticResource IconText}" Margin="0,0,8,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                      <StackPanel VerticalAlignment="Center">
+                        <Button Style="{StaticResource LinkButton}" Content="{Binding Item.FileName}" HorizontalAlignment="Left" ToolTip="Open in the default PDF viewer"
+                                Command="{Binding DataContext.OpenAttachmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                        <TextBlock Text="{Binding Info}" Style="{StaticResource CaptionText}" FontSize="11" />
+                      </StackPanel>
+                    </DockPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
           </Grid>
         </Grid>
       </Border>

@@ -85,7 +85,25 @@ public partial class App : Application, IAppLifetime
         }
     }
 
-    public void RequestExit() => ShutdownCore(exitCode: 0);
+    public void RequestExit() => _ = ExitAsync();
+
+    /// <summary>Exit from the tray: the optional "registered your time?" question first, then a normal shutdown.</summary>
+    private async Task ExitAsync()
+    {
+        try
+        {
+            if (_host?.Services.GetService<TimeReminderService>() is { } reminders)
+            {
+                await reminders.AskBeforeExitAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Exit reminder failed");
+        }
+
+        ShutdownCore(exitCode: 0);
+    }
 
     private void StartTracking(IServiceProvider services, TrayIconService tray, WorkTraceSettings settings)
     {
@@ -102,6 +120,10 @@ public partial class App : Application, IAppLifetime
 
         services.GetRequiredService<SystemEventsBridge>().Start();
         _ = StartEngineAsync(services.GetRequiredService<TrackingEngine>());
+
+        var reminders = services.GetRequiredService<TimeReminderService>();
+        reminders.Start();
+        _ = reminders.AskAfterShutdownAsync();
     }
 
     private async Task StartEngineAsync(TrackingEngine engine)
@@ -135,6 +157,9 @@ public partial class App : Application, IAppLifetime
         // the open tracking segment is closed with an accurate end time).
         _logger?.LogInformation("Windows session ending ({Reason})", e.ReasonSessionEnding);
         base.OnSessionEnding(e);
+
+        // Never delays or cancels the shutdown: an outstanding time registration is asked about at the next start.
+        _host?.Services.GetService<TimeReminderService>()?.OnSessionEnding();
         ShutdownCore(exitCode: 0);
     }
 
@@ -192,6 +217,7 @@ public partial class App : Application, IAppLifetime
             }
 
             _host?.Services.GetService<SystemEventsBridge>()?.Dispose();
+            _host?.Services.GetService<TimeReminderService>()?.Dispose();
             _host?.Services.GetService<GlobalHotkey>()?.Dispose();
             _host?.Services.GetService<WindowManager>()?.CloseAll();
             _host?.Services.GetService<TrayIconService>()?.Dispose();

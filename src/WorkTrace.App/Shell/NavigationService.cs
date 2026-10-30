@@ -23,3 +23,6 @@ public sealed record ClientTasksFilter(int ClientId);
 
 /// <summary>Navigation parameter: start creating a new item in the target section.</summary>
 public sealed record CreateNewRequest;
+
+/// <summary>Navigation parameter (Tasks): show the Inbox with the cursor in the quick-capture box.</summary>
+public sealed record CaptureRequest;

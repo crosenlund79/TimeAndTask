@@ -17,12 +17,14 @@ public sealed partial class TaskEditorViewModel : ObservableObject
         int? defaultClientId,
         IReadOnlyList<PickerOption> clients,
         IReadOnlyList<PickerOption> taskSystems,
-        IReadOnlyList<PickerOption> channels)
+        IReadOnlyList<PickerOption> channels,
+        bool showNewTasksOnBoard = true)
     {
         Existing = existing;
         _original = existing is null
-            ? new TaskInput(defaultClientId, null, null, null, null, null)
-            : new TaskInput(existing.ClientId, existing.TaskSystemId, existing.ExternalId, existing.Title, existing.Notes, existing.DefaultChannelId);
+            ? new TaskInput(defaultClientId, null, null, null, null, null, showNewTasksOnBoard)
+            : new TaskInput(existing.ClientId, existing.TaskSystemId, existing.ExternalId, existing.Title, existing.Notes, existing.DefaultChannelId, existing.IsOnBoard);
+        ShowOnBoard = _original.ShowOnBoard ?? true;
 
         ClientId = _original.ClientId;
         TaskSystemId = _original.TaskSystemId;
@@ -89,6 +91,11 @@ public sealed partial class TaskEditorViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsDirty))]
     public partial int? DefaultChannelId { get; set; }
 
+    /// <summary>The task has a card on the Board (off = card archived; the task and its time are untouched).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDirty))]
+    public partial bool ShowOnBoard { get; set; }
+
     /// <summary>
     /// ComboBox-friendly key for <see cref="TaskSystemId"/> (0 = none). A null write is a transient
     /// ComboBox state (items being replaced), never a user choice, and is ignored.
@@ -149,7 +156,7 @@ public sealed partial class TaskEditorViewModel : ObservableObject
 
     public string CreateClientLabel => $"Create client “{Text.Clean(ClientText)}”";
 
-    public TaskInput ToInput() => new(ClientId, TaskSystemId, ExternalId, Title, Notes, DefaultChannelId);
+    public TaskInput ToInput() => new(ClientId, TaskSystemId, ExternalId, Title, Notes, DefaultChannelId, ShowOnBoard);
 
     public void ApplyErrors(ValidationErrors errors)
     {
@@ -185,6 +192,7 @@ public sealed partial class TaskEditorViewModel : ObservableObject
         a.ClientId == b.ClientId
         && a.TaskSystemId == b.TaskSystemId
         && a.DefaultChannelId == b.DefaultChannelId
+        && a.ShowOnBoard == b.ShowOnBoard
         && Text.Clean(a.ExternalId) == Text.Clean(b.ExternalId)
         && Text.Clean(a.Title) == Text.Clean(b.Title)
         && Text.Clean(a.Notes) == Text.Clean(b.Notes);

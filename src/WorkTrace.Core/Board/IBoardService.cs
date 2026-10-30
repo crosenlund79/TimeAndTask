@@ -50,6 +50,17 @@ public interface IBoardService
     /// <exception cref="Validation.OperationNotAllowedException">The card changed since the edit.</exception>
     Task<CardEdit> UndoAsync(CardEdit edit, CancellationToken cancellationToken = default);
 
+    // ---- Cards of time-tracking tasks (time tracking never depends on these) ----
+
+    /// <summary>
+    /// Shows the task's linked card on the board (restoring an archived one, so its column and history are kept,
+    /// or creating one in To do) or takes it off the board (archives it). Nothing happens to the task or its time.
+    /// </summary>
+    Task SetTaskOnBoardAsync(int taskId, bool onBoard, CancellationToken cancellationToken = default);
+
+    /// <summary>Keeps the titles of the task's linked cards equal to the task title.</summary>
+    Task SyncTaskTitleAsync(int taskId, CancellationToken cancellationToken = default);
+
     // ---- Attachments ----
 
     /// <summary>Copies the bytes into the data directory and attaches them to the card.</summary>

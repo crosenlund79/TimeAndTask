@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using WorkTrace.Core.Board;
 using WorkTrace.Core.Common;
 using WorkTrace.Core.Entities;
 using WorkTrace.Core.Management;
+using WorkTrace.Core.Settings;
 using WorkTrace.Core.Validation;
 using WorkTrace.Infrastructure.Persistence;
 
@@ -11,6 +13,8 @@ namespace WorkTrace.Infrastructure.Management;
 internal sealed class TaskService(
     IDbContextFactory<WorkTraceDbContext> contextFactory,
     TimeProvider timeProvider,
+    IBoardService board,
+    ISettingsStore settings,
     ILogger<TaskService> logger) : ITaskService
 {
     public async Task<IReadOnlyList<TaskSummary>> SearchAsync(TaskQuery query, CancellationToken cancellationToken = default)
@@ -36,14 +40,14 @@ internal sealed class TaskService(
 
         // A personal task list is small (hundreds to a few thousand rows): rank in memory so matching
         // can be accent-insensitive and deterministic, which SQLite LIKE cannot provide.
-        var candidates = await Summaries(tasks).ToListAsync(cancellationToken);
+        var candidates = await Summaries(db, tasks).ToListAsync(cancellationToken);
         return TaskSearch.Rank(candidates, query.Text, UtcTime.Now(timeProvider), query.Limit);
     }
 
     public async Task<TaskSummary> GetAsync(int id, CancellationToken cancellationToken = default)
     {
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
-        return await Summaries(db.Tasks.Where(t => t.Id == id)).SingleOrDefaultAsync(cancellationToken)
+        return await Summaries(db, db.Tasks.Where(t => t.Id == id)).SingleOrDefaultAsync(cancellationToken)
             ?? throw new EntityNotFoundException("Task", id);
     }
 
@@ -64,6 +68,11 @@ internal sealed class TaskService(
         db.Tasks.Add(task);
         await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Task {TaskId} created", task.Id);
+        if (input.ShowOnBoard ?? settings.Current.Board.AutoAddTasks)
+        {
+            await BoardAsync(task.Id, b => b.SetTaskOnBoardAsync(task.Id, true, cancellationToken));
+        }
+
         return await GetAsync(task.Id, cancellationToken);
     }
 
@@ -75,6 +84,12 @@ internal sealed class TaskService(
 
         Apply(task, input);
         await SaveIfChangedAsync(db, task, cancellationToken);
+        await BoardAsync(id, b => b.SyncTaskTitleAsync(id, cancellationToken));
+        if (input.ShowOnBoard is { } onBoard)
+        {
+            await BoardAsync(id, b => b.SetTaskOnBoardAsync(id, onBoard, cancellationToken));
+        }
+
         return await GetAsync(id, cancellationToken);
     }
 
@@ -89,6 +104,11 @@ internal sealed class TaskService(
 
         task.IsArchived = isArchived;
         await SaveIfChangedAsync(db, task, cancellationToken);
+        if (isArchived)
+        {
+            await BoardAsync(id, b => b.SetTaskOnBoardAsync(id, false, cancellationToken));
+        }
+
         logger.LogInformation("Task {TaskId} {State}", id, isArchived ? "archived" : "restored");
         return await GetAsync(id, cancellationToken);
     }
@@ -102,7 +122,7 @@ internal sealed class TaskService(
         }
 
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
-        var sameClient = await Summaries(db.Tasks.Where(t =>
+        var sameClient = await Summaries(db, db.Tasks.Where(t =>
                 t.ClientId == input.ClientId && t.TaskSystemId == input.TaskSystemId && t.Id != excludeTaskId && t.ExternalId != null))
             .ToListAsync(cancellationToken);
         return [.. sameClient.Where(t => Text.SameName(t.ExternalId, externalId)).OrderBy(t => t.Id)];
@@ -123,6 +143,9 @@ internal sealed class TaskService(
             throw new OperationNotAllowedException("This task has recorded time and is kept for history. Archive it instead.");
         }
 
+        // Its board card (if any) stays as an archived, unlinked card.
+        await BoardAsync(id, b => b.SetTaskOnBoardAsync(id, false, cancellationToken));
+        await db.BoardCards.Where(c => c.WorkTaskId == id).ExecuteUpdateAsync(s => s.SetProperty(c => c.WorkTaskId, (int?)null), cancellationToken);
         db.Tasks.Remove(task);
         await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Task {TaskId} deleted", id);
@@ -139,6 +162,19 @@ internal sealed class TaskService(
         if (updated == 0)
         {
             throw new EntityNotFoundException("Task", id);
+        }
+    }
+
+    /// <summary>The Board is optional: a failure there is logged and never breaks time tracking.</summary>
+    private async Task BoardAsync(int taskId, Func<IBoardService, Task> action)
+    {
+        try
+        {
+            await action(board);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning(ex, "Board card of task {TaskId} could not be updated", taskId);
         }
     }
 
@@ -213,7 +249,7 @@ internal sealed class TaskService(
         await db.Tasks.SingleOrDefaultAsync(t => t.Id == id, cancellationToken)
         ?? throw new EntityNotFoundException("Task", id);
 
-    private static IQueryable<TaskSummary> Summaries(IQueryable<WorkTask> tasks) =>
+    private static IQueryable<TaskSummary> Summaries(WorkTraceDbContext db, IQueryable<WorkTask> tasks) =>
         tasks.Select(t => new TaskSummary(
             t.Id,
             t.ClientId,
@@ -229,5 +265,6 @@ internal sealed class TaskService(
             t.IsArchived,
             t.CreatedAtUtc,
             t.ModifiedAtUtc,
-            t.LastUsedAtUtc));
+            t.LastUsedAtUtc,
+            db.BoardCards.Any(c => c.WorkTaskId == t.Id && !c.IsArchived)));
 }

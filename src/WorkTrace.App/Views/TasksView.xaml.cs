@@ -24,14 +24,18 @@ public partial class TasksView : UserControl
         if (_viewModel is not null)
         {
             _viewModel.EditorFocusRequested -= OnEditorFocusRequested;
+            _viewModel.CaptureFocusRequested -= OnCaptureFocusRequested;
         }
 
         _viewModel = viewModel;
         if (_viewModel is not null)
         {
             _viewModel.EditorFocusRequested += OnEditorFocusRequested;
+            _viewModel.CaptureFocusRequested += OnCaptureFocusRequested;
         }
     }
+
+    private void OnCaptureFocusRequested(object? sender, EventArgs e) => InboxPanel.FocusCapture();
 
     private void OnEditorFocusRequested(object? sender, EventArgs e) => ListNavigation.FocusSoon(TitleBox, selectAll: true);
 

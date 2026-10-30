@@ -8,6 +8,5 @@ public enum AppSection
     Lists,
     Settings,
     Board,
-    Inbox,
     Guides,
 }

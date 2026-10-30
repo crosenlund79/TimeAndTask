@@ -18,6 +18,10 @@ public sealed class WorkTraceSettings
 
     public ReportingSettings Reporting { get; set; } = new();
 
+    public BoardSettings Board { get; set; } = new();
+
+    public ReminderSettings Reminders { get; set; } = new();
+
     /// <summary>Deep copy, so editors can change settings without touching <see cref="ISettingsStore.Current"/>.</summary>
     public WorkTraceSettings Clone() =>
         System.Text.Json.JsonSerializer.Deserialize<WorkTraceSettings>(System.Text.Json.JsonSerializer.Serialize(this))!;
@@ -27,7 +31,7 @@ public sealed class WorkTraceSettings
     {
         var errors = new List<string>();
 
-        if (General is null || Tracking is null || Screenshots is null || Reporting is null)
+        if (General is null || Tracking is null || Screenshots is null || Reporting is null || Board is null || Reminders is null)
         {
             errors.Add("All settings groups must be present.");
             return errors;
@@ -42,6 +46,7 @@ public sealed class WorkTraceSettings
             errors.Add("Tracking.MaxEstimationHorizonMinutes must be at least the check-in interval.");
         }
 
+        Range(errors, "Reminders.IntervalMinutes", Reminders.IntervalMinutes, ReminderSettings.MinIntervalMinutes, ReminderSettings.MaxIntervalMinutes);
         Range(errors, "Screenshots.CaptureIntervalMinutes", Screenshots.CaptureIntervalMinutes, 1, 240);
         Range(errors, "Screenshots.RetentionDays", Screenshots.RetentionDays, 1, 3650);
         Range(errors, "Screenshots.JpegQuality", Screenshots.JpegQuality, 1, 100);
@@ -193,4 +198,40 @@ public sealed class ReportingSettings
 
     /// <summary>0 = no rounding.</summary>
     public int RoundingMinutes { get; set; }
+}
+
+public sealed class BoardSettings
+{
+    /// <summary>New tasks get a linked Board card (each task's "Show on Board" can still be switched off).</summary>
+    public bool AutoAddTasks { get; set; } = true;
+}
+
+/// <summary>"Have you registered your time today?" reminders. The answer state lives here so it survives restarts.</summary>
+public sealed class ReminderSettings
+{
+    public const int MinIntervalMinutes = 5;
+    public const int MaxIntervalMinutes = 480;
+
+    public bool Enabled { get; set; }
+
+    /// <summary>Local time the reminder period starts; may be after <see cref="End"/> (period crosses midnight).</summary>
+    public TimeOnly Start { get; set; } = new(15, 0);
+
+    public TimeOnly End { get; set; } = new(8, 0);
+
+    public int IntervalMinutes { get; set; } = 60;
+
+    public bool PlaySound { get; set; }
+
+    /// <summary>Best-effort reminder when Windows shuts down or signs out (shown at the next start, see docs).</summary>
+    public bool OnShutdown { get; set; }
+
+    /// <summary>Working day (the date its reminder period started) already answered "done" or "remind me tomorrow".</summary>
+    public DateOnly? DoneForDay { get; set; }
+
+    /// <summary>No reminder before this time (set when one is shown or answered "Not yet").</summary>
+    public DateTime? NotBeforeUtc { get; set; }
+
+    /// <summary>Windows shut down on this day while time registration was outstanding: ask at the next start.</summary>
+    public DateOnly? AskAfterShutdownForDay { get; set; }
 }

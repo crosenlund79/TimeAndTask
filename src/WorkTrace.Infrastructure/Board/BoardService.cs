@@ -128,7 +128,8 @@ internal sealed partial class BoardService(
     public Task<CardDetail> CreateAsync(CardFields fields, BoardStatus status, CancellationToken cancellationToken = default) =>
         CreateCoreAsync(fields, status, [], cancellationToken);
 
-    private async Task<CardDetail> CreateCoreAsync(CardFields fields, BoardStatus status, IReadOnlyList<LinkInput> links, CancellationToken cancellationToken)
+    private async Task<CardDetail> CreateCoreAsync(
+        CardFields fields, BoardStatus status, IReadOnlyList<LinkInput> links, CancellationToken cancellationToken, int? workTaskId = null)
     {
         ArgumentNullException.ThrowIfNull(fields);
         BoardRules.Validate(fields).ThrowIfInvalid();
@@ -146,6 +147,7 @@ internal sealed partial class BoardService(
             SortOrder = (last ?? 0) + BoardRules.SortStep,
             CreatedAtUtc = now,
             ModifiedAtUtc = now,
+            WorkTaskId = workTaskId,
         };
         ApplyFields(card, fields);
         card.Links.AddRange(links.Select((l, i) => new BoardLink { Position = i, Label = l.Label!, Url = l.Url! }));
@@ -164,6 +166,75 @@ internal sealed partial class BoardService(
         state.NextNumber = number + 1;
         return number;
     }
+
+    // ---- Cards of time-tracking tasks ----
+
+    public async Task SetTaskOnBoardAsync(int taskId, bool onBoard, CancellationToken cancellationToken = default)
+    {
+        List<(int Id, bool IsArchived)> cards;
+        string title;
+        await using (var db = await contextFactory.CreateDbContextAsync(cancellationToken))
+        {
+            title = await db.Tasks.Where(t => t.Id == taskId).Select(t => t.Title).SingleOrDefaultAsync(cancellationToken)
+                ?? throw new EntityNotFoundException("Task", taskId);
+            cards = [.. (await db.BoardCards.Where(c => c.WorkTaskId == taskId).OrderByDescending(c => c.ModifiedAtUtc)
+                .Select(c => new { c.Id, c.IsArchived }).ToListAsync(cancellationToken)).Select(c => (c.Id, c.IsArchived))];
+        }
+
+        if (!onBoard)
+        {
+            // Off the board = archived: the card keeps its column, notes and history for when it comes back.
+            foreach (var card in cards.Where(c => !c.IsArchived))
+            {
+                await SetArchivedAsync(card.Id, true, cancellationToken);
+            }
+
+            return;
+        }
+
+        if (cards.Any(c => !c.IsArchived))
+        {
+            return;
+        }
+
+        if (cards.Count > 0)
+        {
+            await SetArchivedAsync(cards[0].Id, false, cancellationToken);
+            return;
+        }
+
+        await CreateCoreAsync(new CardFields(CardTitle(title), null, BoardPriority.Normal, null, null, null, null), BoardStatus.Todo, [], cancellationToken, taskId);
+    }
+
+    public async Task SyncTaskTitleAsync(int taskId, CancellationToken cancellationToken = default)
+    {
+        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var title = await db.Tasks.Where(t => t.Id == taskId).Select(t => t.Title).SingleOrDefaultAsync(cancellationToken);
+        if (title is null)
+        {
+            return;
+        }
+
+        var cardTitle = CardTitle(title);
+        var cards = await db.BoardCards.Where(c => c.WorkTaskId == taskId && c.Title != cardTitle).ToListAsync(cancellationToken);
+        if (cards.Count == 0)
+        {
+            return;
+        }
+
+        var now = UtcTime.Now(timeProvider);
+        foreach (var card in cards)
+        {
+            card.Title = cardTitle;
+            card.Revision++;
+            card.ModifiedAtUtc = now;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static string CardTitle(string taskTitle) =>
+        taskTitle.Length > BoardCard.TitleMaxLength ? taskTitle[..(BoardCard.TitleMaxLength - 1)] + "…" : taskTitle;
 
     // ---- Undoable edits ----
 
