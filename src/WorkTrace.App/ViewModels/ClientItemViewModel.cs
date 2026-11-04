@@ -14,6 +14,8 @@ public sealed class ClientItemViewModel(ClientSummary summary, string lastUsedTe
 
     public bool IsActive => Summary.IsActive;
 
+    public string Color => Summary.Color;
+
     public string Details => Summary.ActiveTaskCount switch
     {
         0 => $"No active tasks · used {LastUsedText}",

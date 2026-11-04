@@ -10,7 +10,8 @@ public sealed record CheckInRequest(
     int? TaskId,
     string? Note,
     int? ChannelId = null,
-    DateTime? ObservedAtUtc = null);
+    DateTime? ObservedAtUtc = null,
+    int? ClientId = null);
 
 public sealed record ObservationSummary(
     int Id,

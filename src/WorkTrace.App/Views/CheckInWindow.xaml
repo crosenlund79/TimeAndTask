@@ -124,10 +124,15 @@
                 <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
                 <TextBlock Text="{Binding Context}" Style="{StaticResource CaptionText}" FontSize="11" />
               </StackPanel>
-              <Border Grid.Column="2" Style="{StaticResource Pill}" Margin="8,0,0,0"
-                      Visibility="{Binding HasExternalId, Converter={StaticResource BoolToVisibility}}">
-                <TextBlock Text="{Binding ExternalId}" Style="{StaticResource PillText}" FontFamily="{StaticResource MonoFont}" />
-              </Border>
+              <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <TextBlock Text="&#xEA8F;" Style="{StaticResource IconText}" FontSize="12" Margin="8,0,0,0" ToolTip="{Binding DeadlineText}"
+                           Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                           Visibility="{Binding HasDeadlineWarning, Converter={StaticResource BoolToVisibility}}" />
+                <Border Style="{StaticResource Pill}" Margin="8,0,0,0"
+                        Visibility="{Binding HasExternalId, Converter={StaticResource BoolToVisibility}}">
+                  <TextBlock Text="{Binding ExternalId}" Style="{StaticResource PillText}" FontFamily="{StaticResource MonoFont}" />
+                </Border>
+              </StackPanel>
             </Grid>
             <DataTemplate.Triggers>
               <DataTrigger Binding="{Binding IsCreateNew}" Value="True">
@@ -220,6 +225,10 @@
         </Grid>
       </Expander>
 
+      <Border Margin="0,8,0,0" Padding="8,5" CornerRadius="4" Background="{DynamicResource SystemFillColorCautionBackgroundBrush}"
+              Visibility="{Binding StakeholderOnlyWarning, Converter={StaticResource NullToCollapsed}}">
+        <TextBlock Text="{Binding StakeholderOnlyWarning}" TextWrapping="Wrap" FontSize="12" />
+      </Border>
       <TextBlock Text="{Binding ErrorMessage}" Style="{StaticResource ErrorText}" Margin="0,8,0,0" />
 
       <!-- Footer -->

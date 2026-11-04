@@ -11,6 +11,7 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
         builder.ToTable("Clients");
         builder.Property(c => c.Name).HasMaxLength(Client.NameMaxLength).UseCollation("NOCASE");
         builder.Property(c => c.Description).HasMaxLength(Client.DescriptionMaxLength);
+        builder.Property(c => c.Color).HasMaxLength(9);
         builder.HasIndex(c => c.Name).IsUnique();
     }
 }

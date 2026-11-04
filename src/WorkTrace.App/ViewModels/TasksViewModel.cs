@@ -406,6 +406,7 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         rebuilt.Notes = input.Notes;
         rebuilt.DefaultChannelId = input.DefaultChannelId;
         rebuilt.ShowOnBoard = input.ShowOnBoard ?? rebuilt.ShowOnBoard;
+        rebuilt.Deadline = input.Deadline;
         SetEditor(rebuilt);
         Notifications.Show($"Stakeholder “{created.Name}” created.", NotificationKind.Success);
     }

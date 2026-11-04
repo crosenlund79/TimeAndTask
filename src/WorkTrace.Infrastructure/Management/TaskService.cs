@@ -186,6 +186,7 @@ internal sealed class TaskService(
         task.Title = Text.Clean(input.Title)!;
         task.Notes = Text.Clean(input.Notes);
         task.DefaultChannelId = input.DefaultChannelId;
+        task.Deadline = input.Deadline;
     }
 
     private async Task SaveIfChangedAsync(WorkTraceDbContext db, WorkTask task, CancellationToken cancellationToken)
@@ -249,8 +250,11 @@ internal sealed class TaskService(
         await db.Tasks.SingleOrDefaultAsync(t => t.Id == id, cancellationToken)
         ?? throw new EntityNotFoundException("Task", id);
 
-    private static IQueryable<TaskSummary> Summaries(WorkTraceDbContext db, IQueryable<WorkTask> tasks) =>
-        tasks.Select(t => new TaskSummary(
+    private IQueryable<TaskSummary> Summaries(WorkTraceDbContext db, IQueryable<WorkTask> tasks)
+    {
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(UtcTime.Now(timeProvider), TimeZoneInfo.Local));
+        var warningDays = settings.Current.Tasks.DeadlineWarningDays;
+        return tasks.Select(t => new TaskSummary(
             t.Id,
             t.ClientId,
             t.Client!.Name,
@@ -266,5 +270,9 @@ internal sealed class TaskService(
             t.CreatedAtUtc,
             t.ModifiedAtUtc,
             t.LastUsedAtUtc,
-            db.BoardCards.Any(c => c.WorkTaskId == t.Id && !c.IsArchived)));
+            db.BoardCards.Any(c => c.WorkTaskId == t.Id && !c.IsArchived),
+            t.Deadline,
+            StakeholderColors.For(t.ClientId, t.Client.Color),
+            Deadlines.State(t.Deadline, today, warningDays, t.IsArchived)));
+    }
 }

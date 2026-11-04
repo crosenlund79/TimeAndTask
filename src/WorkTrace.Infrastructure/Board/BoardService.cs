@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using WorkTrace.Core.Board;
 using WorkTrace.Core.Common;
+using WorkTrace.Core.Management;
 using WorkTrace.Core.Entities;
 using WorkTrace.Core.Validation;
 using WorkTrace.Infrastructure.Persistence;
@@ -13,6 +14,7 @@ internal sealed partial class BoardService(
     IDbContextFactory<WorkTraceDbContext> contextFactory,
     AppPaths paths,
     TimeProvider timeProvider,
+    WorkTrace.Core.Settings.ISettingsStore settings,
     ILogger<BoardService> logger) : IBoardService
 {
     // ---- Queries ----
@@ -76,8 +78,10 @@ internal sealed partial class BoardService(
         return [.. cards.Select(c => new CardRef(c.Id, BoardCard.FormatKey(c.Number), c.Title, c.Status, c.IsArchived))];
     }
 
-    private static async Task<List<CardSummary>> LoadSummariesAsync(WorkTraceDbContext db, CancellationToken cancellationToken)
+    private async Task<List<CardSummary>> LoadSummariesAsync(WorkTraceDbContext db, CancellationToken cancellationToken)
     {
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(UtcTime.Now(timeProvider), TimeZoneInfo.Local));
+        var warningDays = settings.Current.Tasks.DeadlineWarningDays;
         var rows = await db.BoardCards.AsNoTracking().Select(c => new
         {
             c.Id, c.Number, c.Title, c.Category, c.Priority, c.Status, c.SortOrder, c.IsArchived, c.ArchivedAtUtc,
@@ -86,13 +90,20 @@ internal sealed partial class BoardService(
             Links = c.Links.Count,
             Attachments = c.Attachments.Count,
             BlockedBy = c.BlockedBy.Select(d => d.BlockedByCardId).ToList(),
+            Stakeholder = c.WorkTask != null ? c.WorkTask.Client!.Name : null,
+            StakeholderId = c.WorkTask != null ? (int?)c.WorkTask.ClientId : null,
+            StakeholderColor = c.WorkTask != null ? c.WorkTask.Client!.Color : null,
+            Deadline = c.WorkTask != null ? c.WorkTask.Deadline : null,
+            TaskArchived = c.WorkTask != null && c.WorkTask.IsArchived,
         }).ToListAsync(cancellationToken);
 
         var refs = rows.ToDictionary(r => r.Id, r => new CardRef(r.Id, BoardCard.FormatKey(r.Number), r.Title, r.Status, r.IsArchived));
         return [.. rows.Select(r => new CardSummary(
             r.Id, r.Number, BoardCard.FormatKey(r.Number), r.Title, r.Category, r.Priority, r.Status, r.SortOrder, r.IsArchived,
             r.ArchivedAtUtc, [.. r.BlockedBy.Select(b => refs[b]).OrderBy(b => b.Key, StringComparer.Ordinal)],
-            r.Comments, r.Links, r.Attachments, r.WorkTaskId, r.CreatedAtUtc, r.ModifiedAtUtc))];
+            r.Comments, r.Links, r.Attachments, r.WorkTaskId, r.CreatedAtUtc, r.ModifiedAtUtc,
+            r.Stakeholder, r.StakeholderId is { } sid ? StakeholderColors.For(sid, r.StakeholderColor) : null, r.Deadline,
+            Deadlines.State(r.Deadline, today, warningDays, r.TaskArchived || r.Status == BoardStatus.Done)))];
     }
 
     // ---- Creating ----

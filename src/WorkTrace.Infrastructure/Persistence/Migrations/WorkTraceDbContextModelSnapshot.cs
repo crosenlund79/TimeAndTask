@@ -423,6 +423,10 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Color")
+                        .HasMaxLength(9)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
@@ -626,6 +630,9 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                     b.Property<int?>("ChannelId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
@@ -661,6 +668,8 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ChannelId");
+
+                    b.HasIndex("ClientId");
 
                     b.HasIndex("ObservedAtUtc");
 
@@ -745,6 +754,9 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                     b.Property<int>("BaselineMinutes")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
@@ -758,14 +770,16 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("TaskId")
+                    b.Property<int?>("TaskId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClientId");
+
                     b.HasIndex("TaskId");
 
-                    b.HasIndex("LocalDate", "TaskId")
+                    b.HasIndex("LocalDate", "TaskId", "ClientId")
                         .IsUnique();
 
                     b.ToTable("TimesheetAdjustments", null, t =>
@@ -812,6 +826,9 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("Deadline")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("DefaultChannelId")
@@ -962,6 +979,11 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ChannelId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("WorkTrace.Core.Entities.Client", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("WorkTrace.Core.Entities.WorkTask", null)
                         .WithMany()
                         .HasForeignKey("OriginalTaskId")
@@ -974,16 +996,24 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Channel");
 
+                    b.Navigation("Client");
+
                     b.Navigation("Task");
                 });
 
             modelBuilder.Entity("WorkTrace.Core.Entities.TimesheetAdjustment", b =>
                 {
+                    b.HasOne("WorkTrace.Core.Entities.Client", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("WorkTrace.Core.Entities.WorkTask", "Task")
                         .WithMany()
                         .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Client");
 
                     b.Navigation("Task");
                 });

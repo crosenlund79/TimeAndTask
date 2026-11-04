@@ -18,6 +18,10 @@ public sealed record SuggestionItem(TaskSummary? Task, string Title, string? Con
 
     public bool HasExternalId => !string.IsNullOrEmpty(ExternalId);
 
+    public bool HasDeadlineWarning => Task is { DeadlineState: not WorkTrace.Core.Management.DeadlineState.None };
+
+    public string? DeadlineText => Task is null ? null : CardText.DeadlineText(Task.Deadline, Task.DeadlineState);
+
     public static SuggestionItem For(TaskSummary task) =>
         new(task, task.Title, task.TaskSystemName is { } s ? $"{task.ClientName} · {s}" : task.ClientName, task.ExternalId);
 }
@@ -331,9 +335,24 @@ public sealed partial class CheckInViewModel(
         _searchCts = null;
     }
 
-    partial void OnSearchTextChanged(string? value) => ScheduleSearch();
+    partial void OnSearchTextChanged(string? value)
+    {
+        StakeholderOnlyWarning = null;
+        ScheduleSearch();
+    }
 
-    partial void OnClientKeyChanged(int? value) => ScheduleSearch();
+    partial void OnClientKeyChanged(int? value)
+    {
+        StakeholderOnlyWarning = null;
+        ScheduleSearch();
+    }
+
+    /// <summary>
+    /// Shown once when Save would register time on a stakeholder without a task; saving again confirms. Not an error:
+    /// the time is kept on the stakeholder (timesheet line "(no task)"), and no placeholder task is ever created.
+    /// </summary>
+    [ObservableProperty]
+    public partial string? StakeholderOnlyWarning { get; private set; }
 
     partial void OnNoteChanged(string? value) => ErrorMessage = null;
 
@@ -348,6 +367,19 @@ public sealed partial class CheckInViewModel(
         if (SelectedSuggestion?.Task is { } task)
         {
             return RecordAsync(task, null);
+        }
+
+        // A stakeholder chosen but no task: register on the stakeholder, after one confirmation.
+        if (!IsSearching && PickerOption.FromKey(ClientKey ?? 0) is { } stakeholderId)
+        {
+            if (StakeholderOnlyWarning is null)
+            {
+                var name = ClientOptions.FirstOrDefault(o => o.Id == stakeholderId)?.Name ?? "this stakeholder";
+                StakeholderOnlyWarning = $"No task selected. The time will be registered on {name} without a task. Press Save (Enter) again to confirm.";
+                return Task.CompletedTask;
+            }
+
+            return RecordAsync(null, null, stakeholderId);
         }
 
         if (!IsSearching && PreviousTask is { } previous)
@@ -389,7 +421,7 @@ public sealed partial class CheckInViewModel(
     [RelayCommand]
     private void ToggleDetails() => IsExpanded = !IsExpanded;
 
-    private async Task RecordAsync(TaskSummary? task, string? newTaskTitle)
+    private async Task RecordAsync(TaskSummary? task, string? newTaskTitle, int? stakeholderOnly = null)
     {
         NotifyInteraction();
         ErrorMessage = null;
@@ -421,7 +453,7 @@ public sealed partial class CheckInViewModel(
             }
 
             var channelId = PickerOption.FromKey(ChannelKey ?? 0) ?? task?.DefaultChannelId;
-            var observation = await checkIns.RecordAsync(new CheckInRequest(_promptId, task?.Id, Note, channelId, observedAtUtc));
+            var observation = await checkIns.RecordAsync(new CheckInRequest(_promptId, task?.Id, Note, channelId, observedAtUtc, task is null ? stakeholderOnly : null));
             Recorded?.Invoke(this, observation);
             CloseRequested?.Invoke(this, PromptOutcome.Answered);
         }

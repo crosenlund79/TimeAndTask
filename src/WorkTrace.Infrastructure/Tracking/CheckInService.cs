@@ -26,9 +26,15 @@ internal sealed class CheckInService(
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var errors = new ValidationErrors();
-        if (request.TaskId is null && note is null)
+        var clientId = request.TaskId is null ? request.ClientId : null;
+        if (request.TaskId is null && clientId is null && note is null)
         {
-            errors.Add(nameof(CheckInRequest.TaskId), "Choose a task or write a short note.");
+            errors.Add(nameof(CheckInRequest.TaskId), "Choose a task or a stakeholder, or write a short note.");
+        }
+
+        if (clientId is { } stakeholder && !await db.Clients.AnyAsync(c => c.Id == stakeholder, cancellationToken))
+        {
+            errors.Add(nameof(CheckInRequest.ClientId), "The selected stakeholder no longer exists.");
         }
 
         if (note?.Length > Observation.NoteMaxLength)
@@ -60,7 +66,8 @@ internal sealed class CheckInService(
             request.PromptId is null ? ObservationOrigin.Manual : ObservationOrigin.Scheduled,
             request.TaskId,
             request.ChannelId,
-            note);
+            note,
+            clientId);
         db.Observations.Add(observation);
         await db.SaveChangesAsync(cancellationToken);
 

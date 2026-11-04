@@ -45,7 +45,11 @@ public sealed record CardSummary(
     int AttachmentCount,
     int? WorkTaskId,
     DateTime CreatedAtUtc,
-    DateTime ModifiedAtUtc)
+    DateTime ModifiedAtUtc,
+    string? Stakeholder = null,
+    string? StakeholderColor = null,
+    DateOnly? Deadline = null,
+    Management.DeadlineState DeadlineState = Management.DeadlineState.None)
 {
     /// <summary>Blocked while any card it waits for is not Done.</summary>
     public bool IsBlocked => BlockedBy.Any(b => b.Status != BoardStatus.Done);

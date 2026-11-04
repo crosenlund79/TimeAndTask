@@ -11,7 +11,8 @@ public sealed record TimesheetLine(
     string Reference,
     string Task,
     string Comments,
-    IReadOnlyList<TimesheetCell> Days)
+    IReadOnlyList<TimesheetCell> Days,
+    int? ClientId = null)
 {
     public int TotalMinutes => Days.Sum(d => d.Minutes);
 }
@@ -36,8 +37,11 @@ public interface ITimesheetService
 {
     Task<TimesheetWeek> GetWeekAsync(DateOnly anyDay, CancellationToken cancellationToken = default);
 
-    /// <summary>Corrects one day of one task (minutes), or removes the correction (null) so the estimate counts again.</summary>
-    Task SetMinutesAsync(DateOnly day, int taskId, int? minutes, int computedMinutes, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Corrects one day of one line, a task or (taskId null) a stakeholder without a task, in minutes; null removes the
+    /// correction so the estimate counts again.
+    /// </summary>
+    Task SetMinutesAsync(DateOnly day, int? taskId, int? clientId, int? minutes, int computedMinutes, CancellationToken cancellationToken = default);
 
     /// <summary>One row per day and task (date, stakeholder, system, reference, task, hours, comments), for pasting or import.</summary>
     Task ExportCsvAsync(TimesheetWeek week, string path, CancellationToken cancellationToken = default);

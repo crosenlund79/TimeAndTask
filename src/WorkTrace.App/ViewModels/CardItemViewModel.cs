@@ -12,7 +12,8 @@ public sealed partial class CardItemViewModel(CardSummary summary) : ObservableO
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Id), nameof(Key), nameof(Title), nameof(Status), nameof(CategoryText), nameof(HasCategory),
         nameof(PriorityText), nameof(IsUrgent), nameof(ShowPriority), nameof(IsBlocked), nameof(BlockedText), nameof(CommentCount),
-        nameof(AttachmentCount), nameof(LinkCount), nameof(HasTask), nameof(IsArchived), nameof(Meta), nameof(AutomationName))]
+        nameof(AttachmentCount), nameof(LinkCount), nameof(HasTask), nameof(IsArchived), nameof(Meta), nameof(AutomationName),
+        nameof(Stakeholder), nameof(HasStakeholder), nameof(StakeholderColor), nameof(HasDeadlineWarning), nameof(DeadlineText))]
     public partial CardSummary Summary { get; set; } = summary;
 
     public int Id => Summary.Id;
@@ -45,6 +46,17 @@ public sealed partial class CardItemViewModel(CardSummary summary) : ObservableO
 
     public bool HasTask => Summary.WorkTaskId is not null;
 
+    /// <summary>Stakeholder of the card's task (shown in bold; its colour tints the card).</summary>
+    public string? Stakeholder => Summary.Stakeholder;
+
+    public bool HasStakeholder => Summary.Stakeholder is not null;
+
+    public string? StakeholderColor => Summary.StakeholderColor;
+
+    public bool HasDeadlineWarning => Summary.DeadlineState != WorkTrace.Core.Management.DeadlineState.None;
+
+    public string? DeadlineText => CardText.DeadlineText(Summary.Deadline, Summary.DeadlineState);
+
     public bool IsArchived => Summary.IsArchived;
 
     /// <summary>Second line in lists: created date, or archived date for archived cards.</summary>
@@ -73,6 +85,12 @@ public sealed partial class BoardColumnViewModel(BoardStatus status) : Observabl
 /// <summary>Display texts for card fields.</summary>
 public static class CardText
 {
+    /// <summary>"Due 12 Nov" / "Overdue since 3 Nov" for the bell icon's tooltip; null without a warning.</summary>
+    public static string? DeadlineText(DateOnly? deadline, WorkTrace.Core.Management.DeadlineState state) =>
+        deadline is not { } d || state == WorkTrace.Core.Management.DeadlineState.None ? null
+        : state == WorkTrace.Core.Management.DeadlineState.Overdue ? $"Overdue since {d.ToString("d MMM", CultureInfo.CurrentCulture)}"
+        : $"Due {d.ToString("ddd d MMM", CultureInfo.CurrentCulture)}";
+
     public static string Category(BoardCategory? category) => category switch
     {
         null => "None",

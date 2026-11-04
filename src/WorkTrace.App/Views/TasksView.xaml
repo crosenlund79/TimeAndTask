@@ -119,6 +119,9 @@
                   </StackPanel>
                   <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                      <TextBlock Text="&#xEA8F;" Style="{StaticResource IconText}" FontSize="13" Margin="0,0,8,0" ToolTip="{Binding DeadlineText}"
+                                 Foreground="{DynamicResource SystemFillColorCautionBrush}" AutomationProperties.Name="{Binding DeadlineText}"
+                                 Visibility="{Binding HasDeadlineWarning, Converter={StaticResource BoolToVisibility}}" />
                       <Border Style="{StaticResource Pill}" Margin="0,0,6,0"
                               Visibility="{Binding IsArchived, Converter={StaticResource BoolToVisibility}}">
                         <TextBlock Text="Archived" Style="{StaticResource PillText}" />
@@ -274,6 +277,10 @@
                     <TextBlock Text="{Binding SimilarWarning}" TextWrapping="Wrap" FontSize="12" />
                   </DockPanel>
                 </Border>
+
+                <TextBlock Text="Deadline (optional)" Style="{StaticResource FieldLabelText}" />
+                <DatePicker SelectedDate="{Binding DeadlineDate}" HorizontalAlignment="Left" Width="180" AutomationProperties.Name="Deadline"
+                            ToolTip="A bell appears on the task and its Board card when the deadline is near (Settings › Tasks)" />
 
                 <TextBlock Text="Usual channel (optional)" Style="{StaticResource FieldLabelText}" />
                 <ComboBox ItemsSource="{Binding ChannelOptions}" DisplayMemberPath="DisplayName"

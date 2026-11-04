@@ -22,6 +22,9 @@ public class Client : IAuditedEntity, IChangeTracked
 
     public bool IsActive { get; set; } = true;
 
+    /// <summary>Muted display colour ("#RRGGBB"); null = the default from <see cref="StakeholderColors"/>.</summary>
+    public string? Color { get; set; }
+
     public DateTime CreatedAtUtc { get; set; }
 
     public DateTime ModifiedAtUtc { get; set; }

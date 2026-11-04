@@ -2,7 +2,7 @@ namespace WorkTrace.Core.Management;
 
 // ---- Inputs (what the user edits) ----
 
-public sealed record ClientInput(string? Name, string? Description, bool IsInternal);
+public sealed record ClientInput(string? Name, string? Description, bool IsInternal, string? Color = null);
 
 public sealed record TaskInput(
     int? ClientId,
@@ -11,7 +11,8 @@ public sealed record TaskInput(
     string? Title,
     string? Notes,
     int? DefaultChannelId,
-    bool? ShowOnBoard = null);
+    bool? ShowOnBoard = null,
+    DateOnly? Deadline = null);
 
 // ---- Read models (what lists and pickers show) ----
 
@@ -24,7 +25,8 @@ public sealed record ClientSummary(
     int TaskCount,
     int ActiveTaskCount,
     DateTime? LastUsedAtUtc,
-    DateTime ModifiedAtUtc);
+    DateTime ModifiedAtUtc,
+    string Color = "#7A7F87");
 
 public sealed record TaskSummary(
     int Id,
@@ -42,7 +44,10 @@ public sealed record TaskSummary(
     DateTime CreatedAtUtc,
     DateTime ModifiedAtUtc,
     DateTime? LastUsedAtUtc,
-    bool IsOnBoard = false);
+    bool IsOnBoard = false,
+    DateOnly? Deadline = null,
+    string ClientColor = "#7A7F87",
+    DeadlineState DeadlineState = DeadlineState.None);
 
 public enum LookupKind
 {

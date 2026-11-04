@@ -24,6 +24,9 @@
       <StackPanel x:Name="Tile">
         <DockPanel>
           <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+            <TextBlock Text="&#xEA8F;" Style="{StaticResource IconText}" FontSize="12" Margin="6,0,0,0" ToolTip="{Binding DeadlineText}"
+                       Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                       Visibility="{Binding HasDeadlineWarning, Converter={StaticResource BoolToVisibility}}" />
             <TextBlock Text="&#xE72E;" Style="{StaticResource IconText}" FontSize="12" Margin="6,0,0,0"
                        Foreground="{DynamicResource SystemFillColorCautionBrush}" ToolTip="{Binding BlockedText}"
                        Visibility="{Binding IsBlocked, Converter={StaticResource BoolToVisibility}}" />
@@ -44,6 +47,8 @@
           <TextBlock Text="{Binding Key}" FontFamily="{StaticResource MonoFont}" FontSize="11"
                      Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
         </DockPanel>
+        <TextBlock Text="{Binding Stakeholder}" FontWeight="Bold" FontSize="12" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"
+                   Visibility="{Binding HasStakeholder, Converter={StaticResource BoolToVisibility}}" />
         <TextBlock Text="{Binding Title}" TextWrapping="Wrap" MaxHeight="60" TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
         <WrapPanel Margin="0,4,0,0">
           <Border Style="{StaticResource Pill}" Margin="0,0,6,0" Visibility="{Binding HasCategory, Converter={StaticResource BoolToVisibility}}">

@@ -20,6 +20,9 @@ internal sealed class TimesheetService(
 {
     public const string NoTask = "No task (notes only)";
 
+    /// <summary>Task column of time registered on a stakeholder without a task.</summary>
+    public const string NoTaskForStakeholder = "(no task)";
+
     public async Task<TimesheetWeek> GetWeekAsync(DateOnly anyDay, CancellationToken cancellationToken = default)
     {
         var monday = TimesheetWeek.MondayOf(anyDay);
@@ -48,7 +51,7 @@ internal sealed class TimesheetService(
         var input = new EstimationInput(
             segments,
             locks,
-            [.. observations.Select(o => new EstimationObservation(o.Id, o.ObservedAtUtc, o.CreatedAtUtc, o.TaskId))],
+            [.. observations.Select(o => new EstimationObservation(o.Id, o.ObservedAtUtc, o.CreatedAtUtc, o.TaskId, o.ClientId))],
             prompts,
             [.. allocations.Select(a => new EstimationAllocation(a.Id, a.StartUtc, a.EndUtc, a.CreatedAtUtc, a.TaskId, a.Kind == AllocationKind.NonWork))],
             TimeSpan.FromMinutes(s.Tracking.MaxEstimationHorizonMinutes),
@@ -56,8 +59,9 @@ internal sealed class TimesheetService(
             TimeSpan.FromMinutes(s.Tracking.LockGraceMinutes));
         var periods = TimeEstimator.Estimate(input, from, to);
 
-        // Sum per day (split at local midnight; durations from UTC differences, so DST days have 23/25 hours).
-        var work = new Dictionary<(int Day, int? Task), TimeSpan>();
+        // Sum per day and line (split at local midnight; durations from UTC differences, so DST days have 23/25 hours).
+        // A line is a task, or a stakeholder without a task (Task = null), or note-only time (both null).
+        var work = new Dictionary<(int Day, int? Task, int? Client), TimeSpan>();
         var unclassified = new TimeSpan[7];
         foreach (var p in periods)
         {
@@ -76,27 +80,34 @@ internal sealed class TimesheetService(
                 }
                 else if (p.Kind is PeriodKind.Estimated or PeriodKind.Manual && !p.IsNonWork)
                 {
-                    work[(d, p.TaskId)] = work.GetValueOrDefault((d, p.TaskId)) + (end - start);
+                    var key = (d, p.TaskId, p.TaskId is null ? p.ClientId : null);
+                    work[key] = work.GetValueOrDefault(key) + (end - start);
                 }
             }
         }
 
         var adjustments = await db.TimesheetAdjustments.AsNoTracking()
             .Where(a => a.LocalDate >= monday && a.LocalDate <= monday.AddDays(6)).ToListAsync(cancellationToken);
-        var taskIds = work.Keys.Select(k => k.Task).OfType<int>().Concat(adjustments.Select(a => a.TaskId)).Distinct().ToList();
+        var lineKeys = work.Keys.Select(k => (k.Task, k.Client))
+            .Concat(adjustments.Select(a => (Task: a.TaskId, Client: a.TaskId is null ? a.ClientId : null)))
+            .Distinct().ToList();
+        var taskIds = lineKeys.Select(k => k.Task).OfType<int>().ToList();
         var tasks = await db.Tasks.AsNoTracking().Where(t => taskIds.Contains(t.Id))
             .Select(t => new { t.Id, t.Title, t.ExternalId, Stakeholder = t.Client!.Name, System = t.TaskSystem != null ? t.TaskSystem.Name : null })
             .ToDictionaryAsync(t => t.Id, cancellationToken);
+        var clientIds = lineKeys.Select(k => k.Client).OfType<int>().ToList();
+        var clients = await db.Clients.AsNoTracking().Where(c => clientIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => c.Name, cancellationToken);
         var rounding = s.Reporting.RoundingMinutes;
 
         var lines = new List<TimesheetLine>();
-        foreach (var taskId in taskIds.Cast<int?>().Append(null))
+        foreach (var (taskId, clientId) in lineKeys)
         {
             var cells = new List<TimesheetCell>();
             for (var d = 0; d < 7; d++)
             {
-                var computed = Round((int)Math.Round(work.GetValueOrDefault((d, taskId)).TotalMinutes), rounding);
-                var adjustment = taskId is { } id ? adjustments.FirstOrDefault(a => a.TaskId == id && a.LocalDate == monday.AddDays(d)) : null;
+                var computed = Round((int)Math.Round(work.GetValueOrDefault((d, taskId, clientId)).TotalMinutes), rounding);
+                var adjustment = taskId is null && clientId is null ? null
+                    : adjustments.FirstOrDefault(a => a.TaskId == taskId && (taskId is not null || a.ClientId == clientId) && a.LocalDate == monday.AddDays(d));
                 cells.Add(adjustment is null
                     ? new TimesheetCell(computed, computed, false, false)
                     : new TimesheetCell(computed, adjustment.AdjustedMinutes, true, adjustment.BaselineMinutes != computed));
@@ -107,25 +118,34 @@ internal sealed class TimesheetService(
                 continue;
             }
 
-            var comments = string.Join("; ", observations.Where(o => o.TaskId == taskId && o.ObservedAtUtc >= from && !string.IsNullOrWhiteSpace(o.Note))
+            var comments = string.Join("; ", observations
+                .Where(o => o.TaskId == taskId && (taskId is not null || o.ClientId == clientId) && o.ObservedAtUtc >= from && !string.IsNullOrWhiteSpace(o.Note))
                 .OrderBy(o => o.ObservedAtUtc).Select(o => o.Note!.Trim()).Distinct(StringComparer.CurrentCultureIgnoreCase));
             lines.Add(taskId is { } tid && tasks.TryGetValue(tid, out var t)
                 ? new TimesheetLine(tid, t.Stakeholder, t.System ?? "", t.ExternalId ?? "", t.Title, comments, cells)
-                : new TimesheetLine(null, "", "", "", NoTask, comments, cells));
+                : clientId is { } cid
+                    ? new TimesheetLine(null, clients.GetValueOrDefault(cid, ""), "", "", NoTaskForStakeholder, comments, cells, cid)
+                    : new TimesheetLine(null, "", "", "", NoTask, comments, cells));
         }
 
         var missed = prompts.Count(p => p >= from);
         return new TimesheetWeek(
             monday,
-            [.. lines.OrderBy(l => l.TaskId is null).ThenBy(l => l.Stakeholder, StringComparer.CurrentCultureIgnoreCase).ThenBy(l => l.Task, StringComparer.CurrentCultureIgnoreCase)],
+            [.. lines.OrderBy(l => l.TaskId is null && l.ClientId is null).ThenBy(l => l.Stakeholder, StringComparer.CurrentCultureIgnoreCase).ThenBy(l => l.Task, StringComparer.CurrentCultureIgnoreCase)],
             [.. unclassified.Select(u => (int)Math.Round(u.TotalMinutes))],
             missed);
     }
 
-    public async Task SetMinutesAsync(DateOnly day, int taskId, int? minutes, int computedMinutes, CancellationToken cancellationToken = default)
+    public async Task SetMinutesAsync(DateOnly day, int? taskId, int? clientId, int? minutes, int computedMinutes, CancellationToken cancellationToken = default)
     {
+        if (taskId is null && clientId is null)
+        {
+            throw new ArgumentException("A correction needs a task or a stakeholder.", nameof(taskId));
+        }
+
+        clientId = taskId is null ? clientId : null;
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
-        var existing = await db.TimesheetAdjustments.SingleOrDefaultAsync(a => a.LocalDate == day && a.TaskId == taskId, cancellationToken);
+        var existing = await db.TimesheetAdjustments.FirstOrDefaultAsync(a => a.LocalDate == day && a.TaskId == taskId && a.ClientId == clientId, cancellationToken);
         var now = UtcTime.Now(timeProvider);
         if (minutes is null || (minutes == computedMinutes && existing is null))
         {
@@ -138,7 +158,7 @@ internal sealed class TimesheetService(
         {
             db.TimesheetAdjustments.Add(new TimesheetAdjustment
             {
-                LocalDate = day, TaskId = taskId, AdjustedMinutes = minutes.Value, BaselineMinutes = computedMinutes, CreatedAtUtc = now, ModifiedAtUtc = now,
+                LocalDate = day, TaskId = taskId, ClientId = clientId, AdjustedMinutes = minutes.Value, BaselineMinutes = computedMinutes, CreatedAtUtc = now, ModifiedAtUtc = now,
             });
         }
         else
@@ -149,7 +169,7 @@ internal sealed class TimesheetService(
         }
 
         await db.SaveChangesAsync(cancellationToken);
-        logger.LogInformation("Timesheet correction for task {TaskId} on {Date} {State}", taskId, day, minutes is null ? "removed" : "saved");
+        logger.LogInformation("Timesheet correction for task {TaskId} / stakeholder {ClientId} on {Date} {State}", taskId, clientId, day, minutes is null ? "removed" : "saved");
     }
 
     // ---- Export ----

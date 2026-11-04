@@ -21,5 +21,9 @@ public sealed class TaskItemViewModel(TaskSummary summary, string lastUsedText)
 
     public bool IsArchived => Summary.IsArchived;
 
+    public bool HasDeadlineWarning => Summary.DeadlineState != WorkTrace.Core.Management.DeadlineState.None;
+
+    public string? DeadlineText => CardText.DeadlineText(Summary.Deadline, Summary.DeadlineState);
+
     public string LastUsedText { get; } = lastUsedText;
 }

@@ -37,6 +37,11 @@ public class Observation : IChangeTracked
 
     public int? TaskId { get; set; }
 
+    /// <summary>Stakeholder for time registered without a task (null when <see cref="TaskId"/> is set: the task implies it).</summary>
+    public int? ClientId { get; set; }
+
+    public Client? Client { get; set; }
+
     public WorkTask? Task { get; set; }
 
     public int? ChannelId { get; set; }
@@ -69,7 +74,8 @@ public class Observation : IChangeTracked
         ObservationOrigin origin,
         int? taskId,
         int? channelId = null,
-        string? note = null)
+        string? note = null,
+        int? clientId = null)
     {
         observedAtUtc = UtcTime.Ensure(observedAtUtc, nameof(observedAtUtc));
         createdAtUtc = UtcTime.Ensure(createdAtUtc, nameof(createdAtUtc));
@@ -82,6 +88,7 @@ public class Observation : IChangeTracked
             ModifiedAtUtc = createdAtUtc,
             Origin = origin,
             TaskId = taskId,
+            ClientId = taskId is null ? clientId : null,
             ChannelId = channelId,
             Note = note,
             OriginalObservedAtUtc = observedAtUtc,

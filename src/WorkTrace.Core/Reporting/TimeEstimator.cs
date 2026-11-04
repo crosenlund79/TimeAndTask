@@ -18,14 +18,15 @@ public enum PeriodKind
 }
 
 /// <summary>A half-open interval [Start, End). <see cref="TaskId"/> is null for non-task time (note-only check-ins, non-work allocations).</summary>
-public sealed record TimelinePeriod(DateTime StartUtc, DateTime EndUtc, PeriodKind Kind, int? TaskId, bool IsNonWork = false)
+/// <param name="ClientId">Stakeholder of time registered without a task.</param>
+public sealed record TimelinePeriod(DateTime StartUtc, DateTime EndUtc, PeriodKind Kind, int? TaskId, bool IsNonWork = false, int? ClientId = null)
 {
     public TimeSpan Duration => EndUtc - StartUtc;
 }
 
 public sealed record EstimationSegment(DateTime StartUtc, DateTime EndUtc);
 
-public sealed record EstimationObservation(int Id, DateTime AtUtc, DateTime CreatedAtUtc, int? TaskId);
+public sealed record EstimationObservation(int Id, DateTime AtUtc, DateTime CreatedAtUtc, int? TaskId, int? ClientId = null);
 
 public sealed record EstimationAllocation(int Id, DateTime StartUtc, DateTime EndUtc, DateTime CreatedAtUtc, int? TaskId, bool IsNonWork);
 
@@ -68,11 +69,11 @@ public static class TimeEstimator
     {
         var (s, e) = (segment.StartUtc, segment.EndUtc);
         var result = new List<TimelinePeriod>();
-        void Emit(DateTime from, DateTime to, PeriodKind kind, int? taskId = null, bool nonWork = false)
+        void Emit(DateTime from, DateTime to, PeriodKind kind, EstimationObservation? of = null)
         {
             if (to > from)
             {
-                result.Add(new TimelinePeriod(from, to, kind, taskId, nonWork));
+                result.Add(new TimelinePeriod(from, to, kind, of?.TaskId, false, of?.TaskId is null ? of?.ClientId : null));
             }
         }
 
@@ -122,16 +123,16 @@ public static class TimeEstimator
                 {
                     Emit(cursor, at, PeriodKind.Unclassified); // no backward extrapolation
                 }
-                else if (previous.TaskId == obs.TaskId)
+                else if (previous.TaskId == obs.TaskId && previous.ClientId == obs.ClientId)
                 {
-                    Emit(previous.AtUtc < cursor ? cursor : previous.AtUtc, at, PeriodKind.Estimated, previous.TaskId);
+                    Emit(previous.AtUtc < cursor ? cursor : previous.AtUtc, at, PeriodKind.Estimated, previous);
                 }
                 else
                 {
                     var from = previous.AtUtc < cursor ? cursor : previous.AtUtc;
                     var mid = from + ((at - from) / 2);
-                    Emit(from, mid, PeriodKind.Estimated, previous.TaskId);
-                    Emit(mid, at, PeriodKind.Estimated, obs.TaskId);
+                    Emit(from, mid, PeriodKind.Estimated, previous);
+                    Emit(mid, at, PeriodKind.Estimated, obs);
                 }
 
                 previous = obs with { AtUtc = at };
@@ -141,7 +142,7 @@ public static class TimeEstimator
             {
                 if (previous is not null)
                 {
-                    Emit(previous.AtUtc, at, PeriodKind.Estimated, previous.TaskId);
+                    Emit(previous.AtUtc, at, PeriodKind.Estimated, previous);
                 }
                 else
                 {
@@ -155,7 +156,7 @@ public static class TimeEstimator
             else if (previous is not null)
             {
                 // Missed/dismissed/suppressed prompt: estimated until it, uncertain after it.
-                Emit(previous.AtUtc, at, PeriodKind.Estimated, previous.TaskId);
+                Emit(previous.AtUtc, at, PeriodKind.Estimated, previous);
                 previous = null;
                 cursor = at;
             }
@@ -165,7 +166,7 @@ public static class TimeEstimator
         {
             var capped = previous.AtUtc + input.Horizon;
             var end = capped < e ? capped : e;
-            Emit(previous.AtUtc, end, PeriodKind.Estimated, previous.TaskId);
+            Emit(previous.AtUtc, end, PeriodKind.Estimated, previous);
             Emit(end, e, PeriodKind.Unclassified);
         }
         else
@@ -241,7 +242,7 @@ public static class TimeEstimator
         void Add(TimelinePeriod p)
         {
             if (result.Count > 0 && result[^1] is { } last && last.EndUtc == p.StartUtc && last.Kind == p.Kind
-                && last.TaskId == p.TaskId && last.IsNonWork == p.IsNonWork)
+                && last.TaskId == p.TaskId && last.ClientId == p.ClientId && last.IsNonWork == p.IsNonWork)
             {
                 result[^1] = last with { EndUtc = p.EndUtc };
             }

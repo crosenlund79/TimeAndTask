@@ -97,3 +97,28 @@ public sealed class CountToVisibilityConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
 }
+
+/// <summary>"#RRGGBB" → frozen brush. Parameter: opacity 0–1 (e.g. "0.16" for a background tint). Invalid or null → null.</summary>
+public sealed class HexBrushConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is not string hex || !WorkTrace.Core.Entities.StakeholderColors.IsValid(hex))
+        {
+            return null;
+        }
+
+        var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex);
+        if (parameter is string text && double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var opacity))
+        {
+            color.A = (byte)Math.Round(Math.Clamp(opacity, 0, 1) * 255);
+        }
+
+        var brush = new System.Windows.Media.SolidColorBrush(color);
+        brush.Freeze();
+        return brush;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}

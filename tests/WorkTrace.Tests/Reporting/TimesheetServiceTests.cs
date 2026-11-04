@@ -32,7 +32,7 @@ public class TimesheetServiceTests : ManagementTestBase
         Assert.Equal(30, week.UnclassifiedMinutes.Sum());
         Assert.Equal(("PRJ-7", "export fix"), (line.Reference, line.Comments));
 
-        await Timesheets.SetMinutesAsync(week.Days[wednesday], task.Id, 120, 90, Ct);
+        await Timesheets.SetMinutesAsync(week.Days[wednesday], task.Id, null, 120, 90, Ct);
         week = await Timesheets.GetWeekAsync(week.Monday, Ct);
         Assert.Equal((120, true), (week.Lines[0].Days[wednesday].Minutes, week.Lines[0].Days[wednesday].IsAdjusted));
         Assert.Equal(120, week.WeekTotal);
@@ -45,8 +45,47 @@ public class TimesheetServiceTests : ManagementTestBase
         using var xlsx = ZipFile.OpenRead(Path.Combine(dir, "w.xlsx"));
         Assert.NotNull(xlsx.GetEntry("xl/worksheets/sheet2.xml"));
 
-        await Timesheets.SetMinutesAsync(week.Days[wednesday], task.Id, null, 90, Ct);
+        await Timesheets.SetMinutesAsync(week.Days[wednesday], task.Id, null, null, 90, Ct);
         Assert.Equal(90, (await Timesheets.GetWeekAsync(week.Monday, Ct)).WeekTotal);
+    }
+
+    [Fact]
+    public async Task StakeholderOnlyTime_IsItsOwnLine_AndCanBeCorrected()
+    {
+        var stakeholder = await Clients.CreateAsync(new ClientInput("Contoso", null, false), Ct);
+        var start = Time.GetUtcNow().UtcDateTime;
+        await using (var db = await DbAsync())
+        {
+            db.TrackingSegments.Add(new TrackingSegment { StartUtc = start, EndUtc = start.AddHours(1), LastHeartbeatUtc = start.AddHours(1) });
+            await db.SaveChangesAsync(Ct);
+        }
+
+        await Services.GetRequiredService<WorkTrace.Core.Tracking.ICheckInService>()
+            .RecordAsync(new WorkTrace.Core.Tracking.CheckInRequest(null, null, null, null, start, stakeholder.Id), Ct);
+
+        var week = await Timesheets.GetWeekAsync(DateOnly.FromDateTime(start), Ct);
+        var line = Assert.Single(week.Lines);
+        Assert.Equal((null, stakeholder.Id, "Contoso", 60), (line.TaskId, line.ClientId, line.Stakeholder, line.TotalMinutes));
+
+        var day = week.Days.ToList().IndexOf(DateOnly.FromDateTime(start.ToLocalTime()));
+        await Timesheets.SetMinutesAsync(week.Days[day], null, stakeholder.Id, 45, 60, Ct);
+        Assert.Equal(45, (await Timesheets.GetWeekAsync(week.Monday, Ct)).WeekTotal);
+    }
+
+    [Fact]
+    public async Task Deadlines_WarnWithinTheConfiguredDays_AndStakeholdersGetADefaultColour()
+    {
+        var today = DateOnly.FromDateTime(Time.GetUtcNow().UtcDateTime.ToLocalTime());
+        var clientId = await InternalClientIdAsync();
+        var soon = await Tasks.CreateAsync(new TaskInput(clientId, null, null, "Soon", null, null, Deadline: today.AddDays(2)), Ct);
+        var later = await Tasks.CreateAsync(new TaskInput(clientId, null, null, "Later", null, null, Deadline: today.AddDays(30)), Ct);
+        var late = await Tasks.CreateAsync(new TaskInput(clientId, null, null, "Late", null, null, Deadline: today.AddDays(-1)), Ct);
+
+        Assert.Equal(DeadlineState.Soon, soon.DeadlineState);
+        Assert.Equal(DeadlineState.None, later.DeadlineState);
+        Assert.Equal(DeadlineState.Overdue, late.DeadlineState);
+        Assert.Equal(DeadlineState.None, (await Tasks.SetArchivedAsync(late.Id, true, Ct)).DeadlineState); // completed
+        Assert.True(StakeholderColors.IsValid((await Clients.GetClientsAsync(cancellationToken: Ct))[0].Color));
     }
 
     [Theory]

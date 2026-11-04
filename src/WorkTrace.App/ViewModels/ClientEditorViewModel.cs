@@ -12,9 +12,10 @@ public sealed partial class ClientEditorViewModel : ObservableObject
     {
         Existing = existing;
         _original = existing is null
-            ? new ClientInput(null, null, false)
-            : new ClientInput(existing.Name, existing.Description, existing.IsInternal);
+            ? new ClientInput(null, null, false, null)
+            : new ClientInput(existing.Name, existing.Description, existing.IsInternal, existing.Color);
         Name = _original.Name;
+        Color = _original.Color;
         Description = _original.Description;
         IsInternal = _original.IsInternal;
     }
@@ -49,6 +50,14 @@ public sealed partial class ClientEditorViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsDirty))]
     public partial bool IsInternal { get; set; }
 
+    /// <summary>Muted colour for Board cards ("#RRGGBB"); null for a new stakeholder = a default from the palette.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDirty))]
+    public partial string? Color { get; set; }
+
+    public IReadOnlyList<ColorOption> ColorOptions { get; } =
+        [.. WorkTrace.Core.Entities.StakeholderColors.Palette.Select(p => new ColorOption(p.Name, p.Hex))];
+
     [ObservableProperty]
     public partial string? NameError { get; private set; }
 
@@ -58,9 +67,10 @@ public sealed partial class ClientEditorViewModel : ObservableObject
     public bool IsDirty =>
         Text.Clean(Name) != Text.Clean(_original.Name)
         || Text.Clean(Description) != Text.Clean(_original.Description)
-        || IsInternal != _original.IsInternal;
+        || IsInternal != _original.IsInternal
+        || !string.Equals(Color, _original.Color, StringComparison.OrdinalIgnoreCase);
 
-    public ClientInput ToInput() => new(Name, Description, IsInternal);
+    public ClientInput ToInput() => new(Name, Description, IsInternal, Color);
 
     public void ApplyErrors(ValidationErrors errors)
     {
@@ -72,3 +82,5 @@ public sealed partial class ClientEditorViewModel : ObservableObject
 
     partial void OnDescriptionChanged(string? value) => DescriptionError = null;
 }
+
+public sealed record ColorOption(string Name, string Hex);

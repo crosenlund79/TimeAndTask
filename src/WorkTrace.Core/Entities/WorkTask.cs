@@ -36,6 +36,9 @@ public class WorkTask : IAuditedEntity, IChangeTracked
 
     public bool IsArchived { get; set; }
 
+    /// <summary>Optional deadline (local date). Warnings start <c>Tasks.DeadlineWarningDays</c> before it.</summary>
+    public DateOnly? Deadline { get; set; }
+
     public DateTime CreatedAtUtc { get; set; }
 
     public DateTime ModifiedAtUtc { get; set; }

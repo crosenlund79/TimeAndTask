@@ -13,6 +13,7 @@
   <views:InverseBoolConverter x:Key="InverseBool" />
   <views:ThumbnailConverter x:Key="Thumbnail" />
   <views:CountToVisibilityConverter x:Key="CountToVisibility" />
+  <views:HexBrushConverter x:Key="HexBrush" />
 
   <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
   <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas</FontFamily>
@@ -297,10 +298,21 @@
       <Setter.Value>
         <ControlTemplate TargetType="ListBoxItem">
           <Border x:Name="Bd" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="6"
-                  Padding="{TemplateBinding Padding}" BorderThickness="1" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-            <ContentPresenter />
+                  BorderThickness="1" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+            <!-- Stakeholder tint (none = neutral card) and a thin accent on the left -->
+            <Border CornerRadius="5" Background="{Binding StakeholderColor, Converter={StaticResource HexBrush}, ConverterParameter=0.10}">
+              <Grid>
+                <Border Width="3" HorizontalAlignment="Left" CornerRadius="5,0,0,5"
+                        Background="{Binding StakeholderColor, Converter={StaticResource HexBrush}}" />
+                <ContentPresenter Margin="{TemplateBinding Padding}" />
+              </Grid>
+            </Border>
           </Border>
           <ControlTemplate.Triggers>
+            <DataTrigger Binding="{Binding HasDeadlineWarning}" Value="True">
+              <Setter TargetName="Bd" Property="BorderThickness" Value="2.5" />
+              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
+            </DataTrigger>
             <Trigger Property="IsMouseOver" Value="True">
               <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
             </Trigger>
@@ -310,7 +322,6 @@
             <Trigger Property="IsKeyboardFocused" Value="True">
               <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
               <Setter TargetName="Bd" Property="BorderThickness" Value="2" />
-              <Setter TargetName="Bd" Property="Padding" Value="9,7" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>

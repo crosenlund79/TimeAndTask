@@ -42,6 +42,7 @@ internal sealed class ClientService(
             Description = Text.Clean(input.Description),
             IsInternal = input.IsInternal,
             IsActive = true,
+            Color = StakeholderColors.IsValid(input.Color) ? input.Color!.ToUpperInvariant() : null,
             CreatedAtUtc = now,
             ModifiedAtUtc = now,
         };
@@ -59,6 +60,10 @@ internal sealed class ClientService(
 
         client.Name = Text.Clean(input.Name)!;
         client.Description = Text.Clean(input.Description);
+        if (StakeholderColors.IsValid(input.Color))
+        {
+            client.Color = input.Color!.ToUpperInvariant();
+        }
         client.IsInternal = input.IsInternal;
         await SaveIfChangedAsync(db, client, cancellationToken);
         return await GetSummaryAsync(db, id, cancellationToken);
@@ -180,5 +185,6 @@ internal sealed class ClientService(
             c.Tasks.Count,
             c.Tasks.Count(t => !t.IsArchived),
             c.Tasks.Max(t => t.LastUsedAtUtc),
-            c.ModifiedAtUtc));
+            c.ModifiedAtUtc,
+            StakeholderColors.For(c.Id, c.Color)));
 }

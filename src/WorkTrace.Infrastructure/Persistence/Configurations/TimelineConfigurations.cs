@@ -14,6 +14,7 @@ internal sealed class ObservationConfiguration : IEntityTypeConfiguration<Observ
         builder.Ignore(o => o.IsCorrected);
 
         builder.HasOne(o => o.Task).WithMany().HasForeignKey(o => o.TaskId);
+        builder.HasOne(o => o.Client).WithMany().HasForeignKey(o => o.ClientId);
         builder.HasOne<WorkTask>().WithMany().HasForeignKey(o => o.OriginalTaskId);
         builder.HasOne(o => o.Channel).WithMany().HasForeignKey(o => o.ChannelId);
 
@@ -79,7 +80,8 @@ internal sealed class TimesheetAdjustmentConfiguration : IEntityTypeConfiguratio
         builder.ToTable("TimesheetAdjustments");
         builder.Property(a => a.Note).HasMaxLength(TimesheetAdjustment.NoteMaxLength);
         builder.HasOne(a => a.Task).WithMany().HasForeignKey(a => a.TaskId);
-        builder.HasIndex(a => new { a.LocalDate, a.TaskId }).IsUnique();
+        builder.HasOne(a => a.Client).WithMany().HasForeignKey(a => a.ClientId);
+        builder.HasIndex(a => new { a.LocalDate, a.TaskId, a.ClientId }).IsUnique();
         builder.ToTable(t => t.HasCheckConstraint("CK_TimesheetAdjustments_Minutes", "AdjustedMinutes >= 0 AND BaselineMinutes >= 0"));
     }
 }

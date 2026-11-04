@@ -110,7 +110,8 @@
                   </Grid.ColumnDefinitions>
                   <!-- Monogram -->
                   <Border Width="32" Height="32" CornerRadius="16" Margin="0,0,12,0" VerticalAlignment="Center"
-                          Background="{DynamicResource SubtleFillColorTertiaryBrush}">
+                          Background="{Binding Color, Converter={StaticResource HexBrush}, ConverterParameter=0.22}"
+                          BorderBrush="{Binding Color, Converter={StaticResource HexBrush}}" BorderThickness="1.5">
                     <TextBlock x:Name="Monogram" Text="&#xE716;" Style="{StaticResource IconText}" HorizontalAlignment="Center" FontSize="13" />
                   </Border>
                   <StackPanel Grid.Column="1">
@@ -222,6 +223,23 @@
                          MinHeight="72" MaxHeight="200" VerticalScrollBarVisibility="Auto" MaxLength="2000"
                          AutomationProperties.Name="Stakeholder description" />
                 <TextBlock Text="{Binding DescriptionError}" Style="{StaticResource ErrorText}" />
+
+                <TextBlock Text="Colour on the Board" Style="{StaticResource FieldLabelText}" />
+                <ListBox ItemsSource="{Binding ColorOptions}" SelectedValuePath="Hex" SelectedValue="{Binding Color}"
+                         Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         AutomationProperties.Name="Stakeholder colour">
+                  <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel />
+                    </ItemsPanelTemplate>
+                  </ListBox.ItemsPanel>
+                  <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:ColorOption}">
+                      <Border Width="22" Height="22" CornerRadius="11" ToolTip="{Binding Name}"
+                              Background="{Binding Hex, Converter={StaticResource HexBrush}}" AutomationProperties.Name="{Binding Name}" />
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
 
                 <CheckBox Margin="0,16,0,0" IsChecked="{Binding IsInternal}">
                   <StackPanel>

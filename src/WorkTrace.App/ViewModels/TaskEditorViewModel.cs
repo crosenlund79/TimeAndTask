@@ -23,7 +23,8 @@ public sealed partial class TaskEditorViewModel : ObservableObject
         Existing = existing;
         _original = existing is null
             ? new TaskInput(defaultClientId, null, null, null, null, null, showNewTasksOnBoard)
-            : new TaskInput(existing.ClientId, existing.TaskSystemId, existing.ExternalId, existing.Title, existing.Notes, existing.DefaultChannelId, existing.IsOnBoard);
+            : new TaskInput(existing.ClientId, existing.TaskSystemId, existing.ExternalId, existing.Title, existing.Notes, existing.DefaultChannelId, existing.IsOnBoard, existing.Deadline);
+        Deadline = _original.Deadline;
         ShowOnBoard = _original.ShowOnBoard ?? true;
 
         ClientId = _original.ClientId;
@@ -96,6 +97,17 @@ public sealed partial class TaskEditorViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsDirty))]
     public partial bool ShowOnBoard { get; set; }
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDirty), nameof(DeadlineDate))]
+    public partial DateOnly? Deadline { get; set; }
+
+    /// <summary>DatePicker-friendly <see cref="Deadline"/>.</summary>
+    public DateTime? DeadlineDate
+    {
+        get => Deadline?.ToDateTime(TimeOnly.MinValue);
+        set => Deadline = value is { } d ? DateOnly.FromDateTime(d) : null;
+    }
+
     /// <summary>
     /// ComboBox-friendly key for <see cref="TaskSystemId"/> (0 = none). A null write is a transient
     /// ComboBox state (items being replaced), never a user choice, and is ignored.
@@ -156,7 +168,7 @@ public sealed partial class TaskEditorViewModel : ObservableObject
 
     public string CreateClientLabel => $"Create stakeholder “{Text.Clean(ClientText)}”";
 
-    public TaskInput ToInput() => new(ClientId, TaskSystemId, ExternalId, Title, Notes, DefaultChannelId, ShowOnBoard);
+    public TaskInput ToInput() => new(ClientId, TaskSystemId, ExternalId, Title, Notes, DefaultChannelId, ShowOnBoard, Deadline);
 
     public void ApplyErrors(ValidationErrors errors)
     {
@@ -193,6 +205,7 @@ public sealed partial class TaskEditorViewModel : ObservableObject
         && a.TaskSystemId == b.TaskSystemId
         && a.DefaultChannelId == b.DefaultChannelId
         && a.ShowOnBoard == b.ShowOnBoard
+        && a.Deadline == b.Deadline
         && Text.Clean(a.ExternalId) == Text.Clean(b.ExternalId)
         && Text.Clean(a.Title) == Text.Clean(b.Title)
         && Text.Clean(a.Notes) == Text.Clean(b.Notes);

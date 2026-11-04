@@ -24,6 +24,8 @@ public sealed class WorkTraceSettings
 
     public BackupSettings Backup { get; set; } = new();
 
+    public TaskSettings Tasks { get; set; } = new();
+
     /// <summary>Deep copy, so editors can change settings without touching <see cref="ISettingsStore.Current"/>.</summary>
     public WorkTraceSettings Clone() =>
         System.Text.Json.JsonSerializer.Deserialize<WorkTraceSettings>(System.Text.Json.JsonSerializer.Serialize(this))!;
@@ -33,7 +35,7 @@ public sealed class WorkTraceSettings
     {
         var errors = new List<string>();
 
-        if (General is null || Tracking is null || Screenshots is null || Reporting is null || Board is null || Reminders is null || Backup is null)
+        if (General is null || Tracking is null || Screenshots is null || Reporting is null || Board is null || Reminders is null || Backup is null || Tasks is null)
         {
             errors.Add("All settings groups must be present.");
             return errors;
@@ -48,6 +50,8 @@ public sealed class WorkTraceSettings
             errors.Add("Tracking.MaxEstimationHorizonMinutes must be at least the check-in interval.");
         }
 
+        Range(errors, "Tasks.DeadlineWarningDays", Tasks.DeadlineWarningDays, 0, 60);
+        Range(errors, "Tasks.MaintenanceReminderMinutes", Tasks.MaintenanceReminderMinutes, 15, 24 * 60);
         Range(errors, "Backup.FolderKeep", Backup.FolderKeep, 1, 365);
         Range(errors, "Backup.EmailMaxMegabytes", Backup.EmailMaxMegabytes, 1, 35);
         Defined(errors, "Backup.Frequency", Backup.Frequency);
@@ -303,4 +307,15 @@ public sealed class BackupSettings
     public string? LastEmailError { get; set; }
 
     public string? LastEmailFingerprint { get; set; }
+}
+
+public sealed class TaskSettings
+{
+    /// <summary>Deadline warnings (bell, thicker card border) start this many days before the deadline.</summary>
+    public int DeadlineWarningDays { get; set; } = 3;
+
+    /// <summary>"Have you kept your Tasks and Board up to date?" after this long without using WorkTrace.</summary>
+    public bool MaintenanceReminderEnabled { get; set; } = true;
+
+    public int MaintenanceReminderMinutes { get; set; } = 120;
 }

@@ -13,9 +13,14 @@ public class TimesheetAdjustment : IAuditedEntity, IChangeTracked
 
     public DateOnly LocalDate { get; set; }
 
-    public int TaskId { get; set; }
+    /// <summary>The corrected task; null for a stakeholder-only line (then <see cref="ClientId"/> is set).</summary>
+    public int? TaskId { get; set; }
 
     public WorkTask? Task { get; set; }
+
+    public int? ClientId { get; set; }
+
+    public Client? Client { get; set; }
 
     public int AdjustedMinutes { get; set; }
 

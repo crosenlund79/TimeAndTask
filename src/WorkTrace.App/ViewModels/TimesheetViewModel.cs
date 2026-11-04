@@ -57,7 +57,7 @@ public sealed class TimesheetRowViewModel
         Task = task;
         _onEdit = onEdit;
         Cells = [.. minutes.Select((m, i) => new TimesheetCellViewModel(
-            this, i, Format(m), kind == TimesheetRowKind.Task && line?.TaskId is not null,
+            this, i, Format(m), kind == TimesheetRowKind.Task && (line?.TaskId is not null || line?.ClientId is not null),
             line?.Days[i].IsAdjusted ?? false, line?.Days[i].BaselineChanged ?? false))];
         TotalText = Format(minutes.Sum());
     }
@@ -174,7 +174,7 @@ public sealed partial class TimesheetViewModel(
 
     private async Task SaveCellAsync(TimesheetRowViewModel row, int day, string text)
     {
-        if (_week is null || row.Line?.TaskId is not { } taskId)
+        if (_week is null || row.Line is not { } line || (line.TaskId is null && line.ClientId is null))
         {
             return;
         }
@@ -187,7 +187,7 @@ public sealed partial class TimesheetViewModel(
             return;
         }
 
-        await RunAsync(() => timesheets.SetMinutesAsync(_week.Days[day], taskId, minutes, row.Line.Days[day].ComputedMinutes), "Could not save the correction.");
+        await RunAsync(() => timesheets.SetMinutesAsync(_week.Days[day], line.TaskId, line.ClientId, minutes, line.Days[day].ComputedMinutes), "Could not save the correction.");
         await LoadAsync(Monday);
     }
 
