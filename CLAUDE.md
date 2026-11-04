@@ -114,9 +114,14 @@ Whenever changes are made to the WorkTrace Windows application:
 3. Check the run's email step ("New version ready": sent, skipped or warned); mention it in one line if it did not
    send when it should have. Never print or change the secrets (`RESEND_API_KEY`, `WORKTRACE_NOTIFY_EMAIL`).
 4. Report: a brief summary, the build status, the version number and the commit hash.
-5. The link to the specific successful GitHub Actions run containing the installer
-   (`https://github.com/crosenlund79/TimeAndTask/actions/runs/<run id>`) is always the absolute last item in the
-   reply: nothing after it. If the build fails or no installer artifact exists, say so instead of linking an older run.
+5. Installer link (also after every successful Windows build):
+   - Verify that `WorkTrace-Setup.exe` was generated successfully (the `WorkTrace-Setup-<version>` artifact exists).
+   - Give the exact URL of the newest installer artifact. Prefer the direct artifact download link
+     (`https://github.com/crosenlund79/TimeAndTask/actions/runs/<run id>/artifacts/<artifact id>`); otherwise link the
+     specific successful build run (`https://github.com/crosenlund79/TimeAndTask/actions/runs/<run id>`).
+   - Never link to an older build or invent a download path. If the build fails or no installer artifact exists,
+     say so instead of linking.
+   - The installer link is always the absolute last line of the final response, with nothing after it.
 
 ## Known limitations
 - Development container is Linux: the WPF app cannot be run or UI-tested there; Windows behaviour is
