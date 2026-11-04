@@ -321,4 +321,7 @@ public sealed class TaskSettings
     public bool MaintenanceReminderEnabled { get; set; } = true;
 
     public int MaintenanceReminderMinutes { get; set; } = 120;
+
+    /// <summary>Task-list groups the user collapsed (remembered between sessions).</summary>
+    public List<Management.TaskGroup> CollapsedGroups { get; set; } = [];
 }

@@ -22,9 +22,13 @@ public sealed partial class TaskEditorViewModel : ObservableObject
     {
         Existing = existing;
         _original = existing is null
-            ? new TaskInput(defaultClientId, null, null, null, null, null, showNewTasksOnBoard)
-            : new TaskInput(existing.ClientId, existing.TaskSystemId, existing.ExternalId, existing.Title, existing.Notes, existing.DefaultChannelId, existing.IsOnBoard, existing.Deadline);
+            ? new TaskInput(defaultClientId, null, null, null, null, null, showNewTasksOnBoard, null, false, false, null)
+            : new TaskInput(existing.ClientId, existing.TaskSystemId, existing.ExternalId, existing.Title, existing.Notes, existing.DefaultChannelId, existing.IsOnBoard, existing.Deadline,
+                existing.IsRecurring, existing.IsWaiting, existing.WaitingReason);
         Deadline = _original.Deadline;
+        IsRecurring = _original.IsRecurring == true;
+        IsWaiting = _original.IsWaiting == true;
+        WaitingReason = _original.WaitingReason;
         ShowOnBoard = _original.ShowOnBoard ?? true;
 
         ClientId = _original.ClientId;
@@ -101,6 +105,23 @@ public sealed partial class TaskEditorViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsDirty), nameof(DeadlineDate))]
     public partial DateOnly? Deadline { get; set; }
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDirty))]
+    public partial bool IsRecurring { get; set; }
+
+    /// <summary>Waiting for external input (information, a response, approval or action from others).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDirty))]
+    public partial bool IsWaiting { get; set; }
+
+    /// <summary>"Waiting for / Reason" (optional, plain text). Cleared when the waiting status is cleared.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDirty))]
+    public partial string? WaitingReason { get; set; }
+
+    [ObservableProperty]
+    public partial string? WaitingReasonError { get; private set; }
+
     /// <summary>DatePicker-friendly <see cref="Deadline"/>.</summary>
     public DateTime? DeadlineDate
     {
@@ -168,7 +189,8 @@ public sealed partial class TaskEditorViewModel : ObservableObject
 
     public string CreateClientLabel => $"Create stakeholder “{Text.Clean(ClientText)}”";
 
-    public TaskInput ToInput() => new(ClientId, TaskSystemId, ExternalId, Title, Notes, DefaultChannelId, ShowOnBoard, Deadline);
+    public TaskInput ToInput() => new(ClientId, TaskSystemId, ExternalId, Title, Notes, DefaultChannelId, ShowOnBoard, Deadline,
+        IsRecurring, IsWaiting, IsWaiting ? WaitingReason : null);
 
     public void ApplyErrors(ValidationErrors errors)
     {
@@ -178,6 +200,7 @@ public sealed partial class TaskEditorViewModel : ObservableObject
         TaskSystemError = errors.For(nameof(TaskInput.TaskSystemId));
         ChannelError = errors.For(nameof(TaskInput.DefaultChannelId));
         NotesError = errors.For(nameof(TaskInput.Notes));
+        WaitingReasonError = errors.For(nameof(TaskInput.WaitingReason));
     }
 
     partial void OnClientIdChanged(int? value) => ClientError = null;
@@ -206,6 +229,9 @@ public sealed partial class TaskEditorViewModel : ObservableObject
         && a.DefaultChannelId == b.DefaultChannelId
         && a.ShowOnBoard == b.ShowOnBoard
         && a.Deadline == b.Deadline
+        && a.IsRecurring == b.IsRecurring
+        && a.IsWaiting == b.IsWaiting
+        && Text.Clean(a.WaitingReason) == Text.Clean(b.WaitingReason)
         && Text.Clean(a.ExternalId) == Text.Clean(b.ExternalId)
         && Text.Clean(a.Title) == Text.Clean(b.Title)
         && Text.Clean(a.Notes) == Text.Clean(b.Notes);

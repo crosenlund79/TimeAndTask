@@ -88,6 +88,21 @@ public class TimesheetServiceTests : ManagementTestBase
         Assert.True(StakeholderColors.IsValid((await Clients.GetClientsAsync(cancellationToken: Ct))[0].Color));
     }
 
+    [Fact]
+    public async Task TaskGroups_WaitingWinsOverRecurring_AndClearingWaitingReturnsTheTask()
+    {
+        var clientId = await InternalClientIdAsync();
+        var task = await Tasks.CreateAsync(new TaskInput(clientId, null, null, "Weekly report", null, null, IsRecurring: true), Ct);
+        Assert.Equal(TaskGroup.Recurring, task.Group);
+
+        var input = new TaskInput(clientId, null, null, "Weekly report", null, null, IsRecurring: true, IsWaiting: true, WaitingReason: " Figures from finance ");
+        task = await Tasks.UpdateAsync(task.Id, input, Ct);
+        Assert.Equal((TaskGroup.Waiting, "Figures from finance"), (task.Group, task.WaitingReason));
+
+        task = await Tasks.UpdateAsync(task.Id, input with { IsWaiting = false }, Ct);
+        Assert.Equal((TaskGroup.Recurring, (string?)null), (task.Group, task.WaitingReason));
+    }
+
     [Theory]
     [InlineData("1.5", 90)]
     [InlineData("1,25", 75)]

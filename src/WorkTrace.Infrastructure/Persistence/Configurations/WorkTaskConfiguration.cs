@@ -12,6 +12,7 @@ internal sealed class WorkTaskConfiguration : IEntityTypeConfiguration<WorkTask>
         builder.Property(t => t.Title).HasMaxLength(WorkTask.TitleMaxLength);
         builder.Property(t => t.ExternalId).HasMaxLength(WorkTask.ExternalIdMaxLength).UseCollation("NOCASE");
         builder.Property(t => t.Notes).HasMaxLength(WorkTask.NotesMaxLength);
+        builder.Property(t => t.WaitingReason).HasMaxLength(WorkTask.WaitingReasonMaxLength);
 
         builder.HasOne(t => t.Client).WithMany(c => c.Tasks).HasForeignKey(t => t.ClientId);
         builder.HasOne(t => t.TaskSystem).WithMany().HasForeignKey(t => t.TaskSystemId);

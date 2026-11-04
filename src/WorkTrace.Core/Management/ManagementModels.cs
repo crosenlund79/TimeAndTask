@@ -12,7 +12,10 @@ public sealed record TaskInput(
     string? Notes,
     int? DefaultChannelId,
     bool? ShowOnBoard = null,
-    DateOnly? Deadline = null);
+    DateOnly? Deadline = null,
+    bool? IsRecurring = null,
+    bool? IsWaiting = null,
+    string? WaitingReason = null);
 
 // ---- Read models (what lists and pickers show) ----
 
@@ -47,7 +50,21 @@ public sealed record TaskSummary(
     bool IsOnBoard = false,
     DateOnly? Deadline = null,
     string ClientColor = "#7A7F87",
-    DeadlineState DeadlineState = DeadlineState.None);
+    DeadlineState DeadlineState = DeadlineState.None,
+    bool IsRecurring = false,
+    bool IsWaiting = false,
+    string? WaitingReason = null)
+{
+    /// <summary>The one task-list group the task belongs to: waiting wins over recurring.</summary>
+    public TaskGroup Group => IsWaiting ? TaskGroup.Waiting : IsRecurring ? TaskGroup.Recurring : TaskGroup.Regular;
+}
+
+public enum TaskGroup
+{
+    Regular = 0,
+    Recurring = 1,
+    Waiting = 2,
+}
 
 public enum LookupKind
 {

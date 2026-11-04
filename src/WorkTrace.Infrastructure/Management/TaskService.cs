@@ -187,6 +187,17 @@ internal sealed class TaskService(
         task.Notes = Text.Clean(input.Notes);
         task.DefaultChannelId = input.DefaultChannelId;
         task.Deadline = input.Deadline;
+        if (input.IsRecurring is { } recurring)
+        {
+            task.IsRecurring = recurring;
+        }
+
+        if (input.IsWaiting is { } waiting)
+        {
+            // Clearing the waiting status clears its reason too.
+            task.IsWaiting = waiting;
+            task.WaitingReason = waiting ? Text.Clean(input.WaitingReason) : null;
+        }
     }
 
     private async Task SaveIfChangedAsync(WorkTraceDbContext db, WorkTask task, CancellationToken cancellationToken)
@@ -273,6 +284,9 @@ internal sealed class TaskService(
             db.BoardCards.Any(c => c.WorkTaskId == t.Id && !c.IsArchived),
             t.Deadline,
             StakeholderColors.For(t.ClientId, t.Client.Color),
-            Deadlines.State(t.Deadline, today, warningDays, t.IsArchived)));
+            Deadlines.State(t.Deadline, today, warningDays, t.IsArchived),
+            t.IsRecurring,
+            t.IsWaiting,
+            t.WaitingReason));
     }
 }

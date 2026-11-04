@@ -3,8 +3,11 @@ using WorkTrace.Core.Management;
 namespace WorkTrace.App.ViewModels;
 
 /// <summary>A row in the task list.</summary>
-public sealed class TaskItemViewModel(TaskSummary summary, string lastUsedText)
+public sealed class TaskItemViewModel(TaskSummary summary, string lastUsedText, TaskGroupViewModel group)
 {
+    /// <summary>The list group the row is shown in (the list groups by this object).</summary>
+    public TaskGroupViewModel Group { get; } = group;
+
     public TaskSummary Summary { get; } = summary;
 
     public int Id => Summary.Id;
@@ -26,4 +29,10 @@ public sealed class TaskItemViewModel(TaskSummary summary, string lastUsedText)
     public string? DeadlineText => CardText.DeadlineText(Summary.Deadline, Summary.DeadlineState);
 
     public string LastUsedText { get; } = lastUsedText;
+
+    public bool IsWaiting => Summary.IsWaiting;
+
+    public string? WaitingReason => Summary.WaitingReason;
+
+    public string WaitingText => string.IsNullOrWhiteSpace(Summary.WaitingReason) ? "Waiting for external input" : "Waiting for: " + Summary.WaitingReason;
 }

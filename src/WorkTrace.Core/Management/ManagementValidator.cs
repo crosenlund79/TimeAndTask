@@ -58,6 +58,11 @@ public static class ManagementValidator
             errors.Add(nameof(TaskInput.Notes), $"Use at most {WorkTask.NotesMaxLength} characters.");
         }
 
+        if (Text.Clean(input.WaitingReason)?.Length > WorkTask.WaitingReasonMaxLength)
+        {
+            errors.Add(nameof(TaskInput.WaitingReason), $"Use at most {WorkTask.WaitingReasonMaxLength} characters.");
+        }
+
         return errors;
     }
 

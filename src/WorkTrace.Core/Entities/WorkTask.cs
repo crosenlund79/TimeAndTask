@@ -8,6 +8,7 @@ public class WorkTask : IAuditedEntity, IChangeTracked
     public const int TitleMaxLength = 500;
     public const int ExternalIdMaxLength = 100;
     public const int NotesMaxLength = 8000;
+    public const int WaitingReasonMaxLength = 1000;
 
     public int Id { get; set; }
 
@@ -38,6 +39,15 @@ public class WorkTask : IAuditedEntity, IChangeTracked
 
     /// <summary>Optional deadline (local date). Warnings start <c>Tasks.DeadlineWarningDays</c> before it.</summary>
     public DateOnly? Deadline { get; set; }
+
+    /// <summary>Recurring work (meetings, routine duties): listed in its own group.</summary>
+    public bool IsRecurring { get; set; }
+
+    /// <summary>Waiting for information, a response, approval or action from someone else.</summary>
+    public bool IsWaiting { get; set; }
+
+    /// <summary>Optional "Waiting for / Reason" text while <see cref="IsWaiting"/>.</summary>
+    public string? WaitingReason { get; set; }
 
     public DateTime CreatedAtUtc { get; set; }
 

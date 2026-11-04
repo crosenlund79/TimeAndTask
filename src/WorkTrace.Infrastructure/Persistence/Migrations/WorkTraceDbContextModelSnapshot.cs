@@ -842,6 +842,12 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsArchived")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsRecurring")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsWaiting")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("LastUsedAtUtc")
                         .HasColumnType("TEXT");
 
@@ -858,6 +864,10 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WaitingReason")
+                        .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

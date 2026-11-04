@@ -51,6 +51,42 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         _lookups = lookups;
         _dialogs = dialogs;
         _timeProvider = timeProvider;
+
+        Groups =
+        [
+            new(TaskGroup.Regular, "Regular Tasks", "\uE9D5", SaveGroupState),
+            new(TaskGroup.Recurring, "Recurring Tasks", "\uE8EE", SaveGroupState),
+            new(TaskGroup.Waiting, "Waiting for External Input", "\uE823", SaveGroupState),
+        ];
+        foreach (var group in Groups)
+        {
+            group.IsExpanded = !settings.Current.Tasks.CollapsedGroups.Contains(group.Group);
+        }
+
+        // One list, grouped (selection, keyboard and bulk actions keep working across groups).
+        System.Windows.Data.CollectionViewSource.GetDefaultView(Items).GroupDescriptions
+            .Add(new System.Windows.Data.PropertyGroupDescription(nameof(TaskItemViewModel.Group)));
+    }
+
+    /// <summary>Regular, Recurring and Waiting for External Input, in display order.</summary>
+    public IReadOnlyList<TaskGroupViewModel> Groups { get; }
+
+    private void SaveGroupState(TaskGroupViewModel changed)
+    {
+        var collapsed = Groups.Where(g => !g.IsExpanded).Select(g => g.Group).ToList();
+        _ = UpdateGroupSettingsAsync(collapsed);
+    }
+
+    private async Task UpdateGroupSettingsAsync(List<TaskGroup> collapsed)
+    {
+        try
+        {
+            await _settings.UpdateAsync(s => s.Tasks.CollapsedGroups = collapsed);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Task group state could not be saved");
+        }
     }
 
     /// <summary>Raised when the view should move keyboard focus into the editor (new task).</summary>
@@ -473,9 +509,10 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         cancellationToken.ThrowIfCancellationRequested();
         var now = UtcTime.Now(_timeProvider);
         Items.Clear();
-        foreach (var task in results)
+        // Stable ordering by group keeps the search ranking within each group.
+        foreach (var task in results.OrderBy(t => t.Group))
         {
-            Items.Add(new TaskItemViewModel(task, RelativeTime.Format(task.LastUsedAtUtc, now, TimeZoneInfo.Local, never: "not used yet")));
+            Items.Add(new TaskItemViewModel(task, RelativeTime.Format(task.LastUsedAtUtc, now, TimeZoneInfo.Local, never: "not used yet"), Groups[(int)task.Group]));
         }
 
         var hasQuery = !string.IsNullOrWhiteSpace(SearchText) || ClientFilterId is not null;
