@@ -97,32 +97,33 @@ internal sealed partial class BoardService(
 
     // ---- Creating ----
 
-    public async Task<CardDetail> CaptureAsync(string? text, string? url = null, CancellationToken cancellationToken = default)
+    public async Task<int> RetireInboxAsync(CancellationToken cancellationToken = default)
     {
-        var title = Text.Clean(text);
-        var link = Text.Clean(url);
-        if (link is null && title is not null && BoardRules.IsWebUrl(title) && !title.Contains(' ', StringComparison.Ordinal))
+        List<(int Id, bool HasTask)> inbox;
+        await using (var db = await contextFactory.CreateDbContextAsync(cancellationToken))
         {
-            link = title;
-            title = null;
+            inbox = [.. (await db.BoardCards.Where(c => c.Status == BoardStatus.Inbox && !c.IsArchived)
+                .Select(c => new { c.Id, HasTask = c.WorkTaskId != null }).ToListAsync(cancellationToken)).Select(c => (c.Id, c.HasTask))];
         }
 
-        if (title is null && link is null)
+        foreach (var (id, hasTask) in inbox)
         {
-            throw DomainValidationException.ForField(nameof(CardFields.Title), "Type something to capture.");
+            if (hasTask)
+            {
+                await MoveAsync(id, BoardStatus.Backlog, null, cancellationToken: cancellationToken); // a task's card stays on the board
+            }
+            else
+            {
+                await SetArchivedAsync(id, true, cancellationToken);
+            }
         }
 
-        var links = link is null ? [] : BoardRules.CleanLinks([new LinkInput(null, link)]);
-        title ??= links[0].Label!;
-        if (title.Length > BoardCard.TitleMaxLength)
+        if (inbox.Count > 0)
         {
-            // Long captures keep their full text in the description.
-            var full = title;
-            title = full[..(BoardCard.TitleMaxLength - 1)] + "…";
-            return await CreateCoreAsync(new CardFields(title, null, BoardPriority.Normal, full, null, null, null), BoardStatus.Inbox, links, cancellationToken);
+            logger.LogInformation("Retired {Count} Inbox card(s)", inbox.Count);
         }
 
-        return await CreateCoreAsync(new CardFields(title, null, BoardPriority.Normal, null, null, null, null), BoardStatus.Inbox, links, cancellationToken);
+        return inbox.Count;
     }
 
     public Task<CardDetail> CreateAsync(CardFields fields, BoardStatus status, CancellationToken cancellationToken = default) =>

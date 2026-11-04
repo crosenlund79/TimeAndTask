@@ -6,7 +6,7 @@ using WorkTrace.Core.Entities;
 
 namespace WorkTrace.App.ViewModels;
 
-/// <summary>A card on the board, in the Inbox or in the Archive. Updated in place when the card changes.</summary>
+/// <summary>A card on the board or in the Archive. Updated in place when the card changes.</summary>
 public sealed partial class CardItemViewModel(CardSummary summary) : ObservableObject
 {
     [ObservableProperty]

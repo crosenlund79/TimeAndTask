@@ -34,7 +34,7 @@ public sealed class AutomaticBackupTests : IAsyncLifetime
     {
         var folder = Path.Combine(_data.Root, "OneDrive", "WorkTrace");
         await Get<ISettingsStore>().UpdateAsync(s => (s.Backup.FolderEnabled, s.Backup.Folder) = (true, folder), Ct);
-        await Get<IBoardService>().CaptureAsync("A thought", cancellationToken: Ct);
+        await Get<IBoardService>().CreateAsync(new CardFields("A thought", null, BoardPriority.Normal, null, null, null, null), BoardStatus.Backlog, Ct);
 
         var first = Assert.Single(await Get<IAutomaticBackupService>().RunDueAsync(Ct));
         Assert.True(first.Succeeded, first.Message);
@@ -60,7 +60,7 @@ public sealed class AutomaticBackupTests : IAsyncLifetime
         var board = Get<IBoardService>();
         for (var i = 0; i < 3; i++)
         {
-            var card = await board.CaptureAsync($"Card {i}", cancellationToken: Ct);
+            var card = await board.CreateAsync(new CardFields($"Card {i}", null, BoardPriority.Normal, null, null, null, null), BoardStatus.Backlog, Ct);
             var noise = new byte[400 * 1024];
             Random.Shared.NextBytes(noise); // incompressible
             await board.AddAttachmentAsync(card.Id, "shot.png", "image/png", noise, cancellationToken: Ct);

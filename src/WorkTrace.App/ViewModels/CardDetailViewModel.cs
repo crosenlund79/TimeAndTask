@@ -38,7 +38,7 @@ public sealed record CardPanelServices(
     ILogger<CardDetailViewModel> Logger);
 
 /// <summary>
-/// The open card (right-hand panel on Board and Inbox). Text fields save automatically shortly after
+/// The open card (right-hand panel on the Board). Text fields save automatically shortly after
 /// typing stops; every other change saves at once. Saved edits go to the shared Undo history.
 /// </summary>
 public sealed partial class CardDetailViewModel : ViewModelBase, IDisposable
@@ -104,13 +104,11 @@ public sealed partial class CardDetailViewModel : ViewModelBase, IDisposable
     public partial int StatusKey { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsInbox))]
     public partial BoardStatus Status { get; private set; }
 
     [ObservableProperty]
     public partial bool IsArchived { get; private set; }
 
-    public bool IsInbox => Status == BoardStatus.Inbox;
 
     [ObservableProperty]
     public partial string Meta { get; private set; } = "";
@@ -119,7 +117,7 @@ public sealed partial class CardDetailViewModel : ViewModelBase, IDisposable
 
     public IReadOnlyList<PickerOption> PriorityOptions { get; } = CardText.PriorityOptions();
 
-    public IReadOnlyList<PickerOption> StatusOptions { get; } = CardText.StatusOptions();
+    public IReadOnlyList<PickerOption> StatusOptions { get; } = [.. CardText.StatusOptions().Where(o => o.Id != CardText.KeyOf(BoardStatus.Inbox))];
 
     public ObservableCollection<LinkItemViewModel> Links { get; } = [];
 
@@ -423,9 +421,6 @@ public sealed partial class CardDetailViewModel : ViewModelBase, IDisposable
         Notifications.Show(IsArchived ? $"{Key} archived. Find it under Archive." : $"{Key} restored.", NotificationKind.Success, "Undo", _s.Session.UndoAsync);
     }
 
-    /// <summary>Inbox → board (Backlog by default).</summary>
-    [RelayCommand]
-    private Task ToBoardAsync() => MoveToAsync(BoardStatus.Backlog);
 
     // ---- Links ----
 

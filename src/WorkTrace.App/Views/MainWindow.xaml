@@ -23,7 +23,6 @@
     <KeyBinding Modifiers="Ctrl" Key="D7" Command="{Binding GoToSectionCommand}" CommandParameter="{x:Static shell:AppSection.Guides}" />
     <KeyBinding Modifiers="Ctrl" Key="D8" Command="{Binding GoToSectionCommand}" CommandParameter="{x:Static shell:AppSection.Timesheet}" />
     <KeyBinding Modifiers="Ctrl" Key="D9" Command="{Binding GoToSectionCommand}" CommandParameter="{x:Static shell:AppSection.Screenshots}" />
-    <KeyBinding Modifiers="Ctrl+Shift" Key="C" Command="{Binding QuickCaptureCommand}" />
   </Window.InputBindings>
 
   <Window.Resources>

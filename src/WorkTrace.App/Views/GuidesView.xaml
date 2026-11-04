@@ -61,12 +61,20 @@
                 SelectedItem="{Binding CategoryFilter}" AutomationProperties.Name="Filter by category" />
       <CheckBox Grid.Column="2" Content="Only stale" Margin="14,0,0,0" VerticalAlignment="Center" IsChecked="{Binding OnlyStale}" />
       <TextBlock Grid.Column="3" Text="{Binding Summary}" Style="{StaticResource CaptionText}" Margin="14,0,0,0" VerticalAlignment="Center" />
-      <Button Grid.Column="4" Padding="14,6" Style="{DynamicResource AccentButtonStyle}" Command="{Binding NewGuideCommand}" ToolTip="New guide (Ctrl+N)">
-        <StackPanel Orientation="Horizontal">
-          <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
-          <TextBlock Text="New guide" />
-        </StackPanel>
-      </Button>
+      <StackPanel Grid.Column="4" Orientation="Horizontal">
+        <Button Padding="12,6" Margin="0,0,8,0" Command="{Binding EditSelectedCommand}" ToolTip="Edit the selected guide (Enter)">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE70F;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
+            <TextBlock Text="Edit" />
+          </StackPanel>
+        </Button>
+        <Button Padding="14,6" Style="{DynamicResource AccentButtonStyle}" Command="{Binding NewGuideCommand}" ToolTip="New guide (Ctrl+N)">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
+            <TextBlock Text="New guide" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
     </Grid>
 
     <Grid Grid.Row="2">
@@ -92,7 +100,8 @@
         </DockPanel>
         <ListBox x:Name="GuideList" Style="{StaticResource RowListBox}" ItemsSource="{Binding Source={StaticResource GroupedGuides}}"
                  SelectedItem="{Binding SelectedItem}" VirtualizingPanel.IsVirtualizingWhenGrouping="True"
-                 SelectionMode="Extended" SelectionChanged="OnListSelectionChanged"
+                 SelectionMode="Extended" SelectionChanged="OnListSelectionChanged" MouseDoubleClick="OnListDoubleClick"
+                 ToolTip="Double-click opens the attached document"
                  AutomationProperties.Name="Guides">
           <ListBox.InputBindings>
             <KeyBinding Key="Delete" Command="{Binding DeleteSelectedCommand}" />
@@ -150,7 +159,7 @@
               <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE74D;" ToolTip="Delete guide"
                       Command="{Binding DeleteCommand}" VerticalAlignment="Top" />
               <StackPanel>
-                <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" FontSize="18" FontWeight="SemiBold"
+                <TextBox x:Name="GuideTitleBox" Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" FontSize="18" FontWeight="SemiBold"
                          MaxLength="200" AutomationProperties.Name="Guide title" />
                 <TextBlock Style="{StaticResource CaptionText}" Margin="0,4,0,0">
                   <Run Text="{Binding Dates, Mode=OneWay}" />

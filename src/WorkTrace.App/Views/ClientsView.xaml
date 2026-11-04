@@ -51,13 +51,20 @@
 
       <CheckBox Grid.Column="1" Content="Show inactive" Margin="14,0,0,0" VerticalAlignment="Center" IsChecked="{Binding ShowInactive}" />
 
-      <Button Grid.Column="3" Padding="14,6" Style="{DynamicResource AccentButtonStyle}" Command="{Binding NewClientCommand}"
-              ToolTip="New stakeholder (Ctrl+N)">
-        <StackPanel Orientation="Horizontal">
-          <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
-          <TextBlock Text="New stakeholder" />
-        </StackPanel>
-      </Button>
+      <StackPanel Grid.Column="3" Orientation="Horizontal">
+        <Button Padding="12,6" Margin="0,0,8,0" Command="{Binding EditSelectedCommand}" ToolTip="Edit the selected stakeholder (Enter)">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE70F;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
+            <TextBlock Text="Edit" />
+          </StackPanel>
+        </Button>
+        <Button Padding="14,6" Style="{DynamicResource AccentButtonStyle}" Command="{Binding NewClientCommand}" ToolTip="New stakeholder (Ctrl+N)">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
+            <TextBlock Text="New stakeholder" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
     </Grid>
 
     <Grid Grid.Row="2">

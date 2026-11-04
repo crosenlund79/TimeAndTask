@@ -17,33 +17,20 @@ public class BoardFlowTests
         [.. vm.Columns.Single(c => c.Status == status).Cards.Select(c => c.Title)];
 
     [Fact]
-    public Task Capture_GoesToInbox_ThenToBoard_AndUndoBringsItBack() => WpfTestHost.RunAsync(async () =>
+    public Task QuickAdd_PutsTheCardInTheBacklog_WithAPastedScreenshot() => WpfTestHost.RunAsync(async () =>
     {
         await using var ctx = await UiTestContext.CreateAsync();
-        var inbox = ctx.Get<InboxViewModel>();
         var board = ctx.Get<BoardViewModel>();
-        await inbox.ActivateAsync(null);
         await board.ActivateAsync(null);
 
-        inbox.CaptureText = "Ask Peter about the export";
-        inbox.SetCaptureImage([1, 2, 3]);
-        await inbox.CaptureCommand.ExecuteAsync(null);
+        board.CaptureText = "Ask Peter about the export";
+        board.SetCaptureImage([1, 2, 3]);
+        await board.CaptureCommand.ExecuteAsync(null);
 
-        var item = Assert.Single(inbox.Items);
-        Assert.Null(inbox.CaptureText);
-        Assert.False(inbox.HasCaptureImage);
-        Assert.Equal(1, item.AttachmentCount);
-        Assert.All(board.Columns, c => Assert.Empty(c.Cards));
-
-        await inbox.ToBoardCommand.ExecuteAsync(item);
-        await WpfTestHost.SettleAsync();
-        Assert.Empty(inbox.Items);
-        Assert.Equal(["Ask Peter about the export"], Titles(board, BoardStatus.Backlog)); // board reloaded via the session
-
-        await inbox.UndoCommand.ExecuteAsync(null);
-        await WpfTestHost.SettleAsync();
-        Assert.Single(inbox.Items);
-        Assert.Empty(Titles(board, BoardStatus.Backlog));
+        Assert.Null(board.CaptureText);
+        Assert.False(board.HasCaptureImage);
+        var card = Assert.Single(board.Columns.Single(c => c.Status == BoardStatus.Backlog).Cards);
+        Assert.Equal(("Ask Peter about the export", 1), (card.Title, card.AttachmentCount));
     });
 
     [Fact]

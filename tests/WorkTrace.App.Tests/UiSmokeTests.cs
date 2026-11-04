@@ -51,8 +51,6 @@ public class UiSmokeTests
         await board.SetArchivedAsync(archivedCard.Id, true);
         var guide = await ctx.Get<WorkTrace.Core.Guides.IGuideService>().CreateAsync("Release checklist", "Deployment");
         await ctx.Get<WorkTrace.Core.Guides.IGuideService>().UpdateAsync(guide.Id, guide.Title, guide.Category, "Step 1\nStep 2");
-        await board.CaptureAsync("Inbox thought");
-        await board.CaptureAsync("https://example.com/captured");
 
         WpfTestHost.BindingErrors.Take();
         WpfTestHost.UnhandledExceptions.Clear();
@@ -131,15 +129,6 @@ public class UiSmokeTests
             System.IO.File.Delete(zip);
             await boardPage.CloseCardCommand.ExecuteAsync(null);
             await WpfTestHost.SettleAsync();
-
-            window.ViewModel.NavigateTo(AppSection.Tasks, new CaptureRequest()); // Inbox lives on the Tasks page
-            await WpfTestHost.SettleAsync(10);
-            Assert.True(ctx.Get<TasksViewModel>().ShowInbox);
-            var inboxPage = ctx.Get<InboxViewModel>();
-            Assert.Equal(2, inboxPage.Items.Count);
-            inboxPage.SelectedItem = inboxPage.Items[0];
-            await WpfTestHost.SettleAsync(10);
-            Assert.NotNull(inboxPage.Detail);
 
             window.ViewModel.NavigateTo(AppSection.Timesheet);
             await WpfTestHost.SettleAsync(10);

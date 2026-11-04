@@ -13,7 +13,7 @@ namespace WorkTrace.App.ViewModels;
 public sealed record OpenCardRequest(int CardId);
 
 /// <summary>
-/// Shared behaviour of the Board and Inbox pages: quick capture, the open card panel, Undo, and reloading
+/// Shared behaviour of the board pages: quick add, the open card panel, Undo, and reloading
 /// when the board changes elsewhere. Everything saves at once, so there are never unsaved changes.
 /// </summary>
 public abstract partial class BoardPageViewModel : ViewModelBase, ISectionViewModel, IDisposable
@@ -85,7 +85,7 @@ public abstract partial class BoardPageViewModel : ViewModelBase, ISectionViewMo
             CardDetail? card = null;
             await RunAsync(async () =>
             {
-                card = await Board.CaptureAsync(text);
+                card = await Board.CreateAsync(new CardFields(text, null, Core.Entities.BoardPriority.Normal, null, null, null, null), Core.Entities.BoardStatus.Backlog);
                 if (image is not null)
                 {
                     await Board.AddAttachmentAsync(card.Id, "screenshot.png", "image/png", image);
@@ -97,7 +97,7 @@ public abstract partial class BoardPageViewModel : ViewModelBase, ISectionViewMo
                 CaptureImage = null;
                 Session.Announce(card.Id, this);
                 await ReloadAsync();
-                Notifications.Show($"Captured to the Inbox as {card.Key}.", NotificationKind.Success);
+                Notifications.Show($"Added {card.Key} to the Backlog.", NotificationKind.Success);
             }
         }
         catch (DomainValidationException ex)
@@ -418,56 +418,4 @@ public sealed partial class BoardViewModel : BoardPageViewModel
 
     [RelayCommand]
     private void ToggleArchive() => ShowArchive = !ShowArchive;
-}
-
-/// <summary>The Inbox: captured items that are not on the board yet, newest first.</summary>
-public sealed partial class InboxViewModel(CardPanelServices services) : BoardPageViewModel(services)
-{
-    public ObservableCollection<CardItemViewModel> Items { get; } = [];
-
-    [ObservableProperty]
-    public partial CardItemViewModel? SelectedItem { get; set; }
-
-    [ObservableProperty]
-    public partial string? Summary { get; private set; }
-
-    protected override void OnCardClosed() => SelectedItem = null;
-
-    partial void OnSelectedItemChanged(CardItemViewModel? value)
-    {
-        if (value is not null)
-        {
-            _ = OpenCardAsync(value.Id);
-        }
-    }
-
-    protected override async Task LoadAsync()
-    {
-        var cards = await Board.GetCardsAsync(new CardFilter(SearchText, Statuses: [BoardStatus.Inbox]));
-        Sync(Items, [.. cards.OrderByDescending(c => c.CreatedAtUtc).ThenByDescending(c => c.Number)]);
-        Summary = cards.Count == 0 ? null : $"{cards.Count} item{(cards.Count == 1 ? "" : "s")}";
-        EmptyMessage = cards.Count > 0 ? null
-            : string.IsNullOrWhiteSpace(SearchText) ? "Inbox zero. Type above and press Enter to capture a thought, link or screenshot."
-            : "Nothing in the Inbox matches.";
-        if (Detail is { } detail && Items.All(i => i.Id != detail.Id) && string.IsNullOrWhiteSpace(SearchText))
-        {
-            await OpenCardAsync(null); // moved to the board or archived
-        }
-    }
-
-    [RelayCommand]
-    private async Task ToBoardAsync(CardItemViewModel item)
-    {
-        await RunAsync(async () => Session.Record(await Board.MoveAsync(item.Id, BoardStatus.Backlog, null), this), "Could not move the item.");
-        await ReloadAsync();
-        Notifications.Show($"{item.Key} moved to the Backlog.", NotificationKind.Success, "Undo", Session.UndoAsync);
-    }
-
-    [RelayCommand]
-    private async Task ArchiveAsync(CardItemViewModel item)
-    {
-        await RunAsync(async () => Session.Record(await Board.SetArchivedAsync(item.Id, true), this), "Could not archive the item.");
-        await ReloadAsync();
-        Notifications.Show($"{item.Key} archived.", NotificationKind.Success, "Undo", Session.UndoAsync);
-    }
 }

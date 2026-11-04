@@ -68,7 +68,7 @@ public class BoardImportTests : ManagementTestBase
         }
 
         // Numbers are never reused: the next card continues after the web board's nextId.
-        var next = await Board.CaptureAsync("new", cancellationToken: Ct);
+        var next = await Board.CreateAsync(new CardFields("new", null, BoardPriority.Normal, null, null, null, null), BoardStatus.Backlog, Ct);
         Assert.Equal(BoardCard.FormatKey(web["nextId"]!.GetValue<int>()), next.Key);
     }
 

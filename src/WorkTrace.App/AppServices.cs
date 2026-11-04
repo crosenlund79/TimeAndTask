@@ -54,7 +54,6 @@ public static class AppServices
             sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CardDetailViewModel>>()));
         services.AddSingleton<BackupViewModel>();
         services.AddSingleton<BoardViewModel>();
-        services.AddSingleton<InboxViewModel>();
         services.AddSingleton<GuidesViewModel>();
         services.AddSingleton<TimesheetViewModel>();
         services.AddSingleton<ScreenshotsViewModel>();

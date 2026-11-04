@@ -76,7 +76,24 @@ public sealed partial class GuidesViewModel(
     public partial string? Summary { get; private set; }
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(EditSelectedCommand))]
     public partial GuideItemViewModel? SelectedItem { get; set; }
+
+    /// <summary>Raised when the view should put the cursor in the guide editor.</summary>
+    public event EventHandler? EditorFocusRequested;
+
+    [RelayCommand(CanExecute = nameof(CanEditSelected))]
+    private async Task EditSelectedAsync()
+    {
+        if (SelectedItem is { } item && Guide?.Id != item.Id)
+        {
+            await OpenAsync(item.Id);
+        }
+
+        EditorFocusRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private bool CanEditSelected() => SelectedItem is not null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasGuide))]
@@ -295,15 +312,33 @@ public sealed partial class GuidesViewModel(
     }
 
     [RelayCommand]
-    private void OpenAttachment(GuideFileViewModel file)
+    private void OpenAttachment(GuideFileViewModel file) => OpenDocument(file.Item);
+
+    /// <summary>Opens an attached document with its default Windows application; a missing file is reported.</summary>
+    public void OpenDocument(GuideAttachmentItem document)
     {
-        if (!System.IO.File.Exists(file.Item.FullPath))
+        if (!System.IO.File.Exists(document.FullPath))
         {
-            Notifications.Show($"{file.Item.FileName} is missing from the data folder.", NotificationKind.Warning);
+            Notifications.Show($"{document.FileName} is missing from the data folder. Remove it from the guide or attach it again.", NotificationKind.Warning);
             return;
         }
 
-        files.OpenFile(file.Item.FullPath);
+        try
+        {
+            files.OpenFile(document.FullPath);
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            Notifications.Show($"{document.FileName} could not be opened: {ex.Message}", NotificationKind.Warning);
+        }
+    }
+
+    /// <summary>Documents attached to a guide (for double-click: open one, choose among several, or show the guide).</summary>
+    public async Task<IReadOnlyList<GuideAttachmentItem>> GetDocumentsAsync(GuideItemViewModel item)
+    {
+        IReadOnlyList<GuideAttachmentItem> documents = [];
+        await RunAsync(async () => documents = (await guides.GetAsync(item.Id)).Attachments, "Could not open the guide.");
+        return documents;
     }
 
     [RelayCommand]

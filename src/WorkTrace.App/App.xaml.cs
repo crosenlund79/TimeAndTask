@@ -53,6 +53,7 @@ public partial class App : Application, IAppLifetime
 
             var firstRun = await _host.Services.GetRequiredService<DatabaseInitializer>().InitializeAsync();
             var settings = await _host.Services.GetRequiredService<ISettingsStore>().LoadAsync();
+            await RetireInboxAsync(_host.Services);
             ApplyTheme(settings.General.Theme);
 
             var tray = _host.Services.GetRequiredService<TrayIconService>();
@@ -93,6 +94,19 @@ public partial class App : Application, IAppLifetime
     }
 
     public void RequestExit() => _ = ExitAsync();
+
+    /// <summary>The Inbox was removed: archive what is left in it (once; the Board and tasks are untouched).</summary>
+    private async Task RetireInboxAsync(IServiceProvider services)
+    {
+        try
+        {
+            await services.GetRequiredService<WorkTrace.Core.Board.IBoardService>().RetireInboxAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Retiring the Inbox failed");
+        }
+    }
 
     /// <summary>Exit from the tray: the optional "registered your time?" question first, then a normal shutdown.</summary>
     private async Task ExitAsync()

@@ -32,14 +32,6 @@
         <TextBlock Text="{Binding Meta}" Style="{StaticResource CaptionText}" FontSize="11" Margin="0,2,0,0" />
       </StackPanel>
       <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
-        <Button Style="{StaticResource SubtleButton}" Margin="0,0,6,0" Command="{Binding ToBoardCommand}"
-                ToolTip="Put this item on the board (Backlog)"
-                Visibility="{Binding IsInbox, Converter={StaticResource BoolToVisibility}}">
-          <StackPanel Orientation="Horizontal">
-            <TextBlock Text="&#xE8A0;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,6,0" />
-            <TextBlock Text="To board" />
-          </StackPanel>
-        </Button>
         <Button Command="{Binding ToggleArchiveCommand}">
           <Button.Style>
             <Style TargetType="Button" BasedOn="{StaticResource IconButton}">

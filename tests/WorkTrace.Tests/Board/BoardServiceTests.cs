@@ -40,18 +40,19 @@ public class BoardServiceTests : ManagementTestBase
     }
 
     [Fact]
-    public async Task Capture_GoesToInbox_AndUrlBecomesTitleAndLink()
+    public async Task RetireInbox_ArchivesInboxOnlyCards_AndKeepsTaskCardsOnTheBoard()
     {
-        var note = await Board.CaptureAsync("Ask Peter about the export", cancellationToken: Ct);
-        var link = await Board.CaptureAsync("https://example.com/some/page", cancellationToken: Ct);
+        var note = await Board.CreateAsync(Fields("Old inbox note", null), BoardStatus.Inbox, Ct);
+        var forTask = await Board.CreateAsync(Fields("Task card", null), BoardStatus.Inbox, Ct);
+        var task = await Tasks.CreateAsync(new TaskInput(await InternalClientIdAsync(), null, null, "T", null, null, ShowOnBoard: false), Ct);
+        await Board.SetWorkTaskAsync(forTask.Id, task.Id, Ct);
+        var other = await Board.CreateAsync(Fields("Untouched"), BoardStatus.Todo, Ct);
 
-        Assert.Equal(BoardStatus.Inbox, note.Status);
-        Assert.Null(note.Summary.Category);
-        Assert.Equal("example.com/some/page", link.Title);
-        Assert.Equal(new LinkInput("example.com/some/page", "https://example.com/some/page"), Assert.Single(link.Links));
-        Assert.Empty(await ColumnAsync(BoardStatus.Todo));
-        Assert.Equal(2, (await Board.GetCardsAsync(new CardFilter(Statuses: [BoardStatus.Inbox]), Ct)).Count);
-        await Assert.ThrowsAsync<DomainValidationException>(() => Board.CaptureAsync(" ", cancellationToken: Ct));
+        Assert.Equal(2, await Board.RetireInboxAsync(Ct));
+        Assert.True((await Board.GetCardAsync(note.Id, Ct)).Summary.IsArchived);
+        Assert.Equal(BoardStatus.Backlog, (await Board.GetCardAsync(forTask.Id, Ct)).Status);
+        Assert.Equal(BoardStatus.Todo, (await Board.GetCardAsync(other.Id, Ct)).Status);
+        Assert.Equal(0, await Board.RetireInboxAsync(Ct));
     }
 
     [Fact]

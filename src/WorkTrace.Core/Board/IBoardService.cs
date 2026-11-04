@@ -17,10 +17,13 @@ public interface IBoardService
     /// <summary>Cards that can be chosen as dependencies or links (all, including archived).</summary>
     Task<IReadOnlyList<CardRef>> GetCardRefsAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>Quick capture into the Inbox. A URL alone becomes the title and a link.</summary>
-    Task<CardDetail> CaptureAsync(string? text, string? url = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// The Inbox was removed: cards still in it are archived (kept, not shown), or moved to the Backlog when they belong
+    /// to a task. Runs at start-up; does nothing once the Inbox is empty. Returns how many cards it changed.
+    /// </summary>
+    Task<int> RetireInboxAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>New card at the end of a column (or the Inbox).</summary>
+    /// <summary>New card at the end of a column.</summary>
     Task<CardDetail> CreateAsync(CardFields fields, BoardStatus status, CancellationToken cancellationToken = default);
 
     /// <returns>The edit, or null when nothing changed.</returns>

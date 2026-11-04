@@ -32,7 +32,7 @@ public sealed partial class ClientsViewModel(
     public partial bool ShowInactive { get; set; } = true;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(ToggleActiveCommand), nameof(DeleteCommand), nameof(ShowTasksCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ToggleActiveCommand), nameof(DeleteCommand), nameof(ShowTasksCommand), nameof(EditSelectedCommand))]
     public partial ClientItemViewModel? SelectedItem { get; set; }
 
     [ObservableProperty]
@@ -84,6 +84,20 @@ public sealed partial class ClientsViewModel(
             SetEditor(new ClientEditorViewModel(value.Summary));
         }
     }
+
+    /// <summary>Opens the selected stakeholder in the editor on the right, with the cursor in it.</summary>
+    [RelayCommand(CanExecute = nameof(CanEditSelected))]
+    private void EditSelected()
+    {
+        if (SelectedItem is { } item && !HasUnsavedChanges && Editor?.Id != item.Id)
+        {
+            SetEditor(new ClientEditorViewModel(item.Summary));
+        }
+
+        EditorFocusRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private bool CanEditSelected() => SelectedItem is not null;
 
     [RelayCommand]
     private void NewClient()

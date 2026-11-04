@@ -65,10 +65,6 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void GoToSection(AppSection section) => NavigateTo(section);
 
-    /// <summary>Ctrl+Shift+C anywhere in the window: Tasks › Inbox, cursor in the capture box.</summary>
-    [RelayCommand]
-    private void QuickCapture() => NavigateTo(AppSection.Tasks, new CaptureRequest());
-
     partial void OnSelectedSectionChanging(NavigationItem? oldValue, NavigationItem? newValue)
     {
         if (oldValue?.Page.HasUnsavedChanges == true && newValue is not null && !ReferenceEquals(oldValue, newValue))

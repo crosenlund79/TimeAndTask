@@ -14,7 +14,7 @@
     </Grid.ColumnDefinitions>
     <Grid>
       <TextBox x:Name="CaptureBox" Text="{Binding CaptureText, UpdateSourceTrigger=PropertyChanged}" Padding="32,6,8,6"
-               VerticalContentAlignment="Center" MaxLength="2000" AutomationProperties.Name="Quick capture"
+               VerticalContentAlignment="Center" MaxLength="2000" AutomationProperties.Name="Add a card"
                PreviewKeyDown="OnPreviewKeyDown">
         <TextBox.InputBindings>
           <KeyBinding Key="Enter" Command="{Binding CaptureCommand}" />
@@ -22,7 +22,7 @@
       </TextBox>
       <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" Margin="11,0,0,0" IsHitTestVisible="False" HorizontalAlignment="Left"
                  Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-      <TextBlock Text="Capture a thought, link or screenshot – Enter saves it to the Inbox   (Ctrl+Shift+C)" Margin="33,0,0,0"
+      <TextBlock Text="Add a card to the Backlog: type a title (or paste a screenshot) and press Enter" Margin="33,0,0,0"
                  VerticalAlignment="Center" IsHitTestVisible="False" TextTrimming="CharacterEllipsis"
                  Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                  Visibility="{Binding Text, ElementName=CaptureBox, Converter={StaticResource NullToCollapsed}, ConverterParameter=invert}" />
@@ -35,6 +35,6 @@
                 ToolTip="Remove the screenshot" Command="{Binding ClearCaptureImageCommand}" />
       </StackPanel>
     </Border>
-    <Button Grid.Column="2" Margin="8,0,0,0" Padding="14,6" Content="Capture" Command="{Binding CaptureCommand}" ToolTip="Save to the Inbox (Enter)" />
+    <Button Grid.Column="2" Margin="8,0,0,0" Padding="14,6" Content="Add" Command="{Binding CaptureCommand}" ToolTip="Add to the Backlog (Enter)" />
   </Grid>
 </UserControl>

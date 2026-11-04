@@ -9,7 +9,7 @@ namespace WorkTrace.App.Shell;
 public sealed record BoardChange(int? CardId, object? Source);
 
 /// <summary>
-/// Board state shared by the Board and Inbox pages: the per-session Undo history and a change signal
+/// Board state shared by the board pages: the per-session Undo history and a change signal
 /// that keeps both pages and the open card in sync. Call from the UI thread.
 /// </summary>
 public sealed partial class BoardSession(IBoardService board, INotificationService notifications, ILogger<BoardSession> logger) : ObservableObject

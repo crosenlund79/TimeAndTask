@@ -42,12 +42,10 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         INotificationService notifications,
         TimeProvider timeProvider,
         ISettingsStore settings,
-        InboxViewModel inbox,
         ILogger<TasksViewModel> logger)
         : base(notifications, logger)
     {
         _settings = settings;
-        Inbox = inbox;
         _tasks = tasks;
         _clients = clients;
         _lookups = lookups;
@@ -59,37 +57,6 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
     public event EventHandler? EditorFocusRequested;
 
     public ObservableCollection<TaskItemViewModel> Items { get; } = [];
-
-    /// <summary>Captured notes and ideas (Board Inbox), shown as a second view of this page.</summary>
-    public InboxViewModel Inbox { get; }
-
-    [ObservableProperty]
-    public partial bool ShowInbox { get; set; }
-
-    /// <summary>Raised when the view should put the cursor in the Inbox capture box.</summary>
-    public event EventHandler? CaptureFocusRequested;
-
-    partial void OnShowInboxChanged(bool value)
-    {
-        if (value)
-        {
-            _ = Inbox.ActivateAsync(null);
-        }
-    }
-
-    [RelayCommand]
-    private void ShowTasksView()
-    {
-        ShowInbox = false;
-        OnPropertyChanged(nameof(ShowInbox)); // re-sync the toggle buttons after a click on the active one
-    }
-
-    [RelayCommand]
-    private void ShowInboxView()
-    {
-        ShowInbox = true;
-        OnPropertyChanged(nameof(ShowInbox));
-    }
 
     public ObservableCollection<PickerOption> ClientFilterOptions { get; } = [];
 
@@ -106,7 +73,7 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
     public partial bool ShowArchived { get; set; }
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(ToggleArchiveCommand), nameof(DeleteCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ToggleArchiveCommand), nameof(DeleteCommand), nameof(EditSelectedCommand))]
     public partial TaskItemViewModel? SelectedItem { get; set; }
 
     [ObservableProperty]
@@ -144,16 +111,9 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
 
         if (parameter is CreateNewRequest)
         {
-            ShowInbox = false;
             NewTask();
         }
 
-        await Inbox.ReloadAsync(); // keeps the Inbox count current
-        if (parameter is CaptureRequest)
-        {
-            ShowInbox = true;
-            CaptureFocusRequested?.Invoke(this, EventArgs.Empty);
-        }
     }
 
     partial void OnSearchTextChanged(string? value) => ScheduleReload();
@@ -184,6 +144,20 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
             SetEditor(CreateEditor(value.Summary));
         }
     }
+
+    /// <summary>Opens the selected task in the editor on the right, with the cursor in it.</summary>
+    [RelayCommand(CanExecute = nameof(CanEditSelected))]
+    private void EditSelected()
+    {
+        if (SelectedItem is { } item && !HasUnsavedChanges && Editor?.Id != item.Id)
+        {
+            SetEditor(CreateEditor(item.Summary));
+        }
+
+        EditorFocusRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private bool CanEditSelected() => SelectedItem is not null;
 
     [RelayCommand]
     private void NewTask()

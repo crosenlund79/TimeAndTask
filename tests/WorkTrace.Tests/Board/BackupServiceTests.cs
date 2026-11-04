@@ -81,7 +81,7 @@ public class BackupServiceTests : ManagementTestBase
     {
         await SeedAsync();
         Time.Advance(TimeSpan.FromDays(40));
-        var later = await Board.CaptureAsync("Next month", cancellationToken: Ct);
+        var later = await Board.CreateAsync(new CardFields("Next month", null, BoardPriority.Normal, null, null, null, null), BoardStatus.Backlog, Ct);
 
         var months = await Backups.GetMonthsAsync(cancellationToken: Ct);
         Assert.Equal(["2026-12", "2026-10"], months.Select(m => m.Month));
