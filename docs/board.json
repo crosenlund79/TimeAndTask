@@ -1437,7 +1437,7 @@
         "Owner checks the daily summary, that a check-in for another task switches at that moment (timesheet/today), and that Exit ends the running task"
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Commit bcc7fc7; Windows CI run 47 green (incl. WPF smoke with the daily summary); installer WorkTrace-Setup-0.2.47",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -1451,8 +1451,8 @@
         }
       ],
       "createdAt": "2026-11-04T15:42:23Z",
-      "updatedAt": "2026-11-04T15:42:23Z",
-      "rev": 1
+      "updatedAt": "2026-11-04T15:50:39Z",
+      "rev": 2
     }
   ]
 }

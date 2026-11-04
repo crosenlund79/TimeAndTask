@@ -407,6 +407,10 @@ Commit 44556e9; Windows CI run 46 green (incl. WPF smoke with the timeline); ins
 
 - Owner checks the daily summary, that a check-in for another task switches at that moment (timesheet/today), and that Exit ends the running task
 
+**Evidence**
+
+Commit bcc7fc7; Windows CI run 47 green (incl. WPF smoke with the daily summary); installer WorkTrace-Setup-0.2.47
+
 ## To do
 
 ### WT-030 · Estimation engine
