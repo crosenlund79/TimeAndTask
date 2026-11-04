@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 55,
+  "nextId": 56,
   "cards": [
     {
       "id": "WT-001",
@@ -1325,6 +1325,38 @@
       "createdAt": "2026-10-30T15:17:16Z",
       "updatedAt": "2026-10-30T15:17:19Z",
       "rev": 2
+    },
+    {
+      "id": "WT-055",
+      "uid": "0e0b7a3d-6034-42f9-8d2e-1d2eae50e60d",
+      "title": "Sharpening iteration: lookups, stakeholder-only time, Edit buttons, stakeholder colours, deadlines, export round-up, settings tabs, guide double-click, Inbox removed, Tasks & Board reminder",
+      "category": "feature",
+      "priority": "high",
+      "status": "review",
+      "rank": "zzzzi",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Owner tests the 10 items of the Sharpening Iteration request on the installed build"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "1964c651-1815-4ec1-9068-980e86aaec95",
+          "type": "created",
+          "at": "2026-11-04T10:25:29Z",
+          "by": "claude",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-11-04T10:25:29Z",
+      "updatedAt": "2026-11-04T10:25:29Z",
+      "rev": 1
     }
   ]
 }

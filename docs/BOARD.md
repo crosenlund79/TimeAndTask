@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 20 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 21 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -362,6 +362,14 @@ Owner request 2026-10-30. Version 0.2.39 (CI run 39). Commits 93ad85a (stakehold
 **Links**
 
 - [CI run 39 (installer 0.2.39)](https://github.com/crosenlund79/TimeAndTask/actions/runs/41077966928)
+
+### WT-055 · Sharpening iteration: lookups, stakeholder-only time, Edit buttons, stakeholder colours, deadlines, export round-up, settings tabs, guide double-click, Inbox removed, Tasks & Board reminder
+
+`feature` · priority High
+
+**Acceptance criteria**
+
+- Owner tests the 10 items of the Sharpening Iteration request on the installed build
 
 ## To do
 
