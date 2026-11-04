@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 21 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 22 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -374,6 +374,14 @@ Owner request 2026-10-30. Version 0.2.39 (CI run 39). Commits 93ad85a (stakehold
 **Evidence**
 
 Commits 4021c5f, a58703a, ef875f7, 6f3408f on claude/keen-mccarthy-qr7q0p; Windows CI run 44 green (all tests incl. WPF smoke over every Settings tab); installer WorkTrace-Setup-0.2.44
+
+### WT-056 · Task overview: collapsible groups (Regular / Recurring / Waiting for External Input) with Waiting for / Reason
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Owner checks grouping, counts, remembered collapse state and the waiting reason on the installed build
 
 ## To do
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 56,
+  "nextId": 57,
   "cards": [
     {
       "id": "WT-001",
@@ -1357,6 +1357,38 @@
       "createdAt": "2026-11-04T10:25:29Z",
       "updatedAt": "2026-11-04T10:34:23Z",
       "rev": 2
+    },
+    {
+      "id": "WT-056",
+      "uid": "a07bf05a-8826-4f5c-b08f-35ef40eb6ee8",
+      "title": "Task overview: collapsible groups (Regular / Recurring / Waiting for External Input) with Waiting for / Reason",
+      "category": "feature",
+      "priority": "normal",
+      "status": "review",
+      "rank": "zzzzr",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Owner checks grouping, counts, remembered collapse state and the waiting reason on the installed build"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "597951a5-ba07-4ece-a953-763c483617cc",
+          "type": "created",
+          "at": "2026-11-04T13:46:55Z",
+          "by": "claude",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-11-04T13:46:55Z",
+      "updatedAt": "2026-11-04T13:46:55Z",
+      "rev": 1
     }
   ]
 }
