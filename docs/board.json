@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 58,
+  "nextId": 59,
   "cards": [
     {
       "id": "WT-001",
@@ -1421,6 +1421,38 @@
       "createdAt": "2026-11-04T15:08:42Z",
       "updatedAt": "2026-11-04T15:17:17Z",
       "rev": 2
+    },
+    {
+      "id": "WT-058",
+      "uid": "97cc6dee-a010-4e76-be47-8b01f92ae28c",
+      "title": "Overview daily summary (replaces Coming next); check-ins switch the active task; exit stops the active task",
+      "category": "feature",
+      "priority": "high",
+      "status": "review",
+      "rank": "zzzzy",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Owner checks the daily summary, that a check-in for another task switches at that moment (timesheet/today), and that Exit ends the running task"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "8d241d16-b40c-423a-aa7f-bdf84aa3f784",
+          "type": "created",
+          "at": "2026-11-04T15:42:23Z",
+          "by": "claude",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-11-04T15:42:23Z",
+      "updatedAt": "2026-11-04T15:42:23Z",
+      "rev": 1
     }
   ]
 }

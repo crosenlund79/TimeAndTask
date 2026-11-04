@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 23 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 24 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -398,6 +398,14 @@ Commit 50a4d86; Windows CI run 45 green (incl. WPF smoke); installer WorkTrace-S
 **Evidence**
 
 Commit 44556e9; Windows CI run 46 green (incl. WPF smoke with the timeline); installer WorkTrace-Setup-0.2.46
+
+### WT-058 · Overview daily summary (replaces Coming next); check-ins switch the active task; exit stops the active task
+
+`feature` · priority High
+
+**Acceptance criteria**
+
+- Owner checks the daily summary, that a check-in for another task switches at that moment (timesheet/today), and that Exit ends the running task
 
 ## To do
 
