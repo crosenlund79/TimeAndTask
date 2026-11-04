@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 22 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 23 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -386,6 +386,14 @@ Commits 4021c5f, a58703a, ef875f7, 6f3408f on claude/keen-mccarthy-qr7q0p; Windo
 **Evidence**
 
 Commit 50a4d86; Windows CI run 45 green (incl. WPF smoke); installer WorkTrace-Setup-0.2.45
+
+### WT-057 · Task overview & visual planning: coloured groups, Closed tasks, remaining estimates, planning timeline, planning reminder
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Owner checks groups/colours, Closed vs Archived, estimates, the timeline (provisional 4 h blocks) and the planning reminder on the installed build
 
 ## To do
 

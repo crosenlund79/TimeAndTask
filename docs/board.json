@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 57,
+  "nextId": 58,
   "cards": [
     {
       "id": "WT-001",
@@ -1389,6 +1389,38 @@
       "createdAt": "2026-11-04T13:46:55Z",
       "updatedAt": "2026-11-04T13:55:29Z",
       "rev": 2
+    },
+    {
+      "id": "WT-057",
+      "uid": "963a0859-40d9-46d6-9822-4386ffec0a89",
+      "title": "Task overview & visual planning: coloured groups, Closed tasks, remaining estimates, planning timeline, planning reminder",
+      "category": "feature",
+      "priority": "normal",
+      "status": "review",
+      "rank": "zzzzw",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Owner checks groups/colours, Closed vs Archived, estimates, the timeline (provisional 4 h blocks) and the planning reminder on the installed build"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "c8136e32-6221-4a75-a91d-14032b8f3450",
+          "type": "created",
+          "at": "2026-11-04T15:08:42Z",
+          "by": "claude",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-11-04T15:08:42Z",
+      "updatedAt": "2026-11-04T15:08:42Z",
+      "rev": 1
     }
   ]
 }
