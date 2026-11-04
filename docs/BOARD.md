@@ -395,6 +395,10 @@ Commit 50a4d86; Windows CI run 45 green (incl. WPF smoke); installer WorkTrace-S
 
 - Owner checks groups/colours, Closed vs Archived, estimates, the timeline (provisional 4 h blocks) and the planning reminder on the installed build
 
+**Evidence**
+
+Commit 44556e9; Windows CI run 46 green (incl. WPF smoke with the timeline); installer WorkTrace-Setup-0.2.46
+
 ## To do
 
 ### WT-030 · Estimation engine
