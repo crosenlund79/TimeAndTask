@@ -1373,7 +1373,7 @@
         "Owner checks grouping, counts, remembered collapse state and the waiting reason on the installed build"
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Commit 50a4d86; Windows CI run 45 green (incl. WPF smoke); installer WorkTrace-Setup-0.2.45",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -1387,8 +1387,8 @@
         }
       ],
       "createdAt": "2026-11-04T13:46:55Z",
-      "updatedAt": "2026-11-04T13:46:55Z",
-      "rev": 1
+      "updatedAt": "2026-11-04T13:55:29Z",
+      "rev": 2
     }
   ]
 }

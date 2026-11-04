@@ -383,6 +383,10 @@ Commits 4021c5f, a58703a, ef875f7, 6f3408f on claude/keen-mccarthy-qr7q0p; Windo
 
 - Owner checks grouping, counts, remembered collapse state and the waiting reason on the installed build
 
+**Evidence**
+
+Commit 50a4d86; Windows CI run 45 green (incl. WPF smoke); installer WorkTrace-Setup-0.2.45
+
 ## To do
 
 ### WT-030 · Estimation engine
