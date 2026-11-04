@@ -23,6 +23,9 @@ public sealed class TimeReminderService(ISettingsStore settings, ISessionStatePr
     private TimeReminderWindow? _open;
     private int _counter = Random.Shared.Next(100);
 
+    /// <summary>True while a reminder is on screen (other popups wait for it).</summary>
+    public bool IsOpen => _open is not null;
+
     public void Start()
     {
         _timer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };

@@ -176,6 +176,9 @@ internal sealed class TimesheetService(
 
     private static readonly string[] LineHeaders = ["Date", "Day", "Stakeholder", "System", "Reference", "Task", "Hours", "Comments"];
 
+    private TimesheetWeek ForExport(TimesheetWeek week) =>
+        settings.Current.Reporting.ExportRoundUpToQuarter ? week.RoundedUpToQuarter() : week;
+
     private static IEnumerable<object[]> LineRows(TimesheetWeek week) =>
         from d in Enumerable.Range(0, 7)
         from l in week.Lines
@@ -189,6 +192,7 @@ internal sealed class TimesheetService(
     public async Task ExportCsvAsync(TimesheetWeek week, string path, CancellationToken cancellationToken = default)
     {
         // Culture's list separator and decimal mark, so Excel on this PC opens it in columns; UTF-8 with BOM for æøå.
+        week = ForExport(week);
         var culture = CultureInfo.CurrentCulture;
         var separator = culture.TextInfo.ListSeparator;
         string Field(object value)
@@ -211,6 +215,7 @@ internal sealed class TimesheetService(
 
     public async Task ExportExcelAsync(TimesheetWeek week, string path, CancellationToken cancellationToken = default)
     {
+        week = ForExport(week);
         var weekRows = new List<object[]>
         {
             new object[] { "Stakeholder", "System", "Reference", "Task" }

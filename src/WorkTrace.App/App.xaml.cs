@@ -39,6 +39,7 @@ public partial class App : Application, IAppLifetime
         }
 
         RegisterGlobalExceptionHandlers();
+        LookupBehavior.Register();
 
         try
         {
@@ -148,6 +149,7 @@ public partial class App : Application, IAppLifetime
         var reminders = services.GetRequiredService<TimeReminderService>();
         reminders.Start();
         _ = reminders.AskAfterShutdownAsync();
+        services.GetRequiredService<MaintenanceReminderService>().Start();
     }
 
     private async Task StartEngineAsync(TrackingEngine engine)
@@ -242,6 +244,7 @@ public partial class App : Application, IAppLifetime
 
             _host?.Services.GetService<SystemEventsBridge>()?.Dispose();
             _host?.Services.GetService<TimeReminderService>()?.Dispose();
+            _host?.Services.GetService<MaintenanceReminderService>()?.Dispose();
             _host?.Services.GetService<ScreenshotCaptureService>()?.Dispose();
             _host?.Services.GetService<BackupScheduler>()?.Dispose();
             _host?.Services.GetService<GlobalHotkey>()?.Dispose();

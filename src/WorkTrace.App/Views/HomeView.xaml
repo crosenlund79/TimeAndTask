@@ -123,6 +123,31 @@
       <!-- Right column -->
       <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel>
+          <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+            <StackPanel>
+              <TextBlock Text="Current task" Style="{StaticResource SectionTitleText}" />
+              <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,2,0,6"
+                         Text="Type to filter, Alt+↓ to open. Choosing another task records a check-in now." />
+              <ComboBox x:Name="CurrentTaskBox" IsEditable="True" IsTextSearchEnabled="False" TextSearch.TextPath="Display"
+                        ItemsSource="{Binding CurrentTasks}" SelectedValuePath="Id" SelectedValue="{Binding CurrentTaskId}"
+                        Text="{Binding CurrentTaskText, UpdateSourceTrigger=PropertyChanged}"
+                        AutomationProperties.Name="Current task" DropDownClosed="OnCurrentTaskClosed" LostKeyboardFocus="OnCurrentTaskLostFocus">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:CurrentTaskOption}">
+                    <DockPanel>
+                      <TextBlock DockPanel.Dock="Right" Text="&#xEA8F;" Style="{StaticResource IconText}" FontSize="12" Margin="8,0,0,0"
+                                 Foreground="{DynamicResource SystemFillColorCautionBrush}" ToolTip="Deadline soon or overdue"
+                                 Visibility="{Binding HasDeadlineWarning, Converter={StaticResource BoolToVisibility}}" />
+                      <StackPanel>
+                        <TextBlock Text="{Binding Display}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Stakeholder}" Style="{StaticResource CaptionText}" />
+                      </StackPanel>
+                    </DockPanel>
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+            </StackPanel>
+          </Border>
           <Border Style="{StaticResource Card}" Padding="8">
             <StackPanel>
               <Button Padding="10,8" HorizontalContentAlignment="Left" Margin="0,0,0,4" Command="{Binding NavigateCommand}"

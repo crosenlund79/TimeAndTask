@@ -96,4 +96,14 @@ public class TimesheetServiceTests : ManagementTestBase
     [InlineData("", null)]
     [InlineData("abc", null)]
     public void Hours_AreParsedInCommonFormats(string text, int? minutes) => Assert.Equal(minutes, Hours.ParseMinutes(text));
+
+    [Fact]
+    public void ExportRounding_RoundsEachEntryUpToTheQuarter_AndTotalsFollow()
+    {
+        Assert.Equal((0, 15, 15, 45, 75), (Hours.RoundUpToQuarter(0), Hours.RoundUpToQuarter(1), Hours.RoundUpToQuarter(15), Hours.RoundUpToQuarter(31), Hours.RoundUpToQuarter(67)));
+        TimesheetCell Cell(int m) => new(m, m, false, false);
+        var line = new TimesheetLine(1, "S", "", "", "T", "", [Cell(1), Cell(31), Cell(67), Cell(0), Cell(0), Cell(0), Cell(0)]);
+        var rounded = new TimesheetWeek(new DateOnly(2026, 11, 2), [line], [0, 0, 0, 0, 0, 0, 0], 0).RoundedUpToQuarter();
+        Assert.Equal(135, rounded.WeekTotal); // 15 + 45 + 75, not round(99)
+    }
 }

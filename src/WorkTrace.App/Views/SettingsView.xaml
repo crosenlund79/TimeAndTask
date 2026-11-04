@@ -8,203 +8,251 @@
              xmlns:views="clr-namespace:WorkTrace.App.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="900"
              d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}">
-  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <StackPanel MaxWidth="760" HorizontalAlignment="Left">
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top">
       <TextBlock Text="Settings" Style="{StaticResource PageTitleText}" />
       <TextBlock Style="{StaticResource PageSubtitleText}" Text="Changes are saved immediately." />
-
-      <!-- Tracking -->
-      <Border Style="{StaticResource Card}" Margin="0,20,0,0">
-        <StackPanel>
-          <TextBlock Text="Tracking" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
-          <controls:SettingRow Header="{Binding Tracking.StatusText}" Description="{Binding Tracking.StatusDetail}">
-            <StackPanel Orientation="Horizontal">
-              <Button Content="Pause until I resume" Padding="12,5"
-                      Command="{Binding Tracking.PauseCommand}" CommandParameter="0"
-                      Visibility="{Binding Tracking.IsPaused, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
-              <Button Content="Resume tracking" Padding="12,5" Style="{DynamicResource AccentButtonStyle}"
-                      Command="{Binding Tracking.ResumeCommand}"
-                      Visibility="{Binding Tracking.IsPaused, Converter={StaticResource BoolToVisibility}}" />
-            </StackPanel>
-          </controls:SettingRow>
-          <StackPanel Margin="0,0,0,8">
-            <TextBlock Text="{Binding Tracking.LastAttemptText}" Style="{StaticResource CaptionText}"
-                       Visibility="{Binding Tracking.LastAttemptText, Converter={StaticResource NullToCollapsed}}" />
-            <TextBlock Text="{Binding Tracking.Warning}" Style="{StaticResource CaptionText}" TextWrapping="Wrap"
-                       Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                       Visibility="{Binding Tracking.HasWarning, Converter={StaticResource BoolToVisibility}}" />
-          </StackPanel>
-          <Border Style="{StaticResource SettingsDivider}" />
-          <controls:SettingRow Header="Periodic check-ins" Description="Ask what you are working on at regular times. Manual check-ins always work.">
-            <CheckBox IsChecked="{Binding PeriodicPromptsEnabled}" Content="On" AutomationProperties.Name="Periodic check-ins" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Check-in interval" Description="Aligned to the clock, e.g. :00 and :30. Takes effect immediately; missed slots are never replayed.">
-            <StackPanel Width="180">
-              <ComboBox ItemsSource="{Binding IntervalOptions}" DisplayMemberPath="Name"
-                        SelectedValuePath="Id" SelectedValue="{Binding IntervalChoice}" AutomationProperties.Name="Check-in interval" />
-              <StackPanel Orientation="Horizontal" Margin="0,6,0,0"
-                          Visibility="{Binding IsCustomInterval, Converter={StaticResource BoolToVisibility}}">
-                <TextBox x:Name="CustomIntervalBox" Width="70" MaxLength="3" HorizontalContentAlignment="Right"
-                         Text="{Binding CustomIntervalText, UpdateSourceTrigger=LostFocus}"
-                         ToolTip="Whole minutes, 1–240. Press Enter to apply." AutomationProperties.Name="Custom interval in minutes"
-                         KeyDown="OnCustomIntervalKeyDown" />
-                <TextBlock Text="minutes" Margin="8,0,0,0" VerticalAlignment="Center" />
-              </StackPanel>
-              <TextBlock Text="{Binding IntervalError}" Style="{StaticResource ErrorText}" />
-            </StackPanel>
-          </controls:SettingRow>
-          <controls:SettingRow Header="Ask when tracking starts" Description="Shortly after start-up, waking the computer and resuming from a pause.">
-            <CheckBox IsChecked="{Binding PromptOnStart}" Content="On" AutomationProperties.Name="Ask when tracking starts" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Offer the previous task" Description="Show &#x201C;Same as before&#x201D; so Enter repeats your last task.">
-            <CheckBox IsChecked="{Binding RememberLastTask}" Content="On" AutomationProperties.Name="Offer the previous task" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Treat locked time as not working"
-                               Description="Off (recommended): time while the screen is locked counts as uncertain and is never treated as confirmed work.">
-            <CheckBox IsChecked="{Binding LockedTimeIsNotWork}" Content="On" AutomationProperties.Name="Treat locked time as not working" />
-          </controls:SettingRow>
-        </StackPanel>
-      </Border>
-
-      <!-- Popup -->
-      <Border Style="{StaticResource Card}" Margin="0,16,0,0">
-        <StackPanel>
-          <TextBlock Text="Check-in popup" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
-          <RadioButton GroupName="PopupMode" IsChecked="{Binding IsUnobtrusiveMode}" Margin="0,6">
-            <StackPanel>
-              <TextBlock Text="Unobtrusive" />
-              <TextBlock Text="Appears without taking keyboard focus. Click it or press the shortcut to answer." Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
-            </StackPanel>
-          </RadioButton>
-          <RadioButton GroupName="PopupMode" IsChecked="{Binding IsFocusedMode}" Margin="0,6">
-            <StackPanel>
-              <TextBlock Text="Focused" />
-              <TextBlock Text="Comes to the front with the cursor in the search box, ready to type." Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
-            </StackPanel>
-          </RadioButton>
-          <Border Style="{StaticResource SettingsDivider}" />
-          <controls:SettingRow Header="Position">
-            <ComboBox Width="180" ItemsSource="{Binding PositionOptions}" DisplayMemberPath="Name"
-                      SelectedValuePath="Id" SelectedValue="{Binding PositionKey}" AutomationProperties.Name="Popup position" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Close unanswered check-ins" Description="An unanswered check-in makes the time after it uncertain. The countdown stops as soon as you interact.">
-            <ComboBox Width="180" ItemsSource="{Binding AutoDismissOptions}" DisplayMemberPath="Name"
-                      SelectedValuePath="Id" SelectedValue="{Binding AutoDismissSeconds}" AutomationProperties.Name="Auto-dismiss" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Reminder sound">
-            <CheckBox IsChecked="{Binding ReminderSound}" Content="On" AutomationProperties.Name="Reminder sound" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Try it" Description="Shows a real scheduled check-in now, using the mode and countdown above. If you ignore it, it is recorded as missed.">
-            <Button Content="Show a scheduled check-in now" Padding="12,5" Command="{Binding Tracking.TriggerScheduledNowCommand}" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Keyboard shortcut" Description="Opens a check-in from anywhere, or focuses the open one.">
-            <StackPanel Width="180">
-              <TextBox Text="{Binding Shortcut, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Keyboard shortcut" />
-              <TextBlock Text="{Binding ShortcutError}" Style="{StaticResource ErrorText}" />
-            </StackPanel>
-          </controls:SettingRow>
-        </StackPanel>
-      </Border>
-
-      <!-- Time registration reminders -->
-      <Border Style="{StaticResource Card}" Margin="0,16,0,0">
-        <StackPanel>
-          <TextBlock Text="Time registration reminders" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
-          <controls:SettingRow Header="Remind me to register my time"
-                               Description="During the period below, asks now and then &#x201C;Have you registered your time today?&#x201D; until you answer Yes or Remind me tomorrow.">
-            <CheckBox IsChecked="{Binding RemindersEnabled}" Content="On" AutomationProperties.Name="Time registration reminders" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Reminder period" Description="May cross midnight, e.g. 15:00 to 08:00 the next morning.">
-            <StackPanel>
-              <StackPanel Orientation="Horizontal">
-                <TextBox Width="70" Text="{Binding ReminderStart, UpdateSourceTrigger=LostFocus}" HorizontalContentAlignment="Center"
-                         AutomationProperties.Name="Reminder start time" />
-                <TextBlock Text="to" Margin="8,0" VerticalAlignment="Center" />
-                <TextBox Width="70" Text="{Binding ReminderEnd, UpdateSourceTrigger=LostFocus}" HorizontalContentAlignment="Center"
-                         AutomationProperties.Name="Reminder end time" />
-              </StackPanel>
-              <TextBlock Text="{Binding ReminderTimeError}" Style="{StaticResource ErrorText}" />
-            </StackPanel>
-          </controls:SettingRow>
-          <controls:SettingRow Header="Repeat" Description="After &#x201C;Not yet&#x201D; or an ignored reminder. No reminders while the PC is locked or nobody is at it.">
-            <ComboBox Width="180" ItemsSource="{Binding ReminderIntervalOptions}" DisplayMemberPath="Name"
-                      SelectedValuePath="Id" SelectedValue="{Binding ReminderIntervalMinutes}" AutomationProperties.Name="Reminder interval" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Sound">
-            <CheckBox IsChecked="{Binding ReminderPlaySound}" Content="On" AutomationProperties.Name="Reminder sound" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Remind me when shutting down Windows"
-                               Description="Windows does not allow a question while it shuts down, so WorkTrace asks the next time it starts. Exit from the tray asks right away.">
-            <CheckBox IsChecked="{Binding ShutdownReminder}" Content="On" AutomationProperties.Name="Shutdown reminder" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Try it" Description="Shows a reminder now; your answer is not recorded.">
-            <Button Content="Test reminder" Padding="12,5" Command="{Binding TestReminderCommand}" />
-          </controls:SettingRow>
-        </StackPanel>
-      </Border>
-
-      <!-- Screenshots -->
-      <Border Style="{StaticResource Card}" Margin="0,16,0,0">
-        <StackPanel>
-          <TextBlock Text="Screenshots" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
-          <controls:SettingRow Header="Automatic screenshots"
-                               Description="Silent captures while tracking runs (never while paused, asleep or locked). Unchanged screens are skipped. Stored only on this PC.">
-            <ComboBox Width="180" ItemsSource="{Binding ScreenshotModeOptions}" DisplayMemberPath="Name"
-                      SelectedValuePath="Id" SelectedValue="{Binding ScreenshotModeKey}" AutomationProperties.Name="Automatic screenshots" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Interval">
-            <ComboBox Width="180" ItemsSource="{Binding ScreenshotIntervalOptions}" DisplayMemberPath="Name"
-                      SelectedValuePath="Id" SelectedValue="{Binding ScreenshotInterval}" AutomationProperties.Name="Screenshot interval" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Keep screenshots for" Description="Older captures are deleted automatically.">
-            <ComboBox Width="180" ItemsSource="{Binding ScreenshotRetentionOptions}" DisplayMemberPath="Name"
-                      SelectedValuePath="Id" SelectedValue="{Binding ScreenshotRetention}" AutomationProperties.Name="Keep screenshots for" />
-          </controls:SettingRow>
-        </StackPanel>
-      </Border>
-
-      <!-- Weekly timesheet -->
-      <Border Style="{StaticResource Card}" Margin="0,16,0,0">
-        <StackPanel>
-          <TextBlock Text="Weekly timesheet and export" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
-          <controls:SettingRow Header="Round hours" Description="Applies to each day of each task in the timesheet and its Excel/CSV export. Hours are exported as decimals (1.50 = 1 h 30 min).">
-            <ComboBox Width="200" ItemsSource="{Binding RoundingOptions}" DisplayMemberPath="Name"
-                      SelectedValuePath="Id" SelectedValue="{Binding RoundingKey}" AutomationProperties.Name="Round hours" />
-          </controls:SettingRow>
-        </StackPanel>
-      </Border>
-
-      <!-- Board -->
-      <Border Style="{StaticResource Card}" Margin="0,16,0,0">
-        <StackPanel>
-          <TextBlock Text="Board" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
-          <controls:SettingRow Header="Automatically add tasks to Board"
-                               Description="New tasks get a linked card in To do. Each task's &#x201C;Show on Board&#x201D; can still be switched off. Time tracking never needs the Board.">
-            <CheckBox IsChecked="{Binding AutoAddTasksToBoard}" Content="On" AutomationProperties.Name="Automatically add tasks to Board" />
-          </controls:SettingRow>
-        </StackPanel>
-      </Border>
-
-      <!-- General -->
-      <Border Style="{StaticResource Card}" Margin="0,16,0,0">
-        <StackPanel>
-          <TextBlock Text="General" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
-          <controls:SettingRow Header="Theme">
-            <ComboBox Width="180" ItemsSource="{Binding ThemeOptions}" DisplayMemberPath="Name"
-                      SelectedValuePath="Id" SelectedValue="{Binding ThemeKey}" AutomationProperties.Name="Theme" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Start minimised" Description="Start in the notification area without opening this window.">
-            <CheckBox IsChecked="{Binding StartMinimized}" Content="On" AutomationProperties.Name="Start minimised" />
-          </controls:SettingRow>
-          <controls:SettingRow Header="Close to the notification area" Description="Closing this window keeps WorkTrace running. Use Exit in the tray menu to quit.">
-            <CheckBox IsChecked="{Binding CloseToTray}" Content="On" AutomationProperties.Name="Close to the notification area" />
-          </controls:SettingRow>
-        </StackPanel>
-      </Border>
-
-      <!-- Backup & restore -->
-      <TextBlock Text="Backup &amp; restore" Style="{StaticResource SectionTitleText}" FontSize="20" Margin="0,28,0,12" />
-      <views:BackupView DataContext="{Binding Backup}" />
     </StackPanel>
-  </ScrollViewer>
+    <TabControl Margin="0,16,0,0" SelectedIndex="{Binding SelectedTab}" AutomationProperties.Name="Settings sections">
+      <TabItem Header="Tracking &amp; popup">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,16,12,16">
+            <!-- Tracking -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,0">
+              <StackPanel>
+                <TextBlock Text="Tracking" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+                <controls:SettingRow Header="{Binding Tracking.StatusText}" Description="{Binding Tracking.StatusDetail}">
+                  <StackPanel Orientation="Horizontal">
+                    <Button Content="Pause until I resume" Padding="12,5"
+                            Command="{Binding Tracking.PauseCommand}" CommandParameter="0"
+                            Visibility="{Binding Tracking.IsPaused, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                    <Button Content="Resume tracking" Padding="12,5" Style="{DynamicResource AccentButtonStyle}"
+                            Command="{Binding Tracking.ResumeCommand}"
+                            Visibility="{Binding Tracking.IsPaused, Converter={StaticResource BoolToVisibility}}" />
+                  </StackPanel>
+                </controls:SettingRow>
+                <StackPanel Margin="0,0,0,8">
+                  <TextBlock Text="{Binding Tracking.LastAttemptText}" Style="{StaticResource CaptionText}"
+                             Visibility="{Binding Tracking.LastAttemptText, Converter={StaticResource NullToCollapsed}}" />
+                  <TextBlock Text="{Binding Tracking.Warning}" Style="{StaticResource CaptionText}" TextWrapping="Wrap"
+                             Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                             Visibility="{Binding Tracking.HasWarning, Converter={StaticResource BoolToVisibility}}" />
+                </StackPanel>
+                <Border Style="{StaticResource SettingsDivider}" />
+                <controls:SettingRow Header="Periodic check-ins" Description="Ask what you are working on at regular times. Manual check-ins always work.">
+                  <CheckBox IsChecked="{Binding PeriodicPromptsEnabled}" Content="On" AutomationProperties.Name="Periodic check-ins" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Check-in interval" Description="Aligned to the clock, e.g. :00 and :30. Takes effect immediately; missed slots are never replayed.">
+                  <StackPanel Width="180">
+                    <ComboBox ItemsSource="{Binding IntervalOptions}" DisplayMemberPath="Name"
+                              SelectedValuePath="Id" SelectedValue="{Binding IntervalChoice}" AutomationProperties.Name="Check-in interval" />
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0"
+                                Visibility="{Binding IsCustomInterval, Converter={StaticResource BoolToVisibility}}">
+                      <TextBox x:Name="CustomIntervalBox" Width="70" MaxLength="3" HorizontalContentAlignment="Right"
+                               Text="{Binding CustomIntervalText, UpdateSourceTrigger=LostFocus}"
+                               ToolTip="Whole minutes, 1–240. Press Enter to apply." AutomationProperties.Name="Custom interval in minutes"
+                               KeyDown="OnCustomIntervalKeyDown" />
+                      <TextBlock Text="minutes" Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding IntervalError}" Style="{StaticResource ErrorText}" />
+                  </StackPanel>
+                </controls:SettingRow>
+                <controls:SettingRow Header="Ask when tracking starts" Description="Shortly after start-up, waking the computer and resuming from a pause.">
+                  <CheckBox IsChecked="{Binding PromptOnStart}" Content="On" AutomationProperties.Name="Ask when tracking starts" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Offer the previous task" Description="Show &#x201C;Same as before&#x201D; so Enter repeats your last task.">
+                  <CheckBox IsChecked="{Binding RememberLastTask}" Content="On" AutomationProperties.Name="Offer the previous task" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Treat locked time as not working"
+                                     Description="Off (recommended): time while the screen is locked counts as uncertain and is never treated as confirmed work.">
+                  <CheckBox IsChecked="{Binding LockedTimeIsNotWork}" Content="On" AutomationProperties.Name="Treat locked time as not working" />
+                </controls:SettingRow>
+              </StackPanel>
+            </Border>
+
+            <!-- Popup -->
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+              <StackPanel>
+                <TextBlock Text="Check-in popup" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+                <RadioButton GroupName="PopupMode" IsChecked="{Binding IsUnobtrusiveMode}" Margin="0,6">
+                  <StackPanel>
+                    <TextBlock Text="Unobtrusive" />
+                    <TextBlock Text="Appears without taking keyboard focus. Click it or press the shortcut to answer." Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                  </StackPanel>
+                </RadioButton>
+                <RadioButton GroupName="PopupMode" IsChecked="{Binding IsFocusedMode}" Margin="0,6">
+                  <StackPanel>
+                    <TextBlock Text="Focused" />
+                    <TextBlock Text="Comes to the front with the cursor in the search box, ready to type." Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                  </StackPanel>
+                </RadioButton>
+                <Border Style="{StaticResource SettingsDivider}" />
+                <controls:SettingRow Header="Position">
+                  <ComboBox Width="180" ItemsSource="{Binding PositionOptions}" DisplayMemberPath="Name"
+                            SelectedValuePath="Id" SelectedValue="{Binding PositionKey}" AutomationProperties.Name="Popup position" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Close unanswered check-ins" Description="An unanswered check-in makes the time after it uncertain. The countdown stops as soon as you interact.">
+                  <ComboBox Width="180" ItemsSource="{Binding AutoDismissOptions}" DisplayMemberPath="Name"
+                            SelectedValuePath="Id" SelectedValue="{Binding AutoDismissSeconds}" AutomationProperties.Name="Auto-dismiss" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Reminder sound">
+                  <CheckBox IsChecked="{Binding ReminderSound}" Content="On" AutomationProperties.Name="Reminder sound" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Try it" Description="Shows a real scheduled check-in now, using the mode and countdown above. If you ignore it, it is recorded as missed.">
+                  <Button Content="Show a scheduled check-in now" Padding="12,5" Command="{Binding Tracking.TriggerScheduledNowCommand}" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Keyboard shortcut" Description="Opens a check-in from anywhere, or focuses the open one.">
+                  <StackPanel Width="180">
+                    <TextBox Text="{Binding Shortcut, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Keyboard shortcut" />
+                    <TextBlock Text="{Binding ShortcutError}" Style="{StaticResource ErrorText}" />
+                  </StackPanel>
+                </controls:SettingRow>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+      <TabItem Header="Reminders">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,16,12,16">
+            <!-- Time registration reminders -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,0">
+              <StackPanel>
+                <TextBlock Text="Time registration reminders" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+                <controls:SettingRow Header="Remind me to register my time"
+                                     Description="During the period below, asks now and then &#x201C;Have you registered your time today?&#x201D; until you answer Yes or Remind me tomorrow.">
+                  <CheckBox IsChecked="{Binding RemindersEnabled}" Content="On" AutomationProperties.Name="Time registration reminders" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Reminder period" Description="May cross midnight, e.g. 15:00 to 08:00 the next morning.">
+                  <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                      <ComboBox Width="96" IsEditable="True" IsTextSearchEnabled="True" ItemsSource="{Binding QuarterHours}" MaxDropDownHeight="240"
+                                Text="{Binding ReminderStart, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Reminder start time" />
+                      <TextBlock Text="to" Margin="8,0" VerticalAlignment="Center" />
+                      <ComboBox Width="96" IsEditable="True" IsTextSearchEnabled="True" ItemsSource="{Binding QuarterHours}" MaxDropDownHeight="240"
+                                Text="{Binding ReminderEnd, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Reminder end time" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding ReminderTimeError}" Style="{StaticResource ErrorText}" />
+                  </StackPanel>
+                </controls:SettingRow>
+                <controls:SettingRow Header="Repeat" Description="After &#x201C;Not yet&#x201D; or an ignored reminder. No reminders while the PC is locked or nobody is at it.">
+                  <ComboBox Width="180" ItemsSource="{Binding ReminderIntervalOptions}" DisplayMemberPath="Name"
+                            SelectedValuePath="Id" SelectedValue="{Binding ReminderIntervalMinutes}" AutomationProperties.Name="Reminder interval" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Sound">
+                  <CheckBox IsChecked="{Binding ReminderPlaySound}" Content="On" AutomationProperties.Name="Reminder sound" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Remind me when shutting down Windows"
+                                     Description="Windows does not allow a question while it shuts down, so WorkTrace asks the next time it starts. Exit from the tray asks right away.">
+                  <CheckBox IsChecked="{Binding ShutdownReminder}" Content="On" AutomationProperties.Name="Shutdown reminder" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Try it" Description="Shows a reminder now; your answer is not recorded.">
+                  <Button Content="Test reminder" Padding="12,5" Command="{Binding TestReminderCommand}" />
+                </controls:SettingRow>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+      <TabItem Header="Timesheet &amp; screenshots">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,16,12,16">
+            <!-- Weekly timesheet -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,0">
+              <StackPanel>
+                <TextBlock Text="Weekly timesheet and export" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+                <controls:SettingRow Header="Round hours" Description="Applies to each day of each task in the timesheet and its Excel/CSV export. Hours are exported as decimals (1.50 = 1 h 30 min).">
+                  <ComboBox Width="200" ItemsSource="{Binding RoundingOptions}" DisplayMemberPath="Name"
+                            SelectedValuePath="Id" SelectedValue="{Binding RoundingKey}" AutomationProperties.Name="Round hours" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Round durations UP to the next 15 minutes"
+                                     Description="Exports only (Excel/CSV): each day's entry is rounded up, e.g. 0:01 → 0:15, 0:31 → 0:45, 1:07 → 1:15, and totals are summed from the rounded values. The timesheet on screen is unchanged.">
+                  <CheckBox IsChecked="{Binding ExportRoundUpToQuarter}" Content="On" AutomationProperties.Name="Round exported durations up to 15 minutes" />
+                </controls:SettingRow>
+              </StackPanel>
+            </Border>
+
+            <!-- Screenshots -->
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+              <StackPanel>
+                <TextBlock Text="Screenshots" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+                <controls:SettingRow Header="Automatic screenshots"
+                                     Description="Silent captures while tracking runs (never while paused, asleep or locked). Unchanged screens are skipped. Stored only on this PC.">
+                  <ComboBox Width="180" ItemsSource="{Binding ScreenshotModeOptions}" DisplayMemberPath="Name"
+                            SelectedValuePath="Id" SelectedValue="{Binding ScreenshotModeKey}" AutomationProperties.Name="Automatic screenshots" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Interval">
+                  <ComboBox Width="180" ItemsSource="{Binding ScreenshotIntervalOptions}" DisplayMemberPath="Name"
+                            SelectedValuePath="Id" SelectedValue="{Binding ScreenshotInterval}" AutomationProperties.Name="Screenshot interval" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Keep screenshots for" Description="Older captures are deleted automatically.">
+                  <ComboBox Width="180" ItemsSource="{Binding ScreenshotRetentionOptions}" DisplayMemberPath="Name"
+                            SelectedValuePath="Id" SelectedValue="{Binding ScreenshotRetention}" AutomationProperties.Name="Keep screenshots for" />
+                </controls:SettingRow>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+      <TabItem Header="Tasks &amp; Board">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,16,12,16">
+            <!-- Board -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,0">
+              <StackPanel>
+                <TextBlock Text="Tasks &amp; Board" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+                <controls:SettingRow Header="Automatically add tasks to Board"
+                                     Description="New tasks get a linked card in To do. Each task's &#x201C;Show on Board&#x201D; can still be switched off. Time tracking never needs the Board.">
+                  <CheckBox IsChecked="{Binding AutoAddTasksToBoard}" Content="On" AutomationProperties.Name="Automatically add tasks to Board" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Deadline warning"
+                                     Description="Tasks with a deadline get a bell (task list, lookups) and a thicker Board card border from this many days before it, and while overdue, until completed or rescheduled.">
+                  <ComboBox Width="180" ItemsSource="{Binding DeadlineWarningOptions}" DisplayMemberPath="Name"
+                            SelectedValuePath="Id" SelectedValue="{Binding DeadlineWarningDays}" AutomationProperties.Name="Deadline warning" />
+                </controls:SettingRow>
+                <Border Style="{StaticResource SettingsDivider}" />
+                <controls:SettingRow Header="Maintenance reminder"
+                                     Description="&#x201C;Have you kept your Tasks and Board up to date?&#x201D; after a while without using the WorkTrace window. Never at the same time as a check-in or time registration reminder.">
+                  <CheckBox IsChecked="{Binding MaintenanceReminderEnabled}" Content="On" AutomationProperties.Name="Maintenance reminder" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Remind me after" Description="&#x201C;Remind me later&#x201D; asks again after 30 minutes.">
+                  <ComboBox Width="180" ItemsSource="{Binding MaintenanceIntervalOptions}" DisplayMemberPath="Name"
+                            SelectedValuePath="Id" SelectedValue="{Binding MaintenanceReminderMinutes}" AutomationProperties.Name="Maintenance reminder interval" />
+                </controls:SettingRow>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+      <TabItem Header="Backup &amp; restore">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,16,12,16">
+            <views:BackupView DataContext="{Binding Backup}" />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+      <TabItem Header="General">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,16,12,16">
+            <!-- General -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,0">
+              <StackPanel>
+                <TextBlock Text="General" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+                <controls:SettingRow Header="Theme">
+                  <ComboBox Width="180" ItemsSource="{Binding ThemeOptions}" DisplayMemberPath="Name"
+                            SelectedValuePath="Id" SelectedValue="{Binding ThemeKey}" AutomationProperties.Name="Theme" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Start minimised" Description="Start in the notification area without opening this window.">
+                  <CheckBox IsChecked="{Binding StartMinimized}" Content="On" AutomationProperties.Name="Start minimised" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Close to the notification area" Description="Closing this window keeps WorkTrace running. Use Exit in the tray menu to quit.">
+                  <CheckBox IsChecked="{Binding CloseToTray}" Content="On" AutomationProperties.Name="Close to the notification area" />
+                </controls:SettingRow>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+    </TabControl>
+  </DockPanel>
 </UserControl>

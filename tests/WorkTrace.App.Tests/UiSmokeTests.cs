@@ -120,6 +120,15 @@ public class UiSmokeTests
             await ctx.Get<WorkTrace.Core.Board.IBackupService>().CreateAsync(new WorkTrace.Core.Board.BackupRequest(WorkTrace.Core.Board.BackupKind.AllCards), zip);
             window.ViewModel.NavigateTo(AppSection.Settings);
             await WpfTestHost.SettleAsync(10);
+            var settingsPage = ctx.Get<SettingsViewModel>();
+            for (var tab = 0; tab < SettingsViewModel.TabCount; tab++)
+            {
+                settingsPage.SelectedTab = tab; // every tab rendered once, so binding errors anywhere fail the test
+                await WpfTestHost.SettleAsync(5);
+            }
+
+            settingsPage.SelectedTab = 4; // Backup & restore
+            await WpfTestHost.SettleAsync(5);
             await backupPanel.PreviewRestoreAsync(zip);
             await WpfTestHost.SettleAsync(10);
             Assert.NotEmpty(backupPanel.RestoreItems);

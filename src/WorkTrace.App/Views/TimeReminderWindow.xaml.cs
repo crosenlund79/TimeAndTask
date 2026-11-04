@@ -21,12 +21,20 @@ public partial class TimeReminderWindow : Window
     private readonly TaskCompletionSource<ReminderAnswer> _answer = new();
     private readonly DispatcherTimer _autoClose;
 
-    /// <param name="yesNo">Shutdown style: only Yes / No.</param>
-    public TimeReminderWindow(string heading, string message, bool yesNo, TimeSpan autoClose)
+    /// <param name="yesNo">Shutdown style: only Yes / No (labels replaceable through <paramref name="labels"/>).</param>
+    public TimeReminderWindow(string heading, string message, bool yesNo, TimeSpan autoClose, (string Yes, string No, string Caption)? labels = null)
     {
         InitializeComponent();
         HeadingText.Text = heading;
         MessageText.Text = message;
+        if (labels is { } l)
+        {
+            YesButton.Content = l.Yes;
+            NoButton.Content = l.No;
+            CaptionRun.Text = l.Caption;
+            Title = "WorkTrace" + l.Caption.Replace(" · ", " – ", StringComparison.Ordinal);
+        }
+
         if (yesNo)
         {
             PeriodicButtons.Visibility = Visibility.Collapsed;

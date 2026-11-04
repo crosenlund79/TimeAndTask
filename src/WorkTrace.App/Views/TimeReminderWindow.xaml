@@ -24,7 +24,7 @@
         <StackPanel Grid.Column="1">
           <TextBlock x:Name="HeadingText" Text="Have you registered your time today?" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
           <TextBlock Style="{StaticResource CaptionText}">
-            <Run Text="WorkTrace" FontWeight="SemiBold" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" /><Run Text=" · time registration" />
+            <Run Text="WorkTrace" FontWeight="SemiBold" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" /><Run x:Name="CaptionRun" Text=" · time registration" />
           </TextBlock>
         </StackPanel>
         <Button Grid.Column="2" Style="{StaticResource IconButton}" Content="&#xE711;" FontSize="11" VerticalAlignment="Top"
@@ -39,8 +39,8 @@
         <Button Content="Yes, all done!" Padding="14,5" Style="{DynamicResource AccentButtonStyle}" Click="OnDone" />
       </WrapPanel>
       <WrapPanel x:Name="ShutdownButtons" HorizontalAlignment="Right" Visibility="Collapsed">
-        <Button Content="No" Padding="16,5" Margin="0,0,6,0" Click="OnNotYet" />
-        <Button Content="Yes" Padding="18,5" Style="{DynamicResource AccentButtonStyle}" Click="OnDone" />
+        <Button x:Name="NoButton" Content="No" Padding="16,5" Margin="0,0,6,0" Click="OnNotYet" />
+        <Button x:Name="YesButton" Content="Yes" Padding="18,5" Style="{DynamicResource AccentButtonStyle}" Click="OnDone" />
       </WrapPanel>
     </StackPanel>
   </Border>

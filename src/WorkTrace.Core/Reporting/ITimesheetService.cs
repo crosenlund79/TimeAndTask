@@ -29,6 +29,12 @@ public sealed record TimesheetWeek(
 
     public int WeekTotal => Lines.Sum(l => l.TotalMinutes);
 
+    /// <summary>Every day of every line rounded up to the next quarter hour (export option); totals follow from the rounded values.</summary>
+    public TimesheetWeek RoundedUpToQuarter() => this with
+    {
+        Lines = [.. Lines.Select(l => l with { Days = [.. l.Days.Select(c => c with { Minutes = Hours.RoundUpToQuarter(c.Minutes) })] })],
+    };
+
     public static DateOnly MondayOf(DateOnly day) => day.AddDays(-(((int)day.DayOfWeek + 6) % 7));
 }
 
@@ -54,6 +60,9 @@ public static class Hours
 {
     /// <summary>Decimal hours, as most time-registration systems expect (90 min → 1.50).</summary>
     public static decimal FromMinutes(int minutes) => Math.Round(minutes / 60m, 2);
+
+    /// <summary>Rounds up to the next 15 minutes (0:01 → 0:15, 0:15 → 0:15, 0:31 → 0:45); 0 stays 0.</summary>
+    public static int RoundUpToQuarter(int minutes) => minutes <= 0 ? minutes : (minutes + 14) / 15 * 15;
 
     /// <summary>Parses "1.5", "1,5", "1:30" or "90m" into minutes; null for empty or invalid text.</summary>
     public static int? ParseMinutes(string? text)

@@ -28,6 +28,7 @@ public static class AppServices
         services.AddSingleton<GlobalHotkey>();
         services.AddSingleton<SystemEventsBridge>();
         services.AddSingleton<TimeReminderService>();
+        services.AddSingleton<MaintenanceReminderService>();
         services.AddSingleton<ScreenshotCaptureService>();
         services.AddSingleton<BackupScheduler>();
         services.AddSingleton<WorkTrace.Core.Board.ISecretStore, Interop.CredentialSecretStore>();

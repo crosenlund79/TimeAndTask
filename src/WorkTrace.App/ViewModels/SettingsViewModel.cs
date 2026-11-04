@@ -178,10 +178,58 @@ public sealed partial class SettingsViewModel(
         }
     }
 
-    // ---- Board ----
+    [ObservableProperty]
+    public partial bool ExportRoundUpToQuarter { get; set; }
+
+    partial void OnExportRoundUpToQuarterChanged(bool value) => Apply(s => s.Reporting.ExportRoundUpToQuarter = value);
+
+    // ---- Tasks & Board ----
+
+    /// <summary>Index of the open settings tab (Tracking, Reminders, Timesheet, Tasks &amp; Board, Backup, General).</summary>
+    [ObservableProperty]
+    public partial int SelectedTab { get; set; }
+
+    public const int TabCount = 6;
 
     [ObservableProperty]
     public partial bool AutoAddTasksToBoard { get; set; }
+
+    public IReadOnlyList<PickerOption> DeadlineWarningOptions { get; } =
+    [
+        new(1, "1 day before"), new(2, "2 days before"), new(3, "3 days before"), new(5, "5 days before"), new(7, "1 week before"), new(14, "2 weeks before"),
+    ];
+
+    [ObservableProperty]
+    public partial int? DeadlineWarningDays { get; set; }
+
+    partial void OnDeadlineWarningDaysChanged(int? value)
+    {
+        if (value is { } days)
+        {
+            Apply(s => s.Tasks.DeadlineWarningDays = days);
+        }
+    }
+
+    public IReadOnlyList<PickerOption> MaintenanceIntervalOptions { get; } =
+    [
+        new(30, "30 minutes"), new(60, "1 hour"), new(90, "1 hour 30 minutes"), new(120, "2 hours"), new(180, "3 hours"), new(240, "4 hours"),
+    ];
+
+    [ObservableProperty]
+    public partial bool MaintenanceReminderEnabled { get; set; }
+
+    partial void OnMaintenanceReminderEnabledChanged(bool value) => Apply(s => s.Tasks.MaintenanceReminderEnabled = value);
+
+    [ObservableProperty]
+    public partial int? MaintenanceReminderMinutes { get; set; }
+
+    partial void OnMaintenanceReminderMinutesChanged(int? value)
+    {
+        if (value is { } minutes)
+        {
+            Apply(s => s.Tasks.MaintenanceReminderMinutes = minutes);
+        }
+    }
 
     // ---- Time registration reminders ----
 
@@ -189,6 +237,10 @@ public sealed partial class SettingsViewModel(
     [
         new(15, "Every 15 minutes"), new(30, "Every 30 minutes"), new(60, "Every hour"), new(90, "Every 90 minutes"), new(120, "Every 2 hours"),
     ];
+
+    /// <summary>Quarter-hour choices for the reminder period (any other time can still be typed).</summary>
+    public IReadOnlyList<string> QuarterHours { get; } =
+        [.. Enumerable.Range(0, 96).Select(i => new TimeOnly(i / 4, i % 4 * 15).ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture))];
 
     [ObservableProperty]
     public partial bool RemindersEnabled { get; set; }
@@ -237,6 +289,10 @@ public sealed partial class SettingsViewModel(
         StartMinimized = s.General.StartMinimized;
         CloseToTray = s.General.CloseToTray;
         AutoAddTasksToBoard = s.Board.AutoAddTasks;
+        DeadlineWarningDays = s.Tasks.DeadlineWarningDays;
+        MaintenanceReminderEnabled = s.Tasks.MaintenanceReminderEnabled;
+        MaintenanceReminderMinutes = s.Tasks.MaintenanceReminderMinutes;
+        ExportRoundUpToQuarter = s.Reporting.ExportRoundUpToQuarter;
         ScreenshotModeKey = (int)s.Screenshots.Mode + 1;
         ScreenshotInterval = s.Screenshots.CaptureIntervalMinutes;
         ScreenshotRetention = s.Screenshots.RetentionDays;

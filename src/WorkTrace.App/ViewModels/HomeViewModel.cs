@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using WorkTrace.App.Shell;
 using WorkTrace.App.Tracking;
+using WorkTrace.Core.Management;
 using WorkTrace.Core.Services;
 using WorkTrace.Core.Tracking;
 
@@ -17,10 +18,14 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
     private readonly ICheckInService _checkIns;
     private readonly INavigationService _navigation;
     private readonly TimeProvider _timeProvider;
+    private readonly ITaskService _tasks;
+    private bool _loadingCurrent;
+    private int? _recordedTaskId;
 
     public HomeViewModel(
         IAppStatusService statusService,
         ICheckInService checkIns,
+        ITaskService tasks,
         TrackingController tracking,
         INavigationService navigation,
         INotificationService notifications,
@@ -32,10 +37,15 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
         _checkIns = checkIns;
         _navigation = navigation;
         _timeProvider = timeProvider;
+        _tasks = tasks;
         Tracking = tracking;
 
         // Keep "Today" current while the page is open.
-        tracking.CheckInRecorded += (_, _) => _ = LoadTimelineAsync();
+        tracking.CheckInRecorded += (_, _) =>
+        {
+            _ = LoadTimelineAsync();
+            _ = LoadCurrentTaskAsync();
+        };
         tracking.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(TrackingController.Status))
@@ -48,6 +58,16 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
     public TrackingController Tracking { get; }
 
     public ObservableCollection<TimelineItemViewModel> Today { get; } = [];
+
+    /// <summary>Non-archived tasks, most recently used first, for the "Current task" lookup.</summary>
+    public ObservableCollection<CurrentTaskOption> CurrentTasks { get; } = [];
+
+    /// <summary>The task of the latest check-in; choosing another one records a check-in now.</summary>
+    [ObservableProperty]
+    public partial int CurrentTaskId { get; set; }
+
+    [ObservableProperty]
+    public partial string? CurrentTaskText { get; set; }
 
     [ObservableProperty]
     public partial string? TodaySummary { get; private set; }
@@ -71,6 +91,7 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
     {
         await RunAsync(async () => Status = await _statusService.GetStatusAsync(), "Could not read the database status.");
         await LoadTimelineAsync();
+        await LoadCurrentTaskAsync();
     }
 
     private async Task LoadTimelineAsync()
@@ -95,6 +116,67 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
             : $"{checkIns} check-in{(checkIns == 1 ? string.Empty : "s")}" + (missed > 0 ? $" · {missed} without an answer" : string.Empty);
     }
 
+    private async Task LoadCurrentTaskAsync()
+    {
+        IReadOnlyList<TaskSummary> tasks = [];
+        ObservationSummary? last = null;
+        if (!await RunAsync(
+            async () =>
+            {
+                tasks = await _tasks.SearchAsync(new TaskQuery(Limit: 500));
+                last = await _checkIns.GetLastObservationAsync();
+            },
+            "Could not load tasks."))
+        {
+            return;
+        }
+
+        _loadingCurrent = true;
+        try
+        {
+            CurrentTasks.Clear();
+            foreach (var t in tasks.OrderByDescending(t => t.LastUsedAtUtc ?? DateTime.MinValue).ThenBy(t => t.Title, StringComparer.CurrentCultureIgnoreCase))
+            {
+                CurrentTasks.Add(new CurrentTaskOption(t.Id, CurrentTaskOption.Format(t), t.ClientName, t.DeadlineState != DeadlineState.None));
+            }
+
+            var current = CurrentTasks.FirstOrDefault(o => o.Id == last?.TaskId);
+            CurrentTaskId = current?.Id ?? PickerOption.NoneKey;
+            _recordedTaskId = current?.Id;
+            CurrentTaskText = current?.Display ?? string.Empty;
+        }
+        finally
+        {
+            _loadingCurrent = false;
+        }
+    }
+
+    /// <summary>
+    /// Records a check-in for the chosen task when it differs from the current one. Called when the lookup closes or
+    /// loses focus, so browsing the list with the arrow keys does not record anything.
+    /// </summary>
+    [RelayCommand]
+    private async Task CommitCurrentTaskAsync()
+    {
+        if (_loadingCurrent || CurrentTaskId == PickerOption.NoneKey || CurrentTaskId == _recordedTaskId)
+        {
+            return;
+        }
+
+        var taskId = CurrentTaskId;
+        _recordedTaskId = taskId;
+        if (await RunAsync(() => _checkIns.RecordAsync(new CheckInRequest(null, taskId, null)), "Could not record the current task."))
+        {
+            Notifications.Show("Current task recorded.", NotificationKind.Success);
+            await LoadTimelineAsync();
+            await LoadCurrentTaskAsync();
+        }
+        else
+        {
+            _recordedTaskId = null;
+        }
+    }
+
     [RelayCommand]
     private void NewTask() => _navigation.Navigate(AppSection.Tasks, new CreateNewRequest());
 
@@ -115,3 +197,11 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
 }
 
 public sealed record RoadmapItem(string Feature, string Phase);
+
+/// <param name="HasDeadlineWarning">Deadline within the warning period or overdue: the lookup shows a bell.</param>
+public sealed record CurrentTaskOption(int Id, string Display, string Stakeholder, bool HasDeadlineWarning)
+{
+    public static string Format(TaskSummary t) => string.IsNullOrWhiteSpace(t.ExternalId) ? t.Title : $"{t.ExternalId} · {t.Title}";
+
+    public override string ToString() => Display;
+}

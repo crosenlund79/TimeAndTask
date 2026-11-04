@@ -218,6 +218,9 @@ public sealed class ReportingSettings
 
     /// <summary>0 = no rounding.</summary>
     public int RoundingMinutes { get; set; }
+
+    /// <summary>Exports round each day's entry UP to the next 15 minutes; totals are summed from the rounded values. Off by default.</summary>
+    public bool ExportRoundUpToQuarter { get; set; }
 }
 
 public sealed class BoardSettings
