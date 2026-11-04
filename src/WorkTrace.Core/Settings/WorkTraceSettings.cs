@@ -322,6 +322,17 @@ public sealed class TaskSettings
 
     public int MaintenanceReminderMinutes { get; set; } = 120;
 
+    /// <summary>Daily "review your upcoming tasks" popup with the active pipeline (off by default).</summary>
+    public bool PlanningReminderEnabled { get; set; }
+
+    /// <summary>Local time of the planning reminder (shown once per day, at or after this time).</summary>
+    public TimeOnly PlanningReminderTime { get; set; } = new(9, 0);
+
+    public bool PlanningReminderWeekdaysOnly { get; set; } = true;
+
+    /// <summary>Day the planning reminder was last shown (so it comes once a day, also across restarts).</summary>
+    public DateOnly? PlanningReminderShownOn { get; set; }
+
     /// <summary>Task-list groups the user collapsed (remembered between sessions).</summary>
     public List<Management.TaskGroup> CollapsedGroups { get; set; } = [];
 }

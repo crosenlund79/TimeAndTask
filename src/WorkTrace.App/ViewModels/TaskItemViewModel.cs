@@ -32,6 +32,14 @@ public sealed class TaskItemViewModel(TaskSummary summary, string lastUsedText, 
 
     public bool IsWaiting => Summary.IsWaiting;
 
+    public bool IsClosed => Summary.IsClosed;
+
+    public string StakeholderColor => Summary.ClientColor;
+
+    public bool HasEstimate => Summary.EstimatedRemainingMinutes is not null;
+
+    public string EstimateText => Summary.EstimatedRemainingMinutes is { } m ? "≈ " + TaskQueue.FormatDuration(m) + " left" : "No estimate";
+
     public string? WaitingReason => Summary.WaitingReason;
 
     public string WaitingText => string.IsNullOrWhiteSpace(Summary.WaitingReason) ? "Waiting for external input" : "Waiting for: " + Summary.WaitingReason;

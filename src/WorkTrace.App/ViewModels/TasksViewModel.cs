@@ -54,9 +54,10 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
 
         Groups =
         [
-            new(TaskGroup.Regular, "Regular Tasks", "\uE9D5", SaveGroupState),
-            new(TaskGroup.Recurring, "Recurring Tasks", "\uE8EE", SaveGroupState),
-            new(TaskGroup.Waiting, "Waiting for External Input", "\uE823", SaveGroupState),
+            new(TaskGroup.Regular, "Regular Tasks", "\uE9D5", "#5B7DB1", SaveGroupState),
+            new(TaskGroup.Recurring, "Recurring Tasks", "\uE8EE", "#4F8A8B", SaveGroupState),
+            new(TaskGroup.Waiting, "Waiting for External Input", "\uE823", "#B08D57", SaveGroupState),
+            new(TaskGroup.Closed, "Closed Tasks", "\uE73E", "#7A7F87", SaveGroupState),
         ];
         foreach (var group in Groups)
         {
@@ -145,6 +146,11 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         // Rebuild an unmodified editor so its pickers include clients/lists changed on other pages.
         await ReloadAsync(selectId: Editor?.Id ?? SelectedItem?.Id, forceEditor: !HasUnsavedChanges);
 
+        if (parameter is ShowTimelineRequest)
+        {
+            ShowTimeline = true;
+        }
+
         if (parameter is CreateNewRequest)
         {
             NewTask();
@@ -157,6 +163,60 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
     partial void OnClientFilterKeyChanged(int? value) => ScheduleReload();
 
     partial void OnShowArchivedChanged(bool value) => ScheduleReload();
+
+    // ---- Planning timeline ----
+
+    private IReadOnlyList<TaskSummary> _lastResults = [];
+
+    /// <summary>Shows the planning timeline instead of the grouped list (the editor stays on the right).</summary>
+    [ObservableProperty]
+    public partial bool ShowTimeline { get; set; }
+
+    public ObservableCollection<QueueItemViewModel> Timeline { get; } = [];
+
+    /// <summary>Timeline group filter: 1 = all active, 2 Regular, 3 Recurring, 4 Waiting, 5 Closed (keys avoid the picker's 0).</summary>
+    public IReadOnlyList<PickerOption> TimelineGroupOptions { get; } =
+    [
+        new(1, "All active tasks"), new(2, "Regular Tasks"), new(3, "Recurring Tasks"), new(4, "Waiting for External Input"), new(5, "Closed Tasks"),
+    ];
+
+    [ObservableProperty]
+    public partial int? TimelineGroupKey { get; set; } = 1;
+
+    [ObservableProperty]
+    public partial string? TimelineSummary { get; private set; }
+
+    [ObservableProperty]
+    public partial QueueItemViewModel? SelectedQueueItem { get; set; }
+
+    partial void OnTimelineGroupKeyChanged(int? value) => BuildTimeline();
+
+    /// <summary>Selecting a timeline row opens the task in the editor, as in the list.</summary>
+    partial void OnSelectedQueueItemChanged(QueueItemViewModel? value)
+    {
+        if (value is not null && !HasUnsavedChanges && Items.FirstOrDefault(i => i.Id == value.Id) is { } item)
+        {
+            SelectedItem = item;
+        }
+    }
+
+    private void BuildTimeline()
+    {
+        var group = TimelineGroupKey switch { 2 => TaskGroup.Regular, 3 => TaskGroup.Recurring, 4 => TaskGroup.Waiting, 5 => TaskGroup.Closed, _ => (TaskGroup?)null };
+        var queue = TaskQueue.Build(_lastResults.Where(t => group is null || t.Group == group), includeClosed: group == TaskGroup.Closed);
+        var total = queue.Sum(e => e.DurationMinutes);
+        Timeline.Clear();
+        foreach (var entry in queue)
+        {
+            Timeline.Add(new QueueItemViewModel(entry, total));
+        }
+
+        var unknown = queue.Count(e => e.IsProvisional);
+        TimelineSummary = queue.Count == 0
+            ? "No active tasks match."
+            : $"{queue.Count} task{(queue.Count == 1 ? "" : "s")} · about {TaskQueue.FormatDuration(total)}"
+                + (unknown > 0 ? $" · {unknown} without an estimate (planned as 4 h each)" : "");
+    }
 
     partial void OnSelectedItemChanged(TaskItemViewModel? value)
     {
@@ -509,6 +569,9 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         cancellationToken.ThrowIfCancellationRequested();
         var now = UtcTime.Now(_timeProvider);
         Items.Clear();
+        _lastResults = results;
+        BuildTimeline();
+
         // Stable ordering by group keeps the search ranking within each group.
         foreach (var task in results.OrderBy(t => t.Group))
         {

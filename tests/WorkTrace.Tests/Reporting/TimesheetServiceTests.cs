@@ -103,6 +103,25 @@ public class TimesheetServiceTests : ManagementTestBase
         Assert.Equal((TaskGroup.Recurring, (string?)null), (task.Group, task.WaitingReason));
     }
 
+    [Fact]
+    public async Task ClosedTasks_LeaveThePlanningQueue_AndUnknownEstimatesArePlannedProvisionally()
+    {
+        var clientId = await InternalClientIdAsync();
+        var first = await Tasks.CreateAsync(new TaskInput(clientId, null, null, "Scheduled", null, null, EstimatedRemainingMinutes: 90, PlannedStart: new DateOnly(2026, 11, 10)), Ct);
+        var unknown = await Tasks.CreateAsync(new TaskInput(clientId, null, null, "Unknown", null, null), Ct);
+        var closed = await Tasks.CreateAsync(new TaskInput(clientId, null, null, "Done", null, null, IsWaiting: true, IsClosed: true), Ct);
+        Assert.Equal(TaskGroup.Closed, closed.Group); // Closed wins over Waiting
+
+        var queue = TaskQueue.Build(await Tasks.SearchAsync(new TaskQuery(), Ct));
+        Assert.Equal([first.Id, unknown.Id], queue.Select(e => e.Task.Id));
+        Assert.Equal((90, false), (queue[0].DurationMinutes, queue[0].IsProvisional));
+        Assert.Equal((90, TaskQueue.ProvisionalMinutes, true), (queue[1].StartMinutes, queue[1].DurationMinutes, queue[1].IsProvisional));
+        Assert.Null((await Tasks.GetAsync(unknown.Id, Ct)).EstimatedRemainingMinutes); // provisional time is never stored
+
+        var reopened = await Tasks.UpdateAsync(closed.Id, new TaskInput(clientId, null, null, "Done", null, null, IsWaiting: true, IsClosed: false), Ct);
+        Assert.Equal(TaskGroup.Waiting, reopened.Group);
+    }
+
     [Theory]
     [InlineData("1.5", 90)]
     [InlineData("1,25", 75)]

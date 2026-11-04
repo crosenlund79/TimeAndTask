@@ -23,3 +23,6 @@ public sealed record ClientTasksFilter(int ClientId);
 
 /// <summary>Navigation parameter: start creating a new item in the target section.</summary>
 public sealed record CreateNewRequest;
+
+/// <summary>Opens the Tasks page on its planning timeline.</summary>
+public sealed record ShowTimelineRequest;

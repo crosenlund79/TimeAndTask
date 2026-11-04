@@ -210,6 +210,40 @@ public sealed partial class SettingsViewModel(
         }
     }
 
+    [ObservableProperty]
+    public partial bool PlanningReminderEnabled { get; set; }
+
+    partial void OnPlanningReminderEnabledChanged(bool value) => Apply(s => s.Tasks.PlanningReminderEnabled = value);
+
+    [ObservableProperty]
+    public partial string? PlanningReminderTime { get; set; }
+
+    [ObservableProperty]
+    public partial string? PlanningTimeError { get; private set; }
+
+    partial void OnPlanningReminderTimeChanged(string? value)
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        if (!TimeOnly.TryParse(value?.Trim(), System.Globalization.CultureInfo.InvariantCulture, out var time)
+            && !TimeOnly.TryParse(value?.Trim(), System.Globalization.CultureInfo.CurrentCulture, out time))
+        {
+            PlanningTimeError = "Use a time such as 09:00.";
+            return;
+        }
+
+        PlanningTimeError = null;
+        Apply(s => s.Tasks.PlanningReminderTime = time);
+    }
+
+    [ObservableProperty]
+    public partial bool PlanningReminderWeekdaysOnly { get; set; }
+
+    partial void OnPlanningReminderWeekdaysOnlyChanged(bool value) => Apply(s => s.Tasks.PlanningReminderWeekdaysOnly = value);
+
     public IReadOnlyList<PickerOption> MaintenanceIntervalOptions { get; } =
     [
         new(30, "30 minutes"), new(60, "1 hour"), new(90, "1 hour 30 minutes"), new(120, "2 hours"), new(180, "3 hours"), new(240, "4 hours"),
@@ -292,6 +326,10 @@ public sealed partial class SettingsViewModel(
         DeadlineWarningDays = s.Tasks.DeadlineWarningDays;
         MaintenanceReminderEnabled = s.Tasks.MaintenanceReminderEnabled;
         MaintenanceReminderMinutes = s.Tasks.MaintenanceReminderMinutes;
+        PlanningReminderEnabled = s.Tasks.PlanningReminderEnabled;
+        PlanningReminderTime = s.Tasks.PlanningReminderTime.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+        PlanningTimeError = null;
+        PlanningReminderWeekdaysOnly = s.Tasks.PlanningReminderWeekdaysOnly;
         ExportRoundUpToQuarter = s.Reporting.ExportRoundUpToQuarter;
         ScreenshotModeKey = (int)s.Screenshots.Mode + 1;
         ScreenshotInterval = s.Screenshots.CaptureIntervalMinutes;

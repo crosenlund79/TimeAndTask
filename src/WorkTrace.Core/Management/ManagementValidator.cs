@@ -58,6 +58,11 @@ public static class ManagementValidator
             errors.Add(nameof(TaskInput.Notes), $"Use at most {WorkTask.NotesMaxLength} characters.");
         }
 
+        if (input.EstimatedRemainingMinutes is < 0 or > 100_000)
+        {
+            errors.Add(nameof(TaskInput.EstimatedRemainingMinutes), "Enter hours and minutes, e.g. 2:30 or 1.5.");
+        }
+
         if (Text.Clean(input.WaitingReason)?.Length > WorkTask.WaitingReasonMaxLength)
         {
             errors.Add(nameof(TaskInput.WaitingReason), $"Use at most {WorkTask.WaitingReasonMaxLength} characters.");

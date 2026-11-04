@@ -20,6 +20,7 @@ public sealed class MaintenanceReminderService(
     ICheckInPresenter checkIns,
     TimeReminderService timeReminders,
     TrackingController tracking,
+    ReminderSlot slot,
     TimeProvider timeProvider,
     ILogger<MaintenanceReminderService> logger) : IDisposable
 {
@@ -87,6 +88,11 @@ public sealed class MaintenanceReminderService(
 
     private async Task ShowAsync()
     {
+        if (!slot.TryEnter())
+        {
+            return;
+        }
+
         _open = true;
         try
         {
@@ -109,6 +115,7 @@ public sealed class MaintenanceReminderService(
         finally
         {
             _open = false;
+            slot.Exit();
         }
     }
 }

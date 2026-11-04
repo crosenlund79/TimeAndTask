@@ -29,6 +29,8 @@ public static class AppServices
         services.AddSingleton<SystemEventsBridge>();
         services.AddSingleton<TimeReminderService>();
         services.AddSingleton<MaintenanceReminderService>();
+        services.AddSingleton<PlanningReminderService>();
+        services.AddSingleton<ReminderSlot>();
         services.AddSingleton<ScreenshotCaptureService>();
         services.AddSingleton<BackupScheduler>();
         services.AddSingleton<WorkTrace.Core.Board.ISecretStore, Interop.CredentialSecretStore>();

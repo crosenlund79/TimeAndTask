@@ -150,6 +150,7 @@ public partial class App : Application, IAppLifetime
         reminders.Start();
         _ = reminders.AskAfterShutdownAsync();
         services.GetRequiredService<MaintenanceReminderService>().Start();
+        services.GetRequiredService<PlanningReminderService>().Start();
     }
 
     private async Task StartEngineAsync(TrackingEngine engine)
@@ -245,6 +246,7 @@ public partial class App : Application, IAppLifetime
             _host?.Services.GetService<SystemEventsBridge>()?.Dispose();
             _host?.Services.GetService<TimeReminderService>()?.Dispose();
             _host?.Services.GetService<MaintenanceReminderService>()?.Dispose();
+            _host?.Services.GetService<PlanningReminderService>()?.Dispose();
             _host?.Services.GetService<ScreenshotCaptureService>()?.Dispose();
             _host?.Services.GetService<BackupScheduler>()?.Dispose();
             _host?.Services.GetService<GlobalHotkey>()?.Dispose();

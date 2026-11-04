@@ -22,9 +22,12 @@ public sealed partial class TaskEditorViewModel : ObservableObject
     {
         Existing = existing;
         _original = existing is null
-            ? new TaskInput(defaultClientId, null, null, null, null, null, showNewTasksOnBoard, null, false, false, null)
+            ? new TaskInput(defaultClientId, null, null, null, null, null, showNewTasksOnBoard, null, false, false, null, false)
             : new TaskInput(existing.ClientId, existing.TaskSystemId, existing.ExternalId, existing.Title, existing.Notes, existing.DefaultChannelId, existing.IsOnBoard, existing.Deadline,
-                existing.IsRecurring, existing.IsWaiting, existing.WaitingReason);
+                existing.IsRecurring, existing.IsWaiting, existing.WaitingReason, existing.IsClosed, existing.EstimatedRemainingMinutes, existing.PlannedStart);
+        IsClosed = _original.IsClosed == true;
+        EstimateText = _original.EstimatedRemainingMinutes is { } est ? FormatEstimate(est) : null;
+        PlannedStart = _original.PlannedStart;
         Deadline = _original.Deadline;
         IsRecurring = _original.IsRecurring == true;
         IsWaiting = _original.IsWaiting == true;
@@ -122,6 +125,60 @@ public sealed partial class TaskEditorViewModel : ObservableObject
     [ObservableProperty]
     public partial string? WaitingReasonError { get; private set; }
 
+    /// <summary>Completed (reopen by clearing it). Different from archiving, which hides the task.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDirty))]
+    public partial bool IsClosed { get; set; }
+
+    /// <summary>Estimated remaining time as typed ("2:30", "1.5", "3h", "45m"); empty = unknown.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDirty))]
+    public partial string? EstimateText { get; set; }
+
+    [ObservableProperty]
+    public partial string? EstimateError { get; private set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDirty), nameof(PlannedStartDate))]
+    public partial DateOnly? PlannedStart { get; set; }
+
+    public DateTime? PlannedStartDate
+    {
+        get => PlannedStart?.ToDateTime(TimeOnly.MinValue);
+        set => PlannedStart = value is { } d ? DateOnly.FromDateTime(d) : null;
+    }
+
+    /// <summary>Minutes, null for empty text; -1 for text that is not a duration (rejected by validation).</summary>
+    public int? EstimatedMinutes => ParseEstimate(EstimateText);
+
+    public static string FormatEstimate(int minutes) => $"{minutes / 60}:{minutes % 60:00}";
+
+    public static int? ParseEstimate(string? text)
+    {
+        var t = text?.Trim().ToLowerInvariant().Replace(" ", "", StringComparison.Ordinal);
+        if (string.IsNullOrEmpty(t))
+        {
+            return null;
+        }
+
+        if (t.EndsWith('h'))
+        {
+            t = t[..^1];
+        }
+
+        if (t.Contains(':', StringComparison.Ordinal) || t.EndsWith('m'))
+        {
+            return WorkTrace.Core.Reporting.Hours.ParseMinutes(t) ?? -1;
+        }
+
+        return decimal.TryParse(t.Replace(',', '.'), System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var hours)
+            && hours is >= 0 and <= 1000
+            ? (int)Math.Round(hours * 60)
+            : -1;
+    }
+
+    partial void OnEstimateTextChanged(string? value) => EstimateError = null;
+
     /// <summary>DatePicker-friendly <see cref="Deadline"/>.</summary>
     public DateTime? DeadlineDate
     {
@@ -190,7 +247,7 @@ public sealed partial class TaskEditorViewModel : ObservableObject
     public string CreateClientLabel => $"Create stakeholder “{Text.Clean(ClientText)}”";
 
     public TaskInput ToInput() => new(ClientId, TaskSystemId, ExternalId, Title, Notes, DefaultChannelId, ShowOnBoard, Deadline,
-        IsRecurring, IsWaiting, IsWaiting ? WaitingReason : null);
+        IsRecurring, IsWaiting, IsWaiting ? WaitingReason : null, IsClosed, EstimatedMinutes, PlannedStart);
 
     public void ApplyErrors(ValidationErrors errors)
     {
@@ -201,6 +258,7 @@ public sealed partial class TaskEditorViewModel : ObservableObject
         ChannelError = errors.For(nameof(TaskInput.DefaultChannelId));
         NotesError = errors.For(nameof(TaskInput.Notes));
         WaitingReasonError = errors.For(nameof(TaskInput.WaitingReason));
+        EstimateError = errors.For(nameof(TaskInput.EstimatedRemainingMinutes));
     }
 
     partial void OnClientIdChanged(int? value) => ClientError = null;
@@ -231,6 +289,9 @@ public sealed partial class TaskEditorViewModel : ObservableObject
         && a.Deadline == b.Deadline
         && a.IsRecurring == b.IsRecurring
         && a.IsWaiting == b.IsWaiting
+        && a.IsClosed == b.IsClosed
+        && a.EstimatedRemainingMinutes == b.EstimatedRemainingMinutes
+        && a.PlannedStart == b.PlannedStart
         && Text.Clean(a.WaitingReason) == Text.Clean(b.WaitingReason)
         && Text.Clean(a.ExternalId) == Text.Clean(b.ExternalId)
         && Text.Clean(a.Title) == Text.Clean(b.Title)

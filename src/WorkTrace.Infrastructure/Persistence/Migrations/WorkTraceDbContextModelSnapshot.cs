@@ -834,12 +834,18 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                     b.Property<int?>("DefaultChannelId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("EstimatedRemainingMinutes")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("ExternalId")
                         .HasMaxLength(100)
                         .HasColumnType("TEXT")
                         .UseCollation("NOCASE");
 
                     b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsClosed")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsRecurring")
@@ -856,6 +862,9 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Notes")
                         .HasMaxLength(8000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("PlannedStart")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("TaskSystemId")

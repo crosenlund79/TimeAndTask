@@ -135,7 +135,7 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
         try
         {
             CurrentTasks.Clear();
-            foreach (var t in tasks.OrderByDescending(t => t.LastUsedAtUtc ?? DateTime.MinValue).ThenBy(t => t.Title, StringComparer.CurrentCultureIgnoreCase))
+            foreach (var t in tasks.Where(t => !t.IsClosed).OrderByDescending(t => t.LastUsedAtUtc ?? DateTime.MinValue).ThenBy(t => t.Title, StringComparer.CurrentCultureIgnoreCase))
             {
                 CurrentTasks.Add(new CurrentTaskOption(t.Id, CurrentTaskOption.Format(t), t.ClientName, t.DeadlineState != DeadlineState.None));
             }

@@ -85,6 +85,13 @@ public class UiSmokeTests
             await WpfTestHost.SettleAsync();
             Assert.Equal(tasks.Items[1].Id, tasks.Editor!.Id);
             Assert.False(tasks.HasUnsavedChanges, $"Switching tasks must not modify the editor: {tasks.Editor.ToInput()} vs {tasks.Editor.Original}");
+            tasks.ShowTimeline = true; // planning timeline: selecting a row opens the task in the editor
+            await WpfTestHost.SettleAsync(5);
+            Assert.NotEmpty(tasks.Timeline);
+            tasks.SelectedQueueItem = tasks.Timeline[0];
+            await WpfTestHost.SettleAsync();
+            Assert.Equal(tasks.Timeline[0].Id, tasks.Editor!.Id);
+            tasks.ShowTimeline = false;
             tasks.SelectedItem = tasks.Items[0];
             await WpfTestHost.SettleAsync();
             tasks.Editor!.Title = "Changed";

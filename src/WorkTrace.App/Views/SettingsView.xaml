@@ -219,6 +219,21 @@
                   <ComboBox Width="180" ItemsSource="{Binding MaintenanceIntervalOptions}" DisplayMemberPath="Name"
                             SelectedValuePath="Id" SelectedValue="{Binding MaintenanceReminderMinutes}" AutomationProperties.Name="Maintenance reminder interval" />
                 </controls:SettingRow>
+                <Border Style="{StaticResource SettingsDivider}" />
+                <controls:SettingRow Header="Planning reminder"
+                                     Description="Once a day, a WorkTrace popup lists the next tasks in your pipeline with Open timeline and Dismiss. Waits for other popups and check-ins.">
+                  <CheckBox IsChecked="{Binding PlanningReminderEnabled}" Content="On" AutomationProperties.Name="Planning reminder" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Show it at" Description="Or as soon as you are back at the PC after this time.">
+                  <StackPanel>
+                    <ComboBox Width="96" IsEditable="True" IsTextSearchEnabled="True" ItemsSource="{Binding QuarterHours}" MaxDropDownHeight="240"
+                              Text="{Binding PlanningReminderTime, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Planning reminder time" />
+                    <TextBlock Text="{Binding PlanningTimeError}" Style="{StaticResource ErrorText}" />
+                  </StackPanel>
+                </controls:SettingRow>
+                <controls:SettingRow Header="Weekdays only">
+                  <CheckBox IsChecked="{Binding PlanningReminderWeekdaysOnly}" Content="On" AutomationProperties.Name="Planning reminder on weekdays only" />
+                </controls:SettingRow>
               </StackPanel>
             </Border>
           </StackPanel>

@@ -198,6 +198,14 @@ internal sealed class TaskService(
             task.IsWaiting = waiting;
             task.WaitingReason = waiting ? Text.Clean(input.WaitingReason) : null;
         }
+
+        if (input.IsClosed is { } closed)
+        {
+            task.IsClosed = closed;
+        }
+
+        task.EstimatedRemainingMinutes = input.EstimatedRemainingMinutes;
+        task.PlannedStart = input.PlannedStart;
     }
 
     private async Task SaveIfChangedAsync(WorkTraceDbContext db, WorkTask task, CancellationToken cancellationToken)
@@ -284,9 +292,14 @@ internal sealed class TaskService(
             db.BoardCards.Any(c => c.WorkTaskId == t.Id && !c.IsArchived),
             t.Deadline,
             StakeholderColors.For(t.ClientId, t.Client.Color),
-            Deadlines.State(t.Deadline, today, warningDays, t.IsArchived),
+            Deadlines.State(t.Deadline, today, warningDays, t.IsArchived || t.IsClosed),
             t.IsRecurring,
             t.IsWaiting,
-            t.WaitingReason));
+            t.WaitingReason,
+            t.IsClosed,
+            t.EstimatedRemainingMinutes,
+            t.PlannedStart,
+            db.BoardCards.Where(c => c.WorkTaskId == t.Id && !c.IsArchived).Select(c => (BoardPriority?)c.Priority).FirstOrDefault(),
+            db.BoardCards.Where(c => c.WorkTaskId == t.Id && !c.IsArchived).Select(c => (double?)c.SortOrder).FirstOrDefault()));
     }
 }

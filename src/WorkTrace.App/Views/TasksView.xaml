@@ -69,6 +69,16 @@
                 IsChecked="{Binding ShowArchived}" />
 
       <StackPanel Grid.Column="4" Orientation="Horizontal">
+        <ComboBox Width="210" Margin="0,0,8,0" VerticalAlignment="Center" ItemsSource="{Binding TimelineGroupOptions}" DisplayMemberPath="Name"
+                  SelectedValuePath="Id" SelectedValue="{Binding TimelineGroupKey}" AutomationProperties.Name="Timeline group filter"
+                  Visibility="{Binding ShowTimeline, Converter={StaticResource BoolToVisibility}}" />
+        <ToggleButton Padding="12,6" Margin="0,0,8,0" IsChecked="{Binding ShowTimeline}" AutomationProperties.Name="Planning timeline"
+                      ToolTip="Planning timeline: the active task queue with estimated effort">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE9D2;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
+            <TextBlock Text="Timeline" />
+          </StackPanel>
+        </ToggleButton>
         <Button Padding="12,6" Margin="0,0,8,0" Command="{Binding EditSelectedCommand}" ToolTip="Edit the selected task (Enter)">
           <StackPanel Orientation="Horizontal">
             <TextBlock Text="&#xE70F;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
@@ -99,7 +109,71 @@
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
 
+          <!-- Planning timeline (replaces the list while on; the editor on the right stays) -->
+          <DockPanel Visibility="{Binding ShowTimeline, Converter={StaticResource BoolToVisibility}}" Margin="6,4,6,0">
+            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+              <TextBlock Text="{Binding TimelineSummary}" Style="{StaticResource CaptionText}" />
+              <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Border Width="18" Height="9" CornerRadius="2" Background="{DynamicResource AccentFillColorDefaultBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                <TextBlock Text="Estimated effort" Style="{StaticResource CaptionText}" Margin="0,0,14,0" />
+                <Rectangle Width="18" Height="9" RadiusX="2" RadiusY="2" Fill="#33C0504D" Stroke="#C0504D" StrokeDashArray="2 1.5" Margin="0,0,6,0" VerticalAlignment="Center" />
+                <TextBlock Text="No estimate: provisional 4 h (not saved)" Style="{StaticResource CaptionText}" />
+              </StackPanel>
+            </StackPanel>
+            <ListBox Style="{StaticResource RowListBox}" ItemsSource="{Binding Timeline}" SelectedItem="{Binding SelectedQueueItem}"
+                     IsEnabled="{Binding IsListEnabled}" AutomationProperties.Name="Planning timeline">
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:QueueItemViewModel}">
+                  <Grid Margin="0,2">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="26" />
+                      <ColumnDefinition Width="2*" MinWidth="140" />
+                      <ColumnDefinition Width="3*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{Binding Position}" Style="{StaticResource CaptionText}" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" Margin="0,0,10,0" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" />
+                      <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="8" Height="8" Margin="0,1,6,0" VerticalAlignment="Center" Fill="{Binding StakeholderColor, Converter={StaticResource HexBrush}}" />
+                        <TextBlock Text="{Binding Context}" Style="{StaticResource CaptionText}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding PlannedText, StringFormat=' · {0}'}" Style="{StaticResource CaptionText}"
+                                   Visibility="{Binding PlannedText, Converter={StaticResource NullToCollapsed}}" />
+                      </StackPanel>
+                    </StackPanel>
+                    <Grid Grid.Column="2" VerticalAlignment="Center">
+                      <Grid.RowDefinitions>
+                        <RowDefinition Height="18" />
+                        <RowDefinition Height="Auto" />
+                      </Grid.RowDefinitions>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="{Binding Before}" />
+                        <ColumnDefinition Width="{Binding Block}" />
+                        <ColumnDefinition Width="{Binding After}" />
+                      </Grid.ColumnDefinitions>
+                      <Border Grid.ColumnSpan="3" CornerRadius="3" Background="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                      <Rectangle x:Name="Bar" Grid.Column="1" RadiusX="3" RadiusY="3" MinWidth="4"
+                                 Fill="{Binding StakeholderColor, Converter={StaticResource HexBrush}, ConverterParameter=0.85}" />
+                      <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource CaptionText}" FontSize="11" Margin="0,2,0,0">
+                        <Run x:Name="Duration" Text="{Binding DurationText, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" · " /><Run Text="{Binding StartText, Mode=OneWay}" />
+                      </TextBlock>
+                    </Grid>
+                  </Grid>
+                  <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding IsProvisional}" Value="True">
+                      <Setter TargetName="Bar" Property="Fill" Value="#33C0504D" />
+                      <Setter TargetName="Bar" Property="Stroke" Value="#C0504D" />
+                      <Setter TargetName="Bar" Property="StrokeThickness" Value="1.5" />
+                      <Setter TargetName="Bar" Property="StrokeDashArray" Value="3 2" />
+                      <Setter TargetName="Duration" Property="Foreground" Value="#C0504D" />
+                    </DataTrigger>
+                  </DataTemplate.Triggers>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
+
           <ListBox x:Name="TaskList" Style="{StaticResource RowListBox}" SelectionMode="Extended" SelectionChanged="OnListSelectionChanged"
+                   Visibility="{Binding ShowTimeline, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"
                    ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}"
                    IsEnabled="{Binding IsListEnabled}" KeyDown="OnListKeyDown"
                    AutomationProperties.Name="Tasks">
@@ -117,14 +191,18 @@
                                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                                     AutomationProperties.Name="{Binding Name.Title}">
                             <Expander.Header>
-                              <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding Name.Glyph}" Style="{StaticResource IconText}" FontSize="12" Margin="0,1,8,0"
-                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                <TextBlock Text="{Binding Name.Title}" FontWeight="SemiBold" />
-                                <Border Style="{StaticResource Pill}" Margin="8,0,0,0">
-                                  <TextBlock Text="{Binding ItemCount}" Style="{StaticResource PillText}" />
-                                </Border>
-                              </StackPanel>
+                              <Border CornerRadius="4" BorderThickness="4,0,0,0" Padding="10,7" Margin="0,4,0,2"
+                                      BorderBrush="{Binding Name.Color, Converter={StaticResource HexBrush}}"
+                                      Background="{Binding Name.Color, Converter={StaticResource HexBrush}, ConverterParameter=0.14}">
+                                <StackPanel Orientation="Horizontal">
+                                  <TextBlock Text="{Binding Name.Glyph}" Style="{StaticResource IconText}" FontSize="14" Margin="0,1,10,0"
+                                             Foreground="{Binding Name.Color, Converter={StaticResource HexBrush}}" />
+                                  <TextBlock Text="{Binding Name.Title}" FontSize="14" FontWeight="SemiBold" />
+                                  <Border Style="{StaticResource Pill}" Margin="10,0,0,0">
+                                    <TextBlock Text="{Binding ItemCount}" Style="{StaticResource PillText}" />
+                                  </Border>
+                                </StackPanel>
+                              </Border>
                             </Expander.Header>
                             <ItemsPresenter />
                           </Expander>
@@ -144,7 +222,13 @@
                   </Grid.ColumnDefinitions>
                   <StackPanel Margin="4,0,12,0">
                     <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Text="{Binding Context}" Style="{StaticResource CaptionText}" Margin="0,2,0,0" />
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                      <Ellipse Width="8" Height="8" Margin="0,1,6,0" VerticalAlignment="Center"
+                               Fill="{Binding StakeholderColor, Converter={StaticResource HexBrush}}" />
+                      <TextBlock Text="{Binding Context}" Style="{StaticResource CaptionText}" />
+                      <TextBlock Text="{Binding EstimateText, StringFormat=' · {0}'}" Style="{StaticResource CaptionText}"
+                                 Visibility="{Binding HasEstimate, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
                     <TextBlock Text="{Binding WaitingText}" Style="{StaticResource CaptionText}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"
                                Foreground="{DynamicResource SystemFillColorCautionBrush}" ToolTip="{Binding WaitingText}"
                                Visibility="{Binding IsWaiting, Converter={StaticResource BoolToVisibility}}" />
@@ -173,6 +257,9 @@
                 <DataTemplate.Triggers>
                   <DataTrigger Binding="{Binding IsArchived}" Value="True">
                     <Setter TargetName="Row" Property="Opacity" Value="0.6" />
+                  </DataTrigger>
+                  <DataTrigger Binding="{Binding IsClosed}" Value="True">
+                    <Setter TargetName="Row" Property="Opacity" Value="0.7" />
                   </DataTrigger>
                 </DataTemplate.Triggers>
               </DataTemplate>
@@ -318,6 +405,25 @@
                 <DatePicker SelectedDate="{Binding DeadlineDate}" HorizontalAlignment="Left" Width="180" AutomationProperties.Name="Deadline"
                             ToolTip="A bell appears on the task and its Board card when the deadline is near (Settings › Tasks)" />
 
+                <Grid Margin="0,0,0,0">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <StackPanel>
+                    <TextBlock Text="Estimated remaining time" Style="{StaticResource FieldLabelText}" />
+                    <TextBox Text="{Binding EstimateText, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Estimated remaining time"
+                             ToolTip="Hours and minutes, e.g. 2:30, 1.5, 3h or 45m. Leave empty when unknown (the timeline then plans a provisional 4 hours)." />
+                    <TextBlock Text="{Binding EstimateError}" Style="{StaticResource ErrorText}" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="2">
+                    <TextBlock Text="Planned start (optional)" Style="{StaticResource FieldLabelText}" />
+                    <DatePicker SelectedDate="{Binding PlannedStartDate}" AutomationProperties.Name="Planned start"
+                                ToolTip="Scheduled tasks come first in the timeline, in date order" />
+                  </StackPanel>
+                </Grid>
+
                 <CheckBox Content="Recurring task" IsChecked="{Binding IsRecurring}" Margin="0,14,0,0"
                           ToolTip="Routine work such as meetings or weekly duties; listed under Recurring Tasks" />
                 <CheckBox Content="Waiting for external input" IsChecked="{Binding IsWaiting}" Margin="0,8,0,0"
@@ -329,6 +435,8 @@
                            AutomationProperties.Name="Waiting for / Reason" />
                   <TextBlock Text="{Binding WaitingReasonError}" Style="{StaticResource ErrorText}" />
                 </StackPanel>
+                <CheckBox Content="Closed (completed)" IsChecked="{Binding IsClosed}" Margin="0,8,0,0"
+                          ToolTip="Completed tasks move to Closed Tasks; clear it to reopen. History and recorded time stay. Archiving instead hides a task." />
 
                 <TextBlock Text="Usual channel (optional)" Style="{StaticResource FieldLabelText}" />
                 <ComboBox ItemsSource="{Binding ChannelOptions}" DisplayMemberPath="DisplayName"

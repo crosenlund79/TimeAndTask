@@ -1,3 +1,5 @@
+using WorkTrace.Core.Entities;
+
 namespace WorkTrace.Core.Management;
 
 // ---- Inputs (what the user edits) ----
@@ -15,7 +17,10 @@ public sealed record TaskInput(
     DateOnly? Deadline = null,
     bool? IsRecurring = null,
     bool? IsWaiting = null,
-    string? WaitingReason = null);
+    string? WaitingReason = null,
+    bool? IsClosed = null,
+    int? EstimatedRemainingMinutes = null,
+    DateOnly? PlannedStart = null);
 
 // ---- Read models (what lists and pickers show) ----
 
@@ -53,10 +58,15 @@ public sealed record TaskSummary(
     DeadlineState DeadlineState = DeadlineState.None,
     bool IsRecurring = false,
     bool IsWaiting = false,
-    string? WaitingReason = null)
+    string? WaitingReason = null,
+    bool IsClosed = false,
+    int? EstimatedRemainingMinutes = null,
+    DateOnly? PlannedStart = null,
+    BoardPriority? BoardPriority = null,
+    double? BoardSortOrder = null)
 {
-    /// <summary>The one task-list group the task belongs to: waiting wins over recurring.</summary>
-    public TaskGroup Group => IsWaiting ? TaskGroup.Waiting : IsRecurring ? TaskGroup.Recurring : TaskGroup.Regular;
+    /// <summary>The one task-list group the task belongs to: Closed, then Waiting, then Recurring, else Regular.</summary>
+    public TaskGroup Group => IsClosed ? TaskGroup.Closed : IsWaiting ? TaskGroup.Waiting : IsRecurring ? TaskGroup.Recurring : TaskGroup.Regular;
 }
 
 public enum TaskGroup
@@ -64,6 +74,7 @@ public enum TaskGroup
     Regular = 0,
     Recurring = 1,
     Waiting = 2,
+    Closed = 3,
 }
 
 public enum LookupKind

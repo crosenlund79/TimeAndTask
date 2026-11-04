@@ -12,7 +12,7 @@ namespace WorkTrace.App.Tracking;
 /// "Have you registered your time today?" reminders during the configured period, plus the best-effort
 /// shutdown reminder. Answers are stored in settings.json so they survive restarts. Use on the UI thread.
 /// </summary>
-public sealed class TimeReminderService(ISettingsStore settings, ISessionStateProbe session, TimeProvider timeProvider, ILogger<TimeReminderService> logger)
+public sealed class TimeReminderService(ISettingsStore settings, ISessionStateProbe session, ReminderSlot slot, TimeProvider timeProvider, ILogger<TimeReminderService> logger)
     : IDisposable
 {
     /// <summary>Nobody at the keyboard for this long: wait (avoids popups piling up at an empty desk overnight).</summary>
@@ -43,7 +43,7 @@ public sealed class TimeReminderService(ISettingsStore settings, ISessionStatePr
     {
         try
         {
-            if (_open is not null || !TimeRegistrationReminders.IsDue(Now, TimeZoneInfo.Local, settings.Current.Reminders)
+            if (_open is not null || slot.IsBusy || !TimeRegistrationReminders.IsDue(Now, TimeZoneInfo.Local, settings.Current.Reminders)
                 || session.IsSessionLocked() == true || Interop.NativeMethods.IdleTime() > IdleLimit)
             {
                 return;

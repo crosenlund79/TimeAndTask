@@ -49,6 +49,15 @@ public class WorkTask : IAuditedEntity, IChangeTracked
     /// <summary>Optional "Waiting for / Reason" text while <see cref="IsWaiting"/>.</summary>
     public string? WaitingReason { get; set; }
 
+    /// <summary>Completed. Unlike <see cref="IsArchived"/> (hidden from normal workflows) it stays visible in the Closed group.</summary>
+    public bool IsClosed { get; set; }
+
+    /// <summary>Estimated remaining work in minutes; null = unknown (never zero by default).</summary>
+    public int? EstimatedRemainingMinutes { get; set; }
+
+    /// <summary>Optional explicit scheduling: the day work is planned to start (orders the planning queue).</summary>
+    public DateOnly? PlannedStart { get; set; }
+
     public DateTime CreatedAtUtc { get; set; }
 
     public DateTime ModifiedAtUtc { get; set; }
