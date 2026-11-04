@@ -123,16 +123,11 @@ public static class TimeEstimator
                 {
                     Emit(cursor, at, PeriodKind.Unclassified); // no backward extrapolation
                 }
-                else if (previous.TaskId == obs.TaskId && previous.ClientId == obs.ClientId)
-                {
-                    Emit(previous.AtUtc < cursor ? cursor : previous.AtUtc, at, PeriodKind.Estimated, previous);
-                }
                 else
                 {
-                    var from = previous.AtUtc < cursor ? cursor : previous.AtUtc;
-                    var mid = from + ((at - from) / 2);
-                    Emit(from, mid, PeriodKind.Estimated, previous);
-                    Emit(mid, at, PeriodKind.Estimated, obs);
+                    // A check-in switches the active task: the previous one runs until this moment, the new one
+                    // starts here. The same task again just continues (merged into one interval by Flatten).
+                    Emit(previous.AtUtc < cursor ? cursor : previous.AtUtc, at, PeriodKind.Estimated, previous);
                 }
 
                 previous = obs with { AtUtc = at };

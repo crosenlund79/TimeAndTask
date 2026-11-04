@@ -143,7 +143,11 @@ internal sealed class CheckInService(
 
             if (segment.EndUtc is { } end && end >= from && end < to)
             {
-                events.Add(new TimelineEvent(end, TimelineEventKind.TrackingStopped, StopTitle(segment.EndReason), null));
+                // The active task's interval ends with the segment: say which one stopped.
+                var active = observations.Where(o => o.ObservedAtUtc >= segment.StartUtc && o.ObservedAtUtc <= end)
+                    .OrderByDescending(o => o.ObservedAtUtc).ThenByDescending(o => o.Id).FirstOrDefault();
+                events.Add(new TimelineEvent(end, TimelineEventKind.TrackingStopped, StopTitle(segment.EndReason),
+                    active?.TaskTitle is { } title ? $"Stopped: {title}" : null));
             }
         }
 

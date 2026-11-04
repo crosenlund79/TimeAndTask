@@ -23,13 +23,13 @@ public class TimeEstimatorTests
         string.Join(" | ", periods.Select(p => $"{(p.StartUtc - T0).TotalMinutes}-{(p.EndUtc - T0).TotalMinutes} {p.Kind}{(p.TaskId is { } t ? $" {t}" : "")}"));
 
     [Fact]
-    public void SameTaskIsContinuous_DifferentTasksSwitchAtTheMidpoint_StartIsUnclassified_TrailingIsCapped()
+    public void SameTaskIsContinuous_ACheckInSwitchesTheTask_StartIsUnclassified_TrailingIsCapped()
     {
         var input = Input([new(At(0), At(300))], [Obs(1, 10, 1), Obs(2, 40, 1), Obs(3, 100, 2)]);
 
         var result = TimeEstimator.Estimate(input, At(0), At(300));
 
-        Assert.Equal("0-10 Unclassified | 10-70 Estimated 1 | 70-160 Estimated 2 | 160-300 Unclassified", Describe(result));
+        Assert.Equal("0-10 Unclassified | 10-100 Estimated 1 | 100-160 Estimated 2 | 160-300 Unclassified", Describe(result));
     }
 
     [Fact]

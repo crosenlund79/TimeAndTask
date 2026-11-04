@@ -135,7 +135,7 @@ Steps per tracking segment `[S, E)` (E = now for the open segment):
    tracking start/resume to keep this short).
 3. Between consecutive observations O₁(A) and O₂(B) without markers in between:
    - A = B → Estimated A for the whole gap.
-   - A ≠ B → Estimated A until the midpoint, Estimated B from the midpoint. The boundary is flagged estimated.
+   - A ≠ B → Estimated A until B's check-in, Estimated B from it (a check-in switches the active task; changed from the midpoint rule on the owner's request, 2026-11-04).
 4. A marker M after O(A): Estimated A until M, then Unclassified until the next observation.
    Lock intervals become Unclassified (or NotTracking with `LockedTimeHandling.NotWorking`).
 5. After the last observation: Estimated, capped at `MaxEstimationHorizonMinutes` (default 60) and the

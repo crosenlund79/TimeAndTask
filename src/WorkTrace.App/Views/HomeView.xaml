@@ -84,7 +84,7 @@
             <TextBlock Text="{Binding TodaySummary}" Style="{StaticResource CaptionText}" />
           </StackPanel>
           <TextBlock DockPanel.Dock="Bottom" Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
-                     Text="Recorded facts only. Time estimates and corrections arrive with the activity log (Phase 4)." />
+                     Text="Recorded facts only. Each check-in switches the active task; stopping or closing WorkTrace ends it." />
           <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <ItemsControl ItemsSource="{Binding Today}" Focusable="False">
               <ItemsControl.ItemTemplate>
@@ -184,14 +184,22 @@
 
           <Border Style="{StaticResource Card}" Margin="0,12,0,0">
             <StackPanel>
-              <TextBlock Text="Coming next" Style="{StaticResource SectionTitleText}" />
-              <ItemsControl ItemsSource="{Binding Roadmap}" Margin="0,6,0,0" Focusable="False">
+              <TextBlock Text="Daily summary" Style="{StaticResource SectionTitleText}" />
+              <TextBlock Text="Approximate: ≈ marks time estimated from check-ins." Style="{StaticResource CaptionText}" Margin="0,2,0,4" />
+              <ItemsControl ItemsSource="{Binding DailySummary}" Focusable="False" AutomationProperties.Name="Daily summary">
                 <ItemsControl.ItemTemplate>
-                  <DataTemplate DataType="{x:Type vm:RoadmapItem}">
-                    <DockPanel Margin="0,3">
-                      <TextBlock DockPanel.Dock="Right" Text="{Binding Phase}" Style="{StaticResource CaptionText}" Margin="8,0,0,0" />
-                      <TextBlock Text="{Binding Feature}" TextWrapping="Wrap" />
+                  <DataTemplate DataType="{x:Type vm:SummaryRow}">
+                    <DockPanel x:Name="Line" Margin="0,3" Background="Transparent" ToolTip="{Binding Hint}">
+                      <TextBlock DockPanel.Dock="Right" Text="{Binding Value}" FontFamily="{StaticResource MonoFont}" />
+                      <TextBlock x:Name="Label" Text="{Binding Label}" />
                     </DockPanel>
+                    <DataTemplate.Triggers>
+                      <DataTrigger Binding="{Binding IsDetail}" Value="True">
+                        <Setter TargetName="Line" Property="Margin" Value="16,1,0,1" />
+                        <Setter TargetName="Label" Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                        <Setter TargetName="Label" Property="FontSize" Value="12" />
+                      </DataTrigger>
+                    </DataTemplate.Triggers>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>

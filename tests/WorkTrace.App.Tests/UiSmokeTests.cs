@@ -153,6 +153,7 @@ public class UiSmokeTests
             window.ViewModel.NavigateTo(AppSection.Home);
             await WpfTestHost.SettleAsync(10);
             Assert.NotEmpty(ctx.Get<HomeViewModel>().Today);
+            Assert.NotEmpty(ctx.Get<HomeViewModel>().DailySummary);
 
             ctx.Get<INotificationService>().Show("Toast with action", NotificationKind.Success, "Undo", () => Task.CompletedTask);
             await WpfTestHost.SettleAsync();

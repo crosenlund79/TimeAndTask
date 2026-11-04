@@ -34,30 +34,7 @@ internal sealed class TimesheetService(
 
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        // Evidence from a day before the week, so estimates continue across Monday midnight.
-        var lookBack = from.AddDays(-1);
-        var segments = (await db.TrackingSegments.AsNoTracking().Where(x => x.StartUtc < to && (x.EndUtc == null || x.EndUtc > lookBack)).ToListAsync(cancellationToken))
-            .Select(x => new EstimationSegment(x.StartUtc, x.EndUtc ?? (now < to ? now : to))).ToList();
-        var locks = (await db.LockPeriods.AsNoTracking().Where(x => x.StartUtc < to && (x.EndUtc == null || x.EndUtc > lookBack)).ToListAsync(cancellationToken))
-            .Select(x => new EstimationSegment(x.StartUtc, x.EndUtc ?? now)).ToList();
-        var observations = await db.Observations.AsNoTracking().Where(x => !x.IsDeleted && x.ObservedAtUtc >= lookBack && x.ObservedAtUtc < to)
-            .ToListAsync(cancellationToken);
-        var prompts = await db.CheckInPrompts.AsNoTracking().Where(x => x.ScheduledAtUtc >= lookBack && x.ScheduledAtUtc < to
-                && (x.Outcome == CheckInOutcome.Missed || x.Outcome == CheckInOutcome.Dismissed || x.Outcome == CheckInOutcome.Suppressed))
-            .Select(x => x.ScheduledAtUtc).ToListAsync(cancellationToken);
-        var allocations = await db.ManualAllocations.AsNoTracking().Where(x => !x.IsDeleted && x.StartUtc < to && x.EndUtc > lookBack)
-            .ToListAsync(cancellationToken);
-
-        var input = new EstimationInput(
-            segments,
-            locks,
-            [.. observations.Select(o => new EstimationObservation(o.Id, o.ObservedAtUtc, o.CreatedAtUtc, o.TaskId, o.ClientId))],
-            prompts,
-            [.. allocations.Select(a => new EstimationAllocation(a.Id, a.StartUtc, a.EndUtc, a.CreatedAtUtc, a.TaskId, a.Kind == AllocationKind.NonWork))],
-            TimeSpan.FromMinutes(s.Tracking.MaxEstimationHorizonMinutes),
-            s.Tracking.LockedTimeHandling,
-            TimeSpan.FromMinutes(s.Tracking.LockGraceMinutes));
-        var periods = TimeEstimator.Estimate(input, from, to);
+        var (periods, _, _, observations, prompts) = await EstimateAsync(db, from, to, now, s, cancellationToken);
 
         // Sum per day and line (split at local midnight; durations from UTC differences, so DST days have 23/25 hours).
         // A line is a task, or a stakeholder without a task (Task = null), or note-only time (both null).
@@ -134,6 +111,83 @@ internal sealed class TimesheetService(
             [.. lines.OrderBy(l => l.TaskId is null && l.ClientId is null).ThenBy(l => l.Stakeholder, StringComparer.CurrentCultureIgnoreCase).ThenBy(l => l.Task, StringComparer.CurrentCultureIgnoreCase)],
             [.. unclassified.Select(u => (int)Math.Round(u.TotalMinutes))],
             missed);
+    }
+
+    /// <summary>The estimated timeline for [from, to), with the segments and lock periods it was built from.</summary>
+    private static async Task<(IReadOnlyList<TimelinePeriod> Periods, List<EstimationSegment> Segments, List<EstimationSegment> Locks, List<Observation> Observations, List<DateTime> Prompts)> EstimateAsync(
+        WorkTraceDbContext db, DateTime from, DateTime to, DateTime now, WorkTraceSettings s, CancellationToken cancellationToken)
+    {
+        // Evidence from a day before, so estimates continue across midnight.
+        var lookBack = from.AddDays(-1);
+        var segments = (await db.TrackingSegments.AsNoTracking().Where(x => x.StartUtc < to && (x.EndUtc == null || x.EndUtc > lookBack)).ToListAsync(cancellationToken))
+            .Select(x => new EstimationSegment(x.StartUtc, x.EndUtc ?? (now < to ? now : to))).ToList();
+        var locks = (await db.LockPeriods.AsNoTracking().Where(x => x.StartUtc < to && (x.EndUtc == null || x.EndUtc > lookBack)).ToListAsync(cancellationToken))
+            .Select(x => new EstimationSegment(x.StartUtc, x.EndUtc ?? now)).ToList();
+        var observations = await db.Observations.AsNoTracking().Where(x => !x.IsDeleted && x.ObservedAtUtc >= lookBack && x.ObservedAtUtc < to)
+            .ToListAsync(cancellationToken);
+        var prompts = await db.CheckInPrompts.AsNoTracking().Where(x => x.ScheduledAtUtc >= lookBack && x.ScheduledAtUtc < to
+                && (x.Outcome == CheckInOutcome.Missed || x.Outcome == CheckInOutcome.Dismissed || x.Outcome == CheckInOutcome.Suppressed))
+            .Select(x => x.ScheduledAtUtc).ToListAsync(cancellationToken);
+        var allocations = await db.ManualAllocations.AsNoTracking().Where(x => !x.IsDeleted && x.StartUtc < to && x.EndUtc > lookBack)
+            .ToListAsync(cancellationToken);
+
+        var input = new EstimationInput(
+            segments,
+            locks,
+            [.. observations.Select(o => new EstimationObservation(o.Id, o.ObservedAtUtc, o.CreatedAtUtc, o.TaskId, o.ClientId))],
+            prompts,
+            [.. allocations.Select(a => new EstimationAllocation(a.Id, a.StartUtc, a.EndUtc, a.CreatedAtUtc, a.TaskId, a.Kind == AllocationKind.NonWork))],
+            TimeSpan.FromMinutes(s.Tracking.MaxEstimationHorizonMinutes),
+            s.Tracking.LockedTimeHandling,
+            TimeSpan.FromMinutes(s.Tracking.LockGraceMinutes));
+        var periods = TimeEstimator.Estimate(input, from, to);
+        return (periods, segments, locks, observations, prompts);
+    }
+
+    public async Task<DaySummary> GetDaySummaryAsync(DateOnly day, CancellationToken cancellationToken = default)
+    {
+        var zone = TimeZoneInfo.Local;
+        var now = UtcTime.Now(timeProvider);
+        var from = ToUtc(day, zone);
+        var to = ToUtc(day.AddDays(1), zone);
+        var until = now < to ? now : to;
+        if (until <= from)
+        {
+            return new DaySummary(0, 0, 0, 0, 0, 0, 0);
+        }
+
+        var s = settings.Current;
+        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var (periods, segments, locks, _, _) = await EstimateAsync(db, from, until, now, s, cancellationToken);
+
+        int Minutes(Func<TimelinePeriod, bool> where) => (int)Math.Round(periods.Where(where).Sum(p => p.Duration.TotalMinutes));
+
+        // Locked while tracking ran (locked time is part of the tracked span, never work).
+        var locked = 0d;
+        foreach (var l in locks)
+        {
+            foreach (var seg in segments)
+            {
+                var a = new[] { l.StartUtc, seg.StartUtc, from }.Max();
+                var b = new[] { l.EndUtc, seg.EndUtc, until }.Min();
+                if (b > a)
+                {
+                    locked += (b - a).TotalMinutes;
+                }
+            }
+        }
+
+        var lockedMinutes = (int)Math.Round(locked);
+        var notWorking = s.Tracking.LockedTimeHandling == LockedTimeHandling.NotWorking;
+        var unclassified = Minutes(p => p.Kind == PeriodKind.Unclassified);
+        return new DaySummary(
+            TrackedMinutes: Minutes(p => p.Kind != PeriodKind.NotTracking) + (notWorking ? lockedMinutes : 0),
+            ConfirmedTaskMinutes: Minutes(p => p.Kind == PeriodKind.Manual && !p.IsNonWork && p.TaskId is not null),
+            EstimatedTaskMinutes: Minutes(p => p.Kind == PeriodKind.Estimated && p.TaskId is not null),
+            OtherMinutes: Minutes(p => p.Kind is PeriodKind.Estimated or PeriodKind.Manual && !p.IsNonWork && p.TaskId is null),
+            BreakMinutes: Minutes(p => p.Kind == PeriodKind.Manual && p.IsNonWork),
+            LockedMinutes: lockedMinutes,
+            UnaccountedMinutes: Math.Max(0, unclassified - (notWorking ? 0 : lockedMinutes)));
     }
 
     public async Task SetMinutesAsync(DateOnly day, int? taskId, int? clientId, int? minutes, int computedMinutes, CancellationToken cancellationToken = default)

@@ -81,7 +81,8 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
 ## Time-estimation invariants (Phase 4 engine; see docs/architecture.md)
 1. Output is a flat, ordered, non-overlapping list of periods: Manual / Estimated / Unclassified / NotTracking.
 2. Estimation never crosses tracking-segment boundaries (pause, sleep, shutdown, crash, clock jump).
-3. Same task → estimated continuous; different tasks → estimated switch at the midpoint.
+3. Each check-in switches the active task at its own time (owner request 2026-11-04, replaces the midpoint rule):
+   the previous task ends there, the new one starts; the same task again just continues (one merged interval).
 4. After a missed/dismissed prompt: unclassified from the prompt's scheduled time until the next observation.
 5. Segment start → first observation: unclassified (no backward extrapolation).
 6. Trailing estimate capped at `MaxEstimationHorizonMinutes`; still labelled Estimated, never Confirmed.

@@ -19,6 +19,7 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
     private readonly INavigationService _navigation;
     private readonly TimeProvider _timeProvider;
     private readonly ITaskService _tasks;
+    private readonly WorkTrace.Core.Reporting.ITimesheetService _timesheets;
     private bool _loadingCurrent;
     private int? _recordedTaskId;
 
@@ -26,6 +27,7 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
         IAppStatusService statusService,
         ICheckInService checkIns,
         ITaskService tasks,
+        WorkTrace.Core.Reporting.ITimesheetService timesheets,
         TrackingController tracking,
         INavigationService navigation,
         INotificationService notifications,
@@ -38,6 +40,7 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
         _navigation = navigation;
         _timeProvider = timeProvider;
         _tasks = tasks;
+        _timesheets = timesheets;
         Tracking = tracking;
 
         // Keep "Today" current while the page is open.
@@ -79,13 +82,8 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
 
     public bool HasUnsavedChanges => false;
 
-    public IReadOnlyList<RoadmapItem> Roadmap { get; } =
-    [
-        new("Activity log & time estimation", "Phase 4"),
-        new("Screenshots (opt-in)", "Phase 5"),
-        new("Weekly timesheets & export", "Phase 6"),
-        new("Settings, backup & installer", "Phase 7"),
-    ];
+    /// <summary>Today's totals (label, value, hint) for the Daily summary card.</summary>
+    public ObservableCollection<SummaryRow> DailySummary { get; } = [];
 
     public async Task ActivateAsync(object? parameter)
     {
@@ -103,6 +101,7 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
             return;
         }
 
+        await LoadSummaryAsync(today);
         Today.Clear();
         foreach (var item in events.Reverse())
         {
@@ -114,6 +113,30 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
         TodaySummary = events.Count == 0
             ? "Nothing recorded today yet."
             : $"{checkIns} check-in{(checkIns == 1 ? string.Empty : "s")}" + (missed > 0 ? $" · {missed} without an answer" : string.Empty);
+    }
+
+    private async Task LoadSummaryAsync(DateOnly today)
+    {
+        WorkTrace.Core.Reporting.DaySummary? sum = null;
+        if (!await RunAsync(async () => sum = await _timesheets.GetDaySummaryAsync(today), "Could not calculate today's summary.") || sum is null)
+        {
+            return;
+        }
+
+        static string F(int minutes) => $"{minutes / 60}:{minutes % 60:00}";
+        DailySummary.Clear();
+        DailySummary.Add(new("Tracked today", F(sum.TrackedMinutes), "Time WorkTrace was tracking (not paused, asleep or closed)"));
+        DailySummary.Add(new("On tasks", "≈ " + F(sum.TaskMinutes), "Registered tasks: confirmed plus estimated from check-ins"));
+        if (sum.ConfirmedTaskMinutes > 0)
+        {
+            DailySummary.Add(new("confirmed", F(sum.ConfirmedTaskMinutes), "Entered manually", IsDetail: true));
+        }
+
+        DailySummary.Add(new("from check-ins", "≈ " + F(sum.EstimatedTaskMinutes), "Each check-in starts its task; it runs until the next check-in or stop", IsDetail: true));
+        DailySummary.Add(new("Other activity", "≈ " + F(sum.OtherMinutes), "Stakeholder-only or note-only check-ins"));
+        DailySummary.Add(new("Breaks", F(sum.BreakMinutes), "Time registered as not work"));
+        DailySummary.Add(new("Locked", F(sum.LockedMinutes), "Screen locked while tracking (idle time is not recorded separately)"));
+        DailySummary.Add(new("Unaccounted", F(sum.UnaccountedMinutes), "Tracking on, but no check-in says what it was (e.g. after a missed check-in)"));
     }
 
     private async Task LoadCurrentTaskAsync()
@@ -196,7 +219,8 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
     }
 }
 
-public sealed record RoadmapItem(string Feature, string Phase);
+/// <param name="IsDetail">Indented sub-line (part of the line above).</param>
+public sealed record SummaryRow(string Label, string Value, string? Hint = null, bool IsDetail = false);
 
 /// <param name="HasDeadlineWarning">Deadline within the warning period or overdue: the lookup shows a bell.</param>
 public sealed record CurrentTaskOption(int Id, string Display, string Stakeholder, bool HasDeadlineWarning)

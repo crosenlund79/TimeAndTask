@@ -38,10 +38,30 @@ public sealed record TimesheetWeek(
     public static DateOnly MondayOf(DateOnly day) => day.AddDays(-(((int)day.DayOfWeek + 6) % 7));
 }
 
+/// <summary>
+/// Today at a glance, in minutes, from the same estimated timeline as the timesheet. Confirmed = manual allocations;
+/// estimated = inferred from check-ins. Other = stakeholder-only or note-only time; breaks = non-work allocations;
+/// locked = screen locked while tracking; unaccounted = tracking on without evidence what was worked on.
+/// </summary>
+public sealed record DaySummary(
+    int TrackedMinutes,
+    int ConfirmedTaskMinutes,
+    int EstimatedTaskMinutes,
+    int OtherMinutes,
+    int BreakMinutes,
+    int LockedMinutes,
+    int UnaccountedMinutes)
+{
+    public int TaskMinutes => ConfirmedTaskMinutes + EstimatedTaskMinutes;
+}
+
 /// <summary>Weekly timesheet built from the estimated timeline, with per-day corrections and exports.</summary>
 public interface ITimesheetService
 {
     Task<TimesheetWeek> GetWeekAsync(DateOnly anyDay, CancellationToken cancellationToken = default);
+
+    /// <summary>Totals for one local day up to now.</summary>
+    Task<DaySummary> GetDaySummaryAsync(DateOnly day, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Corrects one day of one line, a task or (taskId null) a stakeholder without a task, in minutes; null removes the

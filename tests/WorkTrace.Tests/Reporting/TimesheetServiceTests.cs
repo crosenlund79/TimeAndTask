@@ -122,6 +122,30 @@ public class TimesheetServiceTests : ManagementTestBase
         Assert.Equal(TaskGroup.Waiting, reopened.Group);
     }
 
+    [Fact]
+    public async Task DaySummary_ACheckInSwitchesTheTask_AndLockedAndUnaccountedTimeAreSeparated()
+    {
+        var clientId = await InternalClientIdAsync();
+        var a = await Tasks.CreateAsync(new TaskInput(clientId, null, null, "A", null, null), Ct);
+        var b = await Tasks.CreateAsync(new TaskInput(clientId, null, null, "B", null, null), Ct);
+        var start = Time.GetUtcNow().UtcDateTime;
+        await using (var db = await DbAsync())
+        {
+            db.TrackingSegments.Add(new TrackingSegment { StartUtc = start, EndUtc = start.AddMinutes(120), LastHeartbeatUtc = start.AddMinutes(120) });
+            db.Observations.Add(Observation.Create(start, start, ObservationOrigin.Manual, a.Id));
+            db.Observations.Add(Observation.Create(start.AddMinutes(30), start.AddMinutes(30), ObservationOrigin.Manual, b.Id));
+            db.LockPeriods.Add(new LockPeriod { StartUtc = start.AddMinutes(40), EndUtc = start.AddMinutes(50) });
+            await db.SaveChangesAsync(Ct);
+        }
+
+        Time.Advance(TimeSpan.FromHours(3));
+        var week = await Timesheets.GetWeekAsync(DateOnly.FromDateTime(start.ToLocalTime()), Ct);
+        Assert.Equal([30, 10], week.Lines.OrderBy(l => l.Task).Select(l => l.TotalMinutes)); // A until B's check-in, B until the lock
+
+        var day = await Timesheets.GetDaySummaryAsync(DateOnly.FromDateTime(start.ToLocalTime()), Ct);
+        Assert.Equal(new DaySummary(120, 0, 40, 0, 0, 10, 70), day);
+    }
+
     [Theory]
     [InlineData("1.5", 90)]
     [InlineData("1,25", 75)]
