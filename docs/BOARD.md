@@ -371,6 +371,10 @@ Owner request 2026-10-30. Version 0.2.39 (CI run 39). Commits 93ad85a (stakehold
 
 - Owner tests the 10 items of the Sharpening Iteration request on the installed build
 
+**Evidence**
+
+Commits 4021c5f, a58703a, ef875f7, 6f3408f on claude/keen-mccarthy-qr7q0p; Windows CI run 44 green (all tests incl. WPF smoke over every Settings tab); installer WorkTrace-Setup-0.2.44
+
 ## To do
 
 ### WT-030 · Estimation engine
