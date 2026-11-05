@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 27 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 28 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -446,6 +446,14 @@ Commit 70a8667; Windows CI run 49 green (incl. WPF smoke on every page); install
 **Evidence**
 
 Commit e901e4f; Windows CI run 50 green (incl. WPF smoke with Minor Tasks); installer WorkTrace-Setup-0.2.50
+
+### WT-062 · Collapsible navigation; Stakeholders as a Lists tab; Settings renamed System with Screenshots
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Owner checks the collapsed rail (tooltips, remembered), Lists tabs incl. Stakeholders, and System > Screenshots
 
 ## To do
 

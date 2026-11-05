@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 62,
+  "nextId": 63,
   "cards": [
     {
       "id": "WT-001",
@@ -1549,6 +1549,38 @@
       "createdAt": "2026-11-05T11:28:11Z",
       "updatedAt": "2026-11-05T11:28:16Z",
       "rev": 2
+    },
+    {
+      "id": "WT-062",
+      "uid": "375a025d-4ed1-40d4-a1de-0386e1c037de",
+      "title": "Collapsible navigation; Stakeholders as a Lists tab; Settings renamed System with Screenshots",
+      "category": "feature",
+      "priority": "normal",
+      "status": "review",
+      "rank": "zzzzzw",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Owner checks the collapsed rail (tooltips, remembered), Lists tabs incl. Stakeholders, and System > Screenshots"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "e44dde92-c340-48f9-a7f5-d31b18ec0199",
+          "type": "created",
+          "at": "2026-11-05T14:56:04Z",
+          "by": "claude",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-11-05T14:56:04Z",
+      "updatedAt": "2026-11-05T14:56:04Z",
+      "rev": 1
     }
   ]
 }
