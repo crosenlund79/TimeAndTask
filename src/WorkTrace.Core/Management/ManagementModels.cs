@@ -75,6 +75,9 @@ public enum TaskGroup
     Recurring = 1,
     Waiting = 2,
     Closed = 3,
+
+    /// <summary>The Minor Tasks group of the task overview (separate entity; used for its collapsed state only).</summary>
+    Minor = 4,
 }
 
 public enum LookupKind

@@ -55,6 +55,10 @@ public partial class App : Application, IAppLifetime
 
             var firstRun = await _host.Services.GetRequiredService<DatabaseInitializer>().InitializeAsync();
             var settings = await _host.Services.GetRequiredService<ISettingsStore>().LoadAsync();
+            if (settings.Board.Enabled is null)
+            {
+                settings = await DecideBoardAsync(_host.Services, firstRun);
+            }
             await RetireInboxAsync(_host.Services);
 
             var tray = _host.Services.GetRequiredService<TrayIconService>();
@@ -95,6 +99,19 @@ public partial class App : Application, IAppLifetime
     }
 
     public void RequestExit() => _ = ExitAsync();
+
+    /// <summary>
+    /// The Board is optional (off by default). Decided once: a new installation starts without it; an existing one
+    /// that already has cards keeps it. The choice is then stored and changed only in Settings.
+    /// </summary>
+    private static async Task<WorkTraceSettings> DecideBoardAsync(IServiceProvider services, bool firstRun)
+    {
+        var store = services.GetRequiredService<ISettingsStore>();
+        var hasCards = !firstRun
+            && (await services.GetRequiredService<WorkTrace.Core.Board.IBoardService>().GetCardsAsync(new WorkTrace.Core.Board.CardFilter())).Count > 0;
+        await store.UpdateAsync(s => s.Board.Enabled = hasCards);
+        return store.Current;
+    }
 
     /// <summary>The Inbox was removed: archive what is left in it (once; the Board and tasks are untouched).</summary>
     private async Task RetireInboxAsync(IServiceProvider services)
@@ -151,6 +168,7 @@ public partial class App : Application, IAppLifetime
         _ = reminders.AskAfterShutdownAsync();
         services.GetRequiredService<MaintenanceReminderService>().Start();
         services.GetRequiredService<PlanningReminderService>().Start();
+        services.GetRequiredService<MinorTaskReminderService>().Start();
     }
 
     private async Task StartEngineAsync(TrackingEngine engine)
@@ -236,6 +254,7 @@ public partial class App : Application, IAppLifetime
             _host?.Services.GetService<TimeReminderService>()?.Dispose();
             _host?.Services.GetService<MaintenanceReminderService>()?.Dispose();
             _host?.Services.GetService<PlanningReminderService>()?.Dispose();
+            _host?.Services.GetService<MinorTaskReminderService>()?.Dispose();
             _host?.Services.GetService<ScreenshotCaptureService>()?.Dispose();
             _host?.Services.GetService<BackupScheduler>()?.Dispose();
             _host?.Services.GetService<GlobalHotkey>()?.Dispose();

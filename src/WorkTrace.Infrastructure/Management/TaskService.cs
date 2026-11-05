@@ -68,7 +68,7 @@ internal sealed class TaskService(
         db.Tasks.Add(task);
         await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Task {TaskId} created", task.Id);
-        if (input.ShowOnBoard ?? settings.Current.Board.AutoAddTasks)
+        if (settings.Current.Board.IsEnabled && (input.ShowOnBoard ?? settings.Current.Board.AutoAddTasks))
         {
             await BoardAsync(task.Id, b => b.SetTaskOnBoardAsync(task.Id, true, cancellationToken));
         }
@@ -85,7 +85,7 @@ internal sealed class TaskService(
         Apply(task, input);
         await SaveIfChangedAsync(db, task, cancellationToken);
         await BoardAsync(id, b => b.SyncTaskTitleAsync(id, cancellationToken));
-        if (input.ShowOnBoard is { } onBoard)
+        if (settings.Current.Board.IsEnabled && input.ShowOnBoard is { } onBoard)
         {
             await BoardAsync(id, b => b.SetTaskOnBoardAsync(id, onBoard, cancellationToken));
         }

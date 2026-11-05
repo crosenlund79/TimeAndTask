@@ -9,7 +9,9 @@ public partial class HomeView : UserControl
     public HomeView() => InitializeComponent();
 
     // Browsing the lookup must not record anything: the choice counts once the list closes or focus leaves it.
-    private void OnCurrentTaskClosed(object? sender, EventArgs e) => Commit();
+    // Deferred: recording reloads the lookup's items, which must not happen inside the popup's close event.
+    private void OnCurrentTaskClosed(object? sender, EventArgs e) =>
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, Commit);
 
     private void OnCurrentTaskLostFocus(object sender, KeyboardFocusChangedEventArgs e)
     {

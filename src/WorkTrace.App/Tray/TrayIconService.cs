@@ -26,6 +26,7 @@ internal sealed class TrayIconService(
     private Forms.ToolStripMenuItem? _pauseItem;
     private Forms.ToolStripMenuItem? _resumeItem;
     private Forms.ToolStripMenuItem? _recordItem;
+    private Forms.ToolStripMenuItem? _boardItem;
 
     public void Initialize()
     {
@@ -54,7 +55,16 @@ internal sealed class TrayIconService(
         menu.Items.Add(_resumeItem);
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add(Item("Open WorkTrace", windows.ShowMainWindow));
-        menu.Items.Add(Item("Board", () => windows.ShowMainWindow(AppSection.Board)));
+        _boardItem = Item("Board", () => windows.ShowMainWindow(AppSection.Board));
+        _boardItem.Available = settings.Current.Board.IsEnabled;
+        settings.Changed += (_, s) => System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
+        {
+            if (_boardItem is not null)
+            {
+                _boardItem.Available = s.Board.IsEnabled;
+            }
+        });
+        menu.Items.Add(_boardItem);
         menu.Items.Add(Item("Tasks and stakeholders", () => windows.ShowMainWindow(AppSection.Tasks)));
         menu.Items.Add(Item("Settings", () => windows.ShowMainWindow(AppSection.Settings)));
         menu.Items.Add(new Forms.ToolStripSeparator());

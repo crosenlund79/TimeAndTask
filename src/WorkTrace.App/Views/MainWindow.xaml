@@ -75,7 +75,7 @@
       <TextBlock DockPanel.Dock="Bottom" Margin="12,8,0,0" Style="{StaticResource CaptionText}" FontSize="11"
                  Text="Data is stored only on this PC" ToolTip="All data lives under %LocalAppData%\WorkTrace" />
 
-      <ListBox ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}"
+      <ListBox ItemsSource="{Binding VisibleSections}" SelectedItem="{Binding SelectedSection}"
                Background="Transparent" BorderThickness="0"
                ItemContainerStyle="{StaticResource NavListBoxItem}"
                AutomationProperties.Name="Navigation">

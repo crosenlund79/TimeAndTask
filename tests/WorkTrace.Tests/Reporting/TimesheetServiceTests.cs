@@ -112,10 +112,10 @@ public class TimesheetServiceTests : ManagementTestBase
         var closed = await Tasks.CreateAsync(new TaskInput(clientId, null, null, "Done", null, null, IsWaiting: true, IsClosed: true), Ct);
         Assert.Equal(TaskGroup.Closed, closed.Group); // Closed wins over Waiting
 
-        var queue = TaskPipeline.Build(await Tasks.SearchAsync(new TaskQuery(), Ct));
-        Assert.Equal([first.Id, unknown.Id], queue.Select(e => e.Task.Id));
-        Assert.Equal((90, false), (queue[0].DurationMinutes, queue[0].IsProvisional));
-        Assert.Equal((90, TaskPipeline.ProvisionalMinutes, true), (queue[1].StartMinutes, queue[1].DurationMinutes, queue[1].IsProvisional));
+        var queue = TaskPipeline.Build(await Tasks.SearchAsync(new TaskQuery(), Ct), new DateOnly(2026, 11, 2));
+        Assert.Equal([unknown.Id, first.Id], queue.Select(e => e.Task.Id)); // chronological: unplanned work from today, then the planned task
+        Assert.Equal((0, TaskPipeline.ProvisionalMinutes, true), (queue[0].StartMinutes, queue[0].DurationMinutes, queue[0].IsProvisional));
+        Assert.Equal((90, false, new DateOnly(2026, 11, 10)), (queue[1].DurationMinutes, queue[1].IsProvisional, queue[1].StartDate));
         Assert.Null((await Tasks.GetAsync(unknown.Id, Ct)).EstimatedRemainingMinutes); // provisional time is never stored
 
         var reopened = await Tasks.UpdateAsync(closed.Id, new TaskInput(clientId, null, null, "Done", null, null, IsWaiting: true, IsClosed: false), Ct);

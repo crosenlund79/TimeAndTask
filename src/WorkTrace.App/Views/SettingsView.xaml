@@ -201,6 +201,10 @@
             <Border Style="{StaticResource Card}" Margin="0,0,0,0">
               <StackPanel>
                 <TextBlock Text="Tasks &amp; Board" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+                <controls:SettingRow Header="Enable Board"
+                                     Description="Shows the Board in the navigation and keeps cards for tasks. Off: tasks, check-ins, the Timesheet and everything else work without it, and existing cards are kept for when you switch it on again.">
+                  <CheckBox IsChecked="{Binding BoardEnabled}" Content="On" AutomationProperties.Name="Enable Board" />
+                </controls:SettingRow>
                 <controls:SettingRow Header="Automatically add tasks to Board"
                                      Description="New tasks get a linked card in To do. Each task's &#x201C;Show on Board&#x201D; can still be switched off. Time tracking never needs the Board.">
                   <CheckBox IsChecked="{Binding AutoAddTasksToBoard}" Content="On" AutomationProperties.Name="Automatically add tasks to Board" />

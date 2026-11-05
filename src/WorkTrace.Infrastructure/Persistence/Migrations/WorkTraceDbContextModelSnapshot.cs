@@ -621,6 +621,51 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("WorkTrace.Core.Entities.MinorTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ModifiedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReminderAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("SnoozedUntilUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("IsCompleted", "ReminderAtUtc");
+
+                    b.ToTable("MinorTasks", (string)null);
+                });
+
             modelBuilder.Entity("WorkTrace.Core.Entities.Observation", b =>
                 {
                     b.Property<int>("Id")
@@ -989,6 +1034,16 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                     b.Navigation("Channel");
 
                     b.Navigation("Task");
+                });
+
+            modelBuilder.Entity("WorkTrace.Core.Entities.MinorTask", b =>
+                {
+                    b.HasOne("WorkTrace.Core.Entities.Client", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Client");
                 });
 
             modelBuilder.Entity("WorkTrace.Core.Entities.Observation", b =>

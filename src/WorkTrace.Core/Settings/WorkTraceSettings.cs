@@ -226,6 +226,16 @@ public sealed class ReportingSettings
 
 public sealed class BoardSettings
 {
+    /// <summary>
+    /// Show the Board (navigation, tray) and create cards for tasks. Null until decided at start-up: off for a new
+    /// installation, on for an existing one that already has cards. Turning it off never deletes cards.
+    /// </summary>
+    public bool? Enabled { get; set; }
+
+    /// <summary>True unless the Board was switched off (an undecided value counts as on).</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsEnabled => Enabled != false;
+
     /// <summary>New tasks get a linked Board card (each task's "Show on Board" can still be switched off).</summary>
     public bool AutoAddTasks { get; set; } = true;
 }

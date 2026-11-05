@@ -43,6 +43,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<WorkTrace.Core.Screenshots.IScreenshotService, Screenshots.ScreenshotService>();
         services.AddSingleton<WorkTrace.Core.Reporting.ITimesheetService, Reporting.TimesheetService>();
         services.AddSingleton<WorkTrace.Core.Guides.IGuideService, GuideService>();
+        services.AddSingleton<IMinorTaskService, MinorTaskService>();
         services.AddSingleton<ICheckInService, CheckInService>();
         services.AddSingleton<ITrackingStore, TrackingStore>();
 

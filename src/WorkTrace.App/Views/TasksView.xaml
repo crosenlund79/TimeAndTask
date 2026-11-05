@@ -105,20 +105,161 @@
       <Border Style="{StaticResource Card}" Padding="6">
         <Grid>
           <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
 
+          <!-- Minor Tasks: reminder-only to-dos, first group (never used for time registration or the Board) -->
+          <Expander DataContext="{Binding Minor}" IsExpanded="{Binding DataContext.MinorGroup.IsExpanded, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
+                    Margin="0,2,0,4" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" AutomationProperties.Name="Minor Tasks"
+                    Visibility="{Binding DataContext.ShowTimeline, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+            <Expander.Header>
+              <Border CornerRadius="4" BorderThickness="4,0,0,0" Padding="10,7" Margin="0,4,0,2" BorderBrush="#A0675E" Background="#24A0675E">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="&#xE73A;" Style="{StaticResource IconText}" FontSize="14" Margin="0,1,10,0" Foreground="#A0675E" />
+                  <TextBlock Text="Minor Tasks" FontSize="14" FontWeight="SemiBold" />
+                  <Border Style="{StaticResource Pill}" Margin="10,0,0,0">
+                    <TextBlock Text="{Binding Active.Count}" Style="{StaticResource PillText}" />
+                  </Border>
+                  <TextBlock Text="{Binding Summary}" Style="{StaticResource CaptionText}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+              </Border>
+            </Expander.Header>
+            <StackPanel Margin="6,4,6,6">
+              <!-- Quick add: title, optional reminder, Enter or Add -->
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid>
+                  <TextBox x:Name="MinorTitleBox" Text="{Binding NewTitle, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="New minor task">
+                    <TextBox.InputBindings>
+                      <KeyBinding Key="Enter" Command="{Binding AddCommand}" />
+                    </TextBox.InputBindings>
+                  </TextBox>
+                  <TextBlock Text="Add a minor task…" Margin="11,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                             Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                             Visibility="{Binding Text, ElementName=MinorTitleBox, Converter={StaticResource NullToCollapsed}, ConverterParameter=invert}" />
+                </Grid>
+                <DatePicker Grid.Column="1" Width="128" Margin="6,0,0,0" SelectedDate="{Binding NewReminderDate}"
+                            AutomationProperties.Name="Reminder date (optional)" ToolTip="Reminder date (optional; empty = no reminder)" />
+                <ComboBox Grid.Column="2" Width="82" Margin="6,0,0,0" IsEditable="True" ItemsSource="{Binding QuarterHours}" MaxDropDownHeight="240"
+                          Text="{Binding NewReminderTime, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Reminder time"
+                          ToolTip="Reminder time (used when a date is set)" />
+                <Button Grid.Column="3" Margin="6,0,0,0" Padding="12,5" Content="Add" Command="{Binding AddCommand}" Style="{DynamicResource AccentButtonStyle}" />
+              </Grid>
+              <TextBlock Text="{Binding AddError}" Style="{StaticResource ErrorText}" />
+
+              <!-- Open minor tasks -->
+              <ScrollViewer MaxHeight="230" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,6,0,0">
+                <ItemsControl ItemsSource="{Binding Active}" Focusable="False" AutomationProperties.Name="Open minor tasks">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:MinorTaskItemViewModel}">
+                      <Grid Margin="2,3">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="*" />
+                          <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <CheckBox IsChecked="{Binding IsCompleted}" VerticalAlignment="Top" ToolTip="Mark done" AutomationProperties.Name="{Binding Title}" MinWidth="0" />
+                        <StackPanel Grid.Column="1" Margin="2,1,8,0">
+                          <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Description}" />
+                          <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="Reminder" Text="{Binding ReminderText, StringFormat='&#x23F0; {0}'}" Style="{StaticResource CaptionText}" Margin="0,0,10,0"
+                                       Visibility="{Binding ReminderText, Converter={StaticResource NullToCollapsed}}" />
+                            <Ellipse Width="7" Height="7" Margin="0,1,5,0" VerticalAlignment="Center" Fill="{Binding StakeholderColor, Converter={StaticResource HexBrush}}"
+                                     Visibility="{Binding HasStakeholder, Converter={StaticResource BoolToVisibility}}" />
+                            <TextBlock Text="{Binding Stakeholder}" Style="{StaticResource CaptionText}"
+                                       Visibility="{Binding HasStakeholder, Converter={StaticResource BoolToVisibility}}" />
+                          </StackPanel>
+                        </StackPanel>
+                        <Button Grid.Column="2" Style="{StaticResource IconButton}" Content="&#xE70F;" FontSize="12" Width="28" Height="28" ToolTip="Edit"
+                                Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                      </Grid>
+                      <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                          <Setter TargetName="Reminder" Property="Foreground" Value="#A8463A" />
+                          <Setter TargetName="Reminder" Property="FontWeight" Value="SemiBold" />
+                        </DataTrigger>
+                      </DataTemplate.Triggers>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+
+              <!-- Inline editor -->
+              <Border Style="{StaticResource Card}" Padding="12" Margin="0,8,0,0" Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                  <TextBlock Text="Title" Style="{StaticResource FieldLabelText}" Margin="0,0,0,4" />
+                  <TextBox Text="{Binding EditTitle, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Minor task title" />
+                  <TextBlock Text="Description (optional)" Style="{StaticResource FieldLabelText}" />
+                  <TextBox Text="{Binding EditDescription, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="44" MaxHeight="120"
+                           VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Minor task description" />
+                  <TextBlock Text="Stakeholder (optional)" Style="{StaticResource FieldLabelText}" />
+                  <ComboBox ItemsSource="{Binding ClientOptions}" DisplayMemberPath="DisplayName" SelectedValuePath="Id" SelectedValue="{Binding EditClientKey}"
+                            AutomationProperties.Name="Minor task stakeholder" />
+                  <TextBlock Text="Reminder (optional)" Style="{StaticResource FieldLabelText}" />
+                  <StackPanel Orientation="Horizontal">
+                    <DatePicker Width="140" SelectedDate="{Binding EditReminderDate}" AutomationProperties.Name="Minor task reminder date" />
+                    <ComboBox Width="82" Margin="6,0,0,0" IsEditable="True" ItemsSource="{Binding QuarterHours}" MaxDropDownHeight="240"
+                              Text="{Binding EditReminderTime, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Minor task reminder time" />
+                  </StackPanel>
+                  <TextBlock Text="{Binding EditError}" Style="{StaticResource ErrorText}" />
+                  <DockPanel Margin="0,12,0,0">
+                    <Button DockPanel.Dock="Left" Style="{StaticResource SubtleButton}" Command="{Binding DeleteEditingCommand}" ToolTip="Delete this minor task">
+                      <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE74D;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,6,0" />
+                        <TextBlock Text="Delete" />
+                      </StackPanel>
+                    </Button>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                      <Button Content="Cancel" Padding="12,5" Margin="0,0,8,0" Command="{Binding CancelEditCommand}" />
+                      <Button Content="Save" Padding="14,5" Style="{DynamicResource AccentButtonStyle}" Command="{Binding SaveEditCommand}" />
+                    </StackPanel>
+                  </DockPanel>
+                </StackPanel>
+              </Border>
+
+              <!-- Completed minor tasks (untick to reopen) -->
+              <Expander Margin="0,8,0,0" HorizontalAlignment="Stretch" AutomationProperties.Name="Completed minor tasks"
+                        Visibility="{Binding Completed.Count, Converter={StaticResource CountToVisibility}}">
+                <Expander.Header>
+                  <TextBlock Style="{StaticResource CaptionText}"><Run Text="Completed (" /><Run Text="{Binding Completed.Count, Mode=OneWay}" /><Run Text=")" /></TextBlock>
+                </Expander.Header>
+                <ScrollViewer MaxHeight="160" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                  <ItemsControl ItemsSource="{Binding Completed}" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate DataType="{x:Type vm:MinorTaskItemViewModel}">
+                        <StackPanel Orientation="Horizontal" Margin="2,2" Opacity="0.7">
+                          <CheckBox IsChecked="{Binding IsCompleted}" ToolTip="Untick to reopen" MinWidth="0" AutomationProperties.Name="{Binding Title}" />
+                          <TextBlock Text="{Binding Title}" TextDecorations="Strikethrough" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </ScrollViewer>
+              </Expander>
+            </StackPanel>
+          </Expander>
+
           <!-- Planning timeline (replaces the list while on; the editor on the right stays) -->
-          <DockPanel Visibility="{Binding ShowTimeline, Converter={StaticResource BoolToVisibility}}" Margin="6,4,6,0">
+          <DockPanel Grid.Row="1" Visibility="{Binding ShowTimeline, Converter={StaticResource BoolToVisibility}}" Margin="6,4,6,0">
             <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
               <TextBlock Text="{Binding TimelineSummary}" Style="{StaticResource CaptionText}" />
-              <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+              <WrapPanel Margin="0,4,0,0">
                 <Border Width="18" Height="9" CornerRadius="2" Background="{DynamicResource AccentFillColorDefaultBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
                 <TextBlock Text="Estimated effort" Style="{StaticResource CaptionText}" Margin="0,0,14,0" />
                 <Rectangle Width="18" Height="9" RadiusX="2" RadiusY="2" Fill="#33C0504D" Stroke="#C0504D" StrokeDashArray="2 1.5" Margin="0,0,6,0" VerticalAlignment="Center" />
-                <TextBlock Text="No estimate: provisional 4 h (not saved)" Style="{StaticResource CaptionText}" />
-              </StackPanel>
+                <TextBlock Text="No estimate: provisional 4 h (not saved)" Style="{StaticResource CaptionText}" Margin="0,0,14,0" />
+                <Border Width="18" Height="9" Background="#2EA8463A" Margin="0,0,6,0" VerticalAlignment="Center" />
+                <TextBlock Text="Public holiday" Style="{StaticResource CaptionText}" Margin="0,0,14,0" />
+                <Rectangle Width="18" Height="9" Fill="#14B08D57" Stroke="#B08D57" StrokeDashArray="3 2" Margin="0,0,6,0" VerticalAlignment="Center" />
+                <TextBlock Text="Customary day off?" Style="{StaticResource CaptionText}" />
+              </WrapPanel>
             </StackPanel>
             <ListBox Style="{StaticResource RowListBox}" ItemsSource="{Binding Timeline}" SelectedItem="{Binding SelectedQueueItem}"
                      IsEnabled="{Binding IsListEnabled}" AutomationProperties.Name="Planning timeline">
@@ -142,6 +283,7 @@
                     </StackPanel>
                     <Grid Grid.Column="2" VerticalAlignment="Center">
                       <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="18" />
                         <RowDefinition Height="Auto" />
                       </Grid.RowDefinitions>
@@ -150,10 +292,63 @@
                         <ColumnDefinition Width="{Binding Block}" />
                         <ColumnDefinition Width="{Binding After}" />
                       </Grid.ColumnDefinitions>
-                      <Border Grid.ColumnSpan="3" CornerRadius="3" Background="{DynamicResource SubtleFillColorSecondaryBrush}" />
-                      <Rectangle x:Name="Bar" Grid.Column="1" RadiusX="3" RadiusY="3" MinWidth="4"
+
+                      <!-- Working-day grid (Mon-Fri, 7.5 h each): dotted day boundaries, holiday highlights -->
+                      <ItemsControl Grid.RowSpan="3" Grid.ColumnSpan="3" ItemsSource="{Binding Days}" Focusable="False" IsHitTestVisible="False">
+                        <ItemsControl.ItemsPanel>
+                          <ItemsPanelTemplate>
+                            <UniformGrid Rows="1" />
+                          </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate DataType="{x:Type vm:DayCellViewModel}">
+                            <Grid x:Name="Cell" Background="Transparent">
+                              <Rectangle x:Name="Customary" Stroke="#B08D57" StrokeThickness="1" StrokeDashArray="3 2" Visibility="Collapsed" />
+                              <Line X1="0" Y1="0" X2="0" Y2="1" Stretch="Fill" HorizontalAlignment="Left" StrokeThickness="1" StrokeDashArray="1 3"
+                                    Stroke="{DynamicResource ControlStrongStrokeColorDefaultBrush}" Opacity="0.55" />
+                            </Grid>
+                            <DataTemplate.Triggers>
+                              <DataTrigger Binding="{Binding IsPublicHoliday}" Value="True">
+                                <Setter TargetName="Cell" Property="Background" Value="#2EA8463A" />
+                              </DataTrigger>
+                              <DataTrigger Binding="{Binding IsCustomaryHoliday}" Value="True">
+                                <Setter TargetName="Cell" Property="Background" Value="#14B08D57" />
+                                <Setter TargetName="Customary" Property="Visibility" Value="Visible" />
+                              </DataTrigger>
+                            </DataTemplate.Triggers>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+
+                      <!-- Weekday and date labels, above the first row only -->
+                      <ItemsControl Grid.ColumnSpan="3" ItemsSource="{Binding Days}" Focusable="False" Margin="0,0,0,3"
+                                    Visibility="{Binding ShowDayLabels, Converter={StaticResource BoolToVisibility}}">
+                        <ItemsControl.ItemsPanel>
+                          <ItemsPanelTemplate>
+                            <UniformGrid Rows="1" />
+                          </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate DataType="{x:Type vm:DayCellViewModel}">
+                            <TextBlock x:Name="Label" Text="{Binding Label}" ToolTip="{Binding ToolTip}" FontSize="10" Margin="3,0,0,0"
+                                       TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Background="Transparent" />
+                            <DataTemplate.Triggers>
+                              <DataTrigger Binding="{Binding IsPublicHoliday}" Value="True">
+                                <Setter TargetName="Label" Property="Foreground" Value="#A8463A" />
+                                <Setter TargetName="Label" Property="FontWeight" Value="SemiBold" />
+                              </DataTrigger>
+                              <DataTrigger Binding="{Binding IsCustomaryHoliday}" Value="True">
+                                <Setter TargetName="Label" Property="Foreground" Value="#9A7440" />
+                                <Setter TargetName="Label" Property="FontStyle" Value="Italic" />
+                              </DataTrigger>
+                            </DataTemplate.Triggers>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+
+                      <Rectangle x:Name="Bar" Grid.Row="1" Grid.Column="1" RadiusX="3" RadiusY="3" MinWidth="4"
                                  Fill="{Binding StakeholderColor, Converter={StaticResource HexBrush}, ConverterParameter=0.85}" />
-                      <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource CaptionText}" FontSize="11" Margin="0,2,0,0">
+                      <TextBlock Grid.Row="2" Grid.ColumnSpan="3" Style="{StaticResource CaptionText}" FontSize="11" Margin="0,2,0,0">
                         <Run x:Name="Duration" Text="{Binding DurationText, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" · " /><Run Text="{Binding StartText, Mode=OneWay}" />
                       </TextBlock>
                     </Grid>
@@ -172,7 +367,7 @@
             </ListBox>
           </DockPanel>
 
-          <ListBox x:Name="TaskList" Style="{StaticResource RowListBox}" SelectionMode="Extended" SelectionChanged="OnListSelectionChanged"
+          <ListBox x:Name="TaskList" Grid.Row="1" Style="{StaticResource RowListBox}" SelectionMode="Extended" SelectionChanged="OnListSelectionChanged"
                    Visibility="{Binding ShowTimeline, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"
                    ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}"
                    IsEnabled="{Binding IsListEnabled}" KeyDown="OnListKeyDown"
@@ -267,7 +462,7 @@
           </ListBox>
 
           <!-- Empty state -->
-          <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="24" IsHitTestVisible="False"
+          <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="24" IsHitTestVisible="False"
                       Visibility="{Binding EmptyMessage, Converter={StaticResource NullToCollapsed}}">
             <TextBlock Text="&#xE9D5;" Style="{StaticResource IconText}" FontSize="32" HorizontalAlignment="Center"
                        Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
@@ -275,7 +470,7 @@
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
           </StackPanel>
 
-          <DockPanel Grid.Row="1" Margin="8,6,8,2">
+          <DockPanel Grid.Row="2" Margin="8,6,8,2">
             <Button DockPanel.Dock="Right" Style="{StaticResource SubtleButton}" Command="{Binding DeleteSelectedCommand}" IsEnabled="{Binding IsListEnabled}"
                     ToolTip="Delete the selected task (Del). Ctrl+click or Shift+click selects several.">
               <StackPanel Orientation="Horizontal">
@@ -451,6 +646,7 @@
                 <TextBlock Text="{Binding NotesError}" Style="{StaticResource ErrorText}" />
 
                 <CheckBox Content="Show on Board" IsChecked="{Binding ShowOnBoard}" Margin="0,14,0,0"
+                          Visibility="{Binding DataContext.IsBoardEnabled, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}"
                           ToolTip="Off takes the task's card off the Board (archived); the task and its recorded time stay. On brings the same card back." />
               </StackPanel>
             </ScrollViewer>

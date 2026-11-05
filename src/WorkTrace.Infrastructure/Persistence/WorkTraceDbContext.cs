@@ -51,6 +51,8 @@ public sealed class WorkTraceDbContext(DbContextOptions<WorkTraceDbContext> opti
 
     public DbSet<Guide> Guides => Set<Guide>();
 
+    public DbSet<MinorTask> MinorTasks => Set<MinorTask>();
+
     public DbSet<GuideAttachment> GuideAttachments => Set<GuideAttachment>();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess) =>

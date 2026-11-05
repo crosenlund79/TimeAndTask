@@ -106,6 +106,17 @@ internal sealed class GuideConfiguration : IEntityTypeConfiguration<Guide>
     }
 }
 
+internal sealed class MinorTaskConfiguration : IEntityTypeConfiguration<MinorTask>
+{
+    public void Configure(EntityTypeBuilder<MinorTask> builder)
+    {
+        builder.ToTable("MinorTasks");
+        builder.Property(m => m.Title).HasMaxLength(MinorTask.TitleMaxLength);
+        builder.Property(m => m.Description).HasMaxLength(MinorTask.DescriptionMaxLength);
+        builder.HasIndex(m => new { m.IsCompleted, m.ReminderAtUtc });
+    }
+}
+
 internal sealed class GuideAttachmentConfiguration : IEntityTypeConfiguration<GuideAttachment>
 {
     public void Configure(EntityTypeBuilder<GuideAttachment> builder)

@@ -22,9 +22,11 @@ public sealed partial class MainViewModel : ObservableObject
         TimesheetViewModel timesheet,
         ScreenshotsViewModel screenshots,
         INavigationService navigation,
-        NotificationService notifications)
+        NotificationService notifications,
+        WorkTrace.Core.Settings.ISettingsStore settingsStore)
     {
         Notifications = notifications;
+        _settings = settingsStore;
         Sections =
         [
             new(AppSection.Home, "Overview", "", "Ctrl+1", home),
@@ -38,9 +40,43 @@ public sealed partial class MainViewModel : ObservableObject
             new(AppSection.Settings, "Settings", "\uE713", "Ctrl+5", settings),
         ];
         navigation.NavigationRequested += (_, request) => NavigateTo(request.Section, request.Parameter);
+        UpdateVisibleSections();
+        settingsStore.Changed += (_, _) => System.Windows.Application.Current?.Dispatcher.BeginInvoke(UpdateVisibleSections);
     }
 
+    private readonly WorkTrace.Core.Settings.ISettingsStore _settings;
+
     public IReadOnlyList<NavigationItem> Sections { get; }
+
+    /// <summary>The navigation rail: every section, except the Board while it is switched off.</summary>
+    public System.Collections.ObjectModel.ObservableCollection<NavigationItem> VisibleSections { get; } = [];
+
+    private bool IsVisible(AppSection section) => section != AppSection.Board || _settings.Current.Board.IsEnabled;
+
+    private void UpdateVisibleSections()
+    {
+        var wanted = Sections.Where(s => IsVisible(s.Section)).ToList();
+        if (wanted.SequenceEqual(VisibleSections))
+        {
+            return;
+        }
+
+        var selected = SelectedSection;
+        VisibleSections.Clear();
+        foreach (var section in wanted)
+        {
+            VisibleSections.Add(section);
+        }
+
+        if (selected is not null && !wanted.Contains(selected))
+        {
+            NavigateTo(AppSection.Home);
+        }
+        else
+        {
+            SelectedSection = selected;
+        }
+    }
 
     public NotificationService Notifications { get; }
 
@@ -51,6 +87,11 @@ public sealed partial class MainViewModel : ObservableObject
 
     public void NavigateTo(AppSection section, object? parameter = null)
     {
+        if (!IsVisible(section))
+        {
+            section = AppSection.Home; // the Board is switched off
+        }
+
         var target = Sections.First(s => s.Section == section);
         if (ReferenceEquals(target, SelectedSection))
         {

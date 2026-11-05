@@ -92,6 +92,20 @@ public class UiSmokeTests
             await WpfTestHost.SettleAsync();
             Assert.Equal(tasks.Timeline[0].Id, tasks.Editor!.Id);
             tasks.ShowTimeline = false;
+
+            // Minor Tasks group: quick add, inline edit, tick to complete (moves to Completed).
+            tasks.Minor.NewTitle = "Buy stamps";
+            tasks.Minor.NewReminderDate = DateTime.Today.AddDays(1);
+            await tasks.Minor.AddCommand.ExecuteAsync(null);
+            await WpfTestHost.SettleAsync(5);
+            Assert.Single(tasks.Minor.Active);
+            tasks.Minor.EditCommand.Execute(tasks.Minor.Active[0]);
+            await WpfTestHost.SettleAsync(5);
+            tasks.Minor.CancelEditCommand.Execute(null);
+            tasks.Minor.Active[0].IsCompleted = true;
+            await WpfTestHost.SettleAsync(10);
+            Assert.Empty(tasks.Minor.Active);
+            Assert.Single(tasks.Minor.Completed);
             tasks.SelectedItem = tasks.Items[0];
             await WpfTestHost.SettleAsync();
             tasks.Editor!.Title = "Changed";

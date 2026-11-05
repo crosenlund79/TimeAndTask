@@ -136,6 +136,11 @@ internal sealed class ClientService(
             throw new OperationNotAllowedException("Keep at least one active internal stakeholder for internal work.");
         }
 
+        foreach (var minor in await db.MinorTasks.Where(m => m.ClientId == id).ToListAsync(cancellationToken))
+        {
+            minor.ClientId = null; // minor tasks lose the stakeholder, not themselves
+        }
+
         db.Clients.Remove(client);
         await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Stakeholder {ClientId} deleted", id);

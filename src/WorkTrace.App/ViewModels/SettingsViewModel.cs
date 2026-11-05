@@ -186,6 +186,12 @@ public sealed partial class SettingsViewModel(
     [ObservableProperty]
     public partial bool AutoAddTasksToBoard { get; set; }
 
+    /// <summary>Board on/off: hides its navigation and stops card creation; cards are kept either way.</summary>
+    [ObservableProperty]
+    public partial bool BoardEnabled { get; set; }
+
+    partial void OnBoardEnabledChanged(bool value) => Apply(s => s.Board.Enabled = value);
+
     public IReadOnlyList<PickerOption> DeadlineWarningOptions { get; } =
     [
         new(1, "1 day before"), new(2, "2 days before"), new(3, "3 days before"), new(5, "5 days before"), new(7, "1 week before"), new(14, "2 weeks before"),
@@ -314,6 +320,7 @@ public sealed partial class SettingsViewModel(
         StartMinimized = s.General.StartMinimized;
         CloseToTray = s.General.CloseToTray;
         AutoAddTasksToBoard = s.Board.AutoAddTasks;
+        BoardEnabled = s.Board.IsEnabled;
         DeadlineWarningDays = s.Tasks.DeadlineWarningDays;
         MaintenanceReminderEnabled = s.Tasks.MaintenanceReminderEnabled;
         MaintenanceReminderMinutes = s.Tasks.MaintenanceReminderMinutes;

@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using WorkTrace.Core.Validation;
 
 namespace WorkTrace.App.Views;
@@ -16,6 +17,10 @@ internal static class LookupBehavior
 {
     private static readonly DependencyProperty AttachedProperty =
         DependencyProperty.RegisterAttached("LookupAttached", typeof(bool), typeof(LookupBehavior));
+
+    /// <summary>Set by keystrokes in the editable text; only then does a text change filter (and open) the list.</summary>
+    private static readonly DependencyProperty UserTypingProperty =
+        DependencyProperty.RegisterAttached("LookupUserTyping", typeof(bool), typeof(LookupBehavior));
 
     private static readonly DependencyProperty OpenedWithProperty =
         DependencyProperty.RegisterAttached("LookupOpenedWith", typeof(object), typeof(LookupBehavior));
@@ -46,14 +51,28 @@ internal static class LookupBehavior
         box.DropDownClosed += (_, _) =>
         {
             box.ClearValue(OpenedWithProperty);
-            if (box.Items.Filter is not null)
+
+            // Never change the list while the popup is closing (WPF: "Cannot reopen a popup in the closed event
+            // handler"); clear the filter once the close has completed.
+            box.Dispatcher.BeginInvoke(DispatcherPriority.Input, () =>
             {
-                box.Items.Filter = null;
-            }
+                if (!box.IsDropDownOpen && box.Items.Filter is not null)
+                {
+                    box.Items.Filter = null;
+                }
+            });
         };
 
         if (box.IsEditable && box.Template?.FindName("PART_EditableTextBox", box) is TextBox editor)
         {
+            editor.PreviewTextInput += (_, _) => box.SetValue(UserTypingProperty, true);
+            editor.PreviewKeyDown += (_, e) =>
+            {
+                if (e.Key is Key.Back or Key.Delete || (e.Key == Key.V && Keyboard.Modifiers.HasFlag(ModifierKeys.Control)))
+                {
+                    box.SetValue(UserTypingProperty, true);
+                }
+            };
             editor.TextChanged += (_, _) => Filter(box, editor);
         }
     }
@@ -93,7 +112,10 @@ internal static class LookupBehavior
     /// <summary>Editable lookups: show only entries containing the typed text (only while the user types).</summary>
     private static void Filter(ComboBox box, TextBox editor)
     {
-        if (!editor.IsKeyboardFocusWithin)
+        // Text set by a selection, a binding or a reload is not typing: it never filters or opens the list.
+        var typing = (bool)box.GetValue(UserTypingProperty);
+        box.SetValue(UserTypingProperty, false);
+        if (!typing || !editor.IsKeyboardFocusWithin)
         {
             return;
         }
@@ -110,12 +132,19 @@ internal static class LookupBehavior
         box.Items.Filter = o => Text.IndexOf(DisplayText(box, o), text.Trim()) >= 0;
         if (!box.IsDropDownOpen && !box.Items.IsEmpty)
         {
-            box.IsDropDownOpen = true;
-        }
+            // Opened after the current input is processed (never from inside another popup event).
+            box.Dispatcher.BeginInvoke(DispatcherPriority.Input, () =>
+            {
+                if (!box.IsDropDownOpen && editor.IsKeyboardFocusWithin && !box.Items.IsEmpty)
+                {
+                    box.IsDropDownOpen = true;
 
-        // Opening the list selects the text; keep typing where the user was.
-        editor.SelectionLength = 0;
-        editor.CaretIndex = Math.Min(caret, editor.Text.Length);
+                    // Opening the list selects the text; keep typing where the user was.
+                    editor.SelectionLength = 0;
+                    editor.CaretIndex = Math.Min(caret, editor.Text.Length);
+                }
+            });
+        }
     }
 
     private static string DisplayText(ComboBox box, object item)

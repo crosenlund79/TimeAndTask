@@ -74,6 +74,10 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
   State that depends on paired Windows notifications (resume after sleep, unlock) must self-heal (ADR-032).
 - Fake-clock tests do not prove scheduling works: `RealAppTests` launches the built WorkTrace.exe (1-min interval) and
   `SchedulingTests` uses the real clock; keep both green. UI test contexts stop the engine before disposing.
+- **Minor tasks** (`MinorTasks` table, `IMinorTaskService`) are reminder-only to-dos: never tracked, never on the Board,
+  never offered in task selectors. Snoozing never changes the reminder time; completed ones never remind.
+- The **Board is optional** (`Board.Enabled`; decided once at start-up: off for new installs, on when cards exist).
+  Off = hidden from navigation/tray and no cards created; existing cards are never deleted.
 - Services throw `DomainValidationException` (field errors), `OperationNotAllowedException`
   (e.g. deleting a referenced record) or `EntityNotFoundException`; view models map these to inline
   errors / notifications via `ViewModelBase.RunAsync`.

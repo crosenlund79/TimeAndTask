@@ -42,9 +42,16 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         INotificationService notifications,
         TimeProvider timeProvider,
         ISettingsStore settings,
+        MinorTasksViewModel minor,
         ILogger<TasksViewModel> logger)
         : base(notifications, logger)
     {
+        Minor = minor;
+        MinorGroup = new(TaskGroup.Minor, "Minor Tasks", "\uE73A", "#A0675E", SaveGroupState)
+        {
+            IsExpanded = !settings.Current.Tasks.CollapsedGroups.Contains(TaskGroup.Minor),
+        };
+        MinorTasksViewModel.Changed += (_, _) => System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => _ = Minor.LoadAsync());
         _settings = settings;
         _tasks = tasks;
         _clients = clients;
@@ -54,15 +61,17 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
 
         Groups =
         [
-            new(TaskGroup.Regular, "Regular Tasks", "\uE9D5", "#5B7DB1", SaveGroupState),
-            new(TaskGroup.Recurring, "Recurring Tasks", "\uE8EE", "#4F8A8B", SaveGroupState),
+            new(TaskGroup.Regular, "Regular Tasks", "\uE9D5", "#6F7D52", SaveGroupState),
             new(TaskGroup.Waiting, "Waiting for External Input", "\uE823", "#B08D57", SaveGroupState),
-            new(TaskGroup.Closed, "Closed Tasks", "\uE73E", "#7A7F87", SaveGroupState),
+            new(TaskGroup.Recurring, "Recurring Tasks", "\uE8EE", "#5E8C7A", SaveGroupState),
+            new(TaskGroup.Closed, "Closed Tasks", "\uE73E", "#8C8576", SaveGroupState),
         ];
         foreach (var group in Groups)
         {
             group.IsExpanded = !settings.Current.Tasks.CollapsedGroups.Contains(group.Group);
         }
+
+        _groupsReady = true;
 
         // One list, grouped (selection, keyboard and bulk actions keep working across groups).
         System.Windows.Data.CollectionViewSource.GetDefaultView(Items).GroupDescriptions
@@ -70,11 +79,28 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
     }
 
     /// <summary>Regular, Recurring and Waiting for External Input, in display order.</summary>
-    public IReadOnlyList<TaskGroupViewModel> Groups { get; }
+    public List<TaskGroupViewModel> Groups { get; }
+
+    /// <summary>Reminder-only minor tasks, shown as the first group (never offered for time registration).</summary>
+    public MinorTasksViewModel Minor { get; }
+
+    public TaskGroupViewModel MinorGroup { get; }
+
+    private TaskGroupViewModel GroupOf(TaskSummary task) => Groups.First(g => g.Group == task.Group);
+
+    /// <summary>The task editor offers "Show on Board" only while the Board is enabled.</summary>
+    public bool IsBoardEnabled => _settings.Current.Board.IsEnabled;
+
+    private bool _groupsReady;
 
     private void SaveGroupState(TaskGroupViewModel changed)
     {
-        var collapsed = Groups.Where(g => !g.IsExpanded).Select(g => g.Group).ToList();
+        if (!_groupsReady)
+        {
+            return; // initial states come from the settings
+        }
+
+        var collapsed = Groups.Append(MinorGroup).Where(g => !g.IsExpanded).Select(g => g.Group).ToList();
         _ = UpdateGroupSettingsAsync(collapsed);
     }
 
@@ -132,6 +158,8 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
 
     public async Task ActivateAsync(object? parameter)
     {
+        OnPropertyChanged(nameof(IsBoardEnabled));
+        await Minor.LoadAsync();
         await RunAsync(LoadPickersAsync, "Could not load stakeholders and lists.");
 
         _suppressReload = true;
@@ -177,7 +205,7 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
     /// <summary>Timeline group filter: 1 = all active, 2 Regular, 3 Recurring, 4 Waiting, 5 Closed (keys avoid the picker's 0).</summary>
     public IReadOnlyList<PickerOption> TimelineGroupOptions { get; } =
     [
-        new(1, "All active tasks"), new(2, "Regular Tasks"), new(3, "Recurring Tasks"), new(4, "Waiting for External Input"), new(5, "Closed Tasks"),
+        new(1, "All active tasks (not recurring)"), new(2, "Regular Tasks"), new(3, "Recurring Tasks"), new(4, "Waiting for External Input"), new(5, "Closed Tasks"),
     ];
 
     [ObservableProperty]
@@ -202,19 +230,24 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
 
     private void BuildTimeline()
     {
+        // "All active" = Regular and Waiting; Recurring and Closed only under their own filter.
         var group = TimelineGroupKey switch { 2 => TaskGroup.Regular, 3 => TaskGroup.Recurring, 4 => TaskGroup.Waiting, 5 => TaskGroup.Closed, _ => (TaskGroup?)null };
-        var queue = TaskPipeline.Build(_lastResults.Where(t => group is null || t.Group == group), includeClosed: group == TaskGroup.Closed);
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(UtcTime.Now(_timeProvider), TimeZoneInfo.Local));
+        var plan = TaskPipeline.Plan(_lastResults.Where(t => group is null || t.Group == group), today,
+            includeClosed: group == TaskGroup.Closed, includeRecurring: group == TaskGroup.Recurring);
+        var queue = plan.Entries;
         var total = queue.Sum(e => e.DurationMinutes);
+        var days = plan.Days.Select(d => new DayCellViewModel(d)).ToList();
         Timeline.Clear();
         foreach (var entry in queue)
         {
-            Timeline.Add(new QueueItemViewModel(entry, total));
+            Timeline.Add(new QueueItemViewModel(entry, days));
         }
 
         var unknown = queue.Count(e => e.IsProvisional);
         TimelineSummary = queue.Count == 0
             ? "No active tasks match."
-            : $"{queue.Count} task{(queue.Count == 1 ? "" : "s")} · about {TaskPipeline.FormatDuration(total)}"
+            : $"{queue.Count} task{(queue.Count == 1 ? "" : "s")} · about {TaskPipeline.FormatDuration(total)} · Mon–Fri, 7.5 h per working day"
                 + (unknown > 0 ? $" · {unknown} without an estimate (planned as 4 h each)" : "");
     }
 
@@ -573,9 +606,9 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         BuildTimeline();
 
         // Stable ordering by group keeps the search ranking within each group.
-        foreach (var task in results.OrderBy(t => t.Group))
+        foreach (var task in results.OrderBy(t => Groups.IndexOf(GroupOf(t))))
         {
-            Items.Add(new TaskItemViewModel(task, RelativeTime.Format(task.LastUsedAtUtc, now, TimeZoneInfo.Local, never: "not used yet"), Groups[(int)task.Group]));
+            Items.Add(new TaskItemViewModel(task, RelativeTime.Format(task.LastUsedAtUtc, now, TimeZoneInfo.Local, never: "not used yet"), GroupOf(task)));
         }
 
         var hasQuery = !string.IsNullOrWhiteSpace(SearchText) || ClientFilterId is not null;

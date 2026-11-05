@@ -30,6 +30,7 @@ public static class AppServices
         services.AddSingleton<TimeReminderService>();
         services.AddSingleton<MaintenanceReminderService>();
         services.AddSingleton<PlanningReminderService>();
+        services.AddSingleton<MinorTaskReminderService>();
         services.AddSingleton<ReminderSlot>();
         services.AddSingleton<ScreenshotCaptureService>();
         services.AddSingleton<BackupScheduler>();
@@ -41,6 +42,7 @@ public static class AppServices
         // unsaved edits) survives hiding the window to the tray.
         services.AddSingleton<HomeViewModel>();
         services.AddSingleton<TasksViewModel>();
+        services.AddSingleton<MinorTasksViewModel>();
         services.AddSingleton<ClientsViewModel>();
         services.AddSingleton<ListsViewModel>();
         services.AddSingleton<SettingsViewModel>();
