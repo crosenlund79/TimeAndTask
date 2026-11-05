@@ -1501,7 +1501,7 @@
         "Owner installs WorkTrace-Setup over the existing install and accepts the new look (data and settings unchanged)"
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Commit 70a8667; Windows CI run 49 green (incl. WPF smoke on every page); installer WorkTrace-Setup-0.2.49 (install, upgrade, uninstall checked)",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -1515,8 +1515,8 @@
         }
       ],
       "createdAt": "2026-11-05T11:00:08Z",
-      "updatedAt": "2026-11-05T11:00:08Z",
-      "rev": 1
+      "updatedAt": "2026-11-05T11:00:11Z",
+      "rev": 2
     }
   ]
 }

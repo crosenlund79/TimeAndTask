@@ -431,6 +431,10 @@ Commit 6a8d718; Windows CI run 48 green (RegistrationIntegrityTests + WPF smoke 
 
 - Owner installs WorkTrace-Setup over the existing install and accepts the new look (data and settings unchanged)
 
+**Evidence**
+
+Commit 70a8667; Windows CI run 49 green (incl. WPF smoke on every page); installer WorkTrace-Setup-0.2.49 (install, upgrade, uninstall checked)
+
 ## To do
 
 ### WT-030 · Estimation engine
