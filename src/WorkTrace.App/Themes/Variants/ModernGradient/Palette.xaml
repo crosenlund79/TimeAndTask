@@ -368,10 +368,10 @@
   <SolidColorBrush x:Key="WindowForeground" Color="#FF1C1838" />
   <SolidColorBrush x:Key="FlyoutBackground" Color="#FFF8F7FE" />
   <SolidColorBrush x:Key="FlyoutBorderBrush" Color="#1A4B3AA8" />
-  <SolidColorBrush x:Key="FrameBackground" Color="#TRANSPARENT" />
+  <SolidColorBrush x:Key="FrameBackground" Color="Transparent" />
   <SolidColorBrush x:Key="FrameForeground" Color="#FF1C1838" />
-  <SolidColorBrush x:Key="FrameMenuItemBackground" Color="#TRANSPARENT" />
-  <SolidColorBrush x:Key="FrameMenuItemBorderBrush" Color="#TRANSPARENT" />
+  <SolidColorBrush x:Key="FrameMenuItemBackground" Color="Transparent" />
+  <SolidColorBrush x:Key="FrameMenuItemBorderBrush" Color="Transparent" />
   <SolidColorBrush x:Key="FrameMenuItemBackgroundSelected" Color="#0A7B5CFF" />
   <SolidColorBrush x:Key="FrameMenuItemForegroundDisabled" Color="#FFABA7C2" />
   <SolidColorBrush x:Key="GridsplitterBackground" Color="#00FFFFFF" />
@@ -381,16 +381,16 @@
   <SolidColorBrush x:Key="GridsplitterForeground" Color="#72000000" />
   <SolidColorBrush x:Key="GridViewColumnHeaderGripperThumbFill" Color="#334B3AA8" />
   <SolidColorBrush x:Key="GridViewColumnHeaderForeground" Color="#FF1C1838" />
-  <SolidColorBrush x:Key="GridViewColumnHeaderBackground" Color="#TRANSPARENT" />
+  <SolidColorBrush x:Key="GridViewColumnHeaderBackground" Color="Transparent" />
   <SolidColorBrush x:Key="GridViewColumnHeaderBackgroundPointerOver" Color="#127B5CFF" />
   <SolidColorBrush x:Key="GridViewColumnHeaderBackgroundPressed" Color="#0A7B5CFF" />
   <SolidColorBrush x:Key="GridViewColumnHeaderBackgroundDisabled" Color="#00FFFFFF" />
-  <SolidColorBrush x:Key="GridViewColumnHeaderBorderBrush" Color="#TRANSPARENT" />
-  <SolidColorBrush x:Key="GridViewColumnHeaderBorderBrushPointerOver" Color="#TRANSPARENT" />
-  <SolidColorBrush x:Key="GridViewColumnHeaderBorderBrushPressed" Color="#TRANSPARENT" />
-  <SolidColorBrush x:Key="GridViewColumnHeaderBorderBrushDisabled" Color="#TRANSPARENT" />
-  <SolidColorBrush x:Key="GroupBoxBackground" Color="#TRANSPARENT" />
-  <SolidColorBrush x:Key="GroupBoxBorderBrush" Color="#TRANSPARENT" />
+  <SolidColorBrush x:Key="GridViewColumnHeaderBorderBrush" Color="Transparent" />
+  <SolidColorBrush x:Key="GridViewColumnHeaderBorderBrushPointerOver" Color="Transparent" />
+  <SolidColorBrush x:Key="GridViewColumnHeaderBorderBrushPressed" Color="Transparent" />
+  <SolidColorBrush x:Key="GridViewColumnHeaderBorderBrushDisabled" Color="Transparent" />
+  <SolidColorBrush x:Key="GroupBoxBackground" Color="Transparent" />
+  <SolidColorBrush x:Key="GroupBoxBorderBrush" Color="Transparent" />
   <SolidColorBrush x:Key="GroupBoxHeaderForeground" Color="#FF1C1838" />
   <SolidColorBrush x:Key="HyperlinkForeground" Color="#FF5733D6" />
   <SolidColorBrush x:Key="HyperlinkForegroundPointerOver" Color="#FF5733D6" />
@@ -513,7 +513,7 @@
   <SolidColorBrush x:Key="SnackBarBackground" Color="#FFF8F7FE" />
   <SolidColorBrush x:Key="SnackBarForeground" Color="#FF1C1838" />
   <SolidColorBrush x:Key="SnackBarBorderBrush" Color="#1A4B3AA8" />
-  <SolidColorBrush x:Key="StatusBarItemBackground" Color="#TRANSPARENT" />
+  <SolidColorBrush x:Key="StatusBarItemBackground" Color="Transparent" />
   <SolidColorBrush x:Key="StatusBarItemBackgroundDisabled" Color="#4DF9F9F9" />
   <SolidColorBrush x:Key="StatusBarItemForegroundDisabled" Color="#FFABA7C2" />
   <SolidColorBrush x:Key="TabViewBackground" Color="#00FFFFFF" />

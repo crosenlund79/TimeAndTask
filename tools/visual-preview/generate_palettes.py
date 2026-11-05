@@ -41,6 +41,8 @@ def parse(text):
 
 
 def argb(hex_):
+    if not hex_.startswith("#"):
+        return hex_  # named colour (e.g. Transparent)
     h = hex_.lstrip("#")
     if len(h) == 6:
         h = "FF" + h

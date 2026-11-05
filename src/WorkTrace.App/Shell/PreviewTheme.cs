@@ -30,7 +30,13 @@ internal static class PreviewTheme
         // The variant's body font for every window (inherited by all text, including popups and dialogs).
         if (app.Resources["AppFontFamily"] is FontFamily font)
         {
-            System.Windows.Controls.Control.FontFamilyProperty.OverrideMetadata(typeof(Window), new FrameworkPropertyMetadata(font, FrameworkPropertyMetadataOptions.Inherits));
+            EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent, new RoutedEventHandler((sender, _) =>
+            {
+                if (sender is Window window && !Equals(window.FontFamily, font))
+                {
+                    window.FontFamily = font;
+                }
+            }));
         }
     }
 
