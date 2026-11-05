@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 60,
+  "nextId": 61,
   "cards": [
     {
       "id": "WT-001",
@@ -1485,6 +1485,38 @@
       "createdAt": "2026-11-05T08:22:42Z",
       "updatedAt": "2026-11-05T08:31:06Z",
       "rev": 2
+    },
+    {
+      "id": "WT-060",
+      "uid": "2b69e504-64b8-47bb-ae42-43b38bede9e0",
+      "title": "Refined Neutral adopted as WorkTrace's design; visual prototypes retired",
+      "category": "feature",
+      "priority": "normal",
+      "status": "review",
+      "rank": "zzzzzi",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Owner installs WorkTrace-Setup over the existing install and accepts the new look (data and settings unchanged)"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "f38446a4-8f01-45f9-a086-9dcd5f4919e0",
+          "type": "created",
+          "at": "2026-11-05T11:00:08Z",
+          "by": "claude",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-11-05T11:00:08Z",
+      "updatedAt": "2026-11-05T11:00:08Z",
+      "rev": 1
     }
   ]
 }

@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 25 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 26 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -422,6 +422,14 @@ Commit bcc7fc7; Windows CI run 47 green (incl. WPF smoke with the daily summary)
 **Evidence**
 
 Commit 6a8d718; Windows CI run 48 green (RegistrationIntegrityTests + WPF smoke with the Overview calendar); installer WorkTrace-Setup-0.2.48
+
+### WT-060 · Refined Neutral adopted as WorkTrace's design; visual prototypes retired
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Owner installs WorkTrace-Setup over the existing install and accepts the new look (data and settings unchanged)
 
 ## To do
 
