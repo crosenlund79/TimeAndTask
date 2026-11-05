@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 61,
+  "nextId": 62,
   "cards": [
     {
       "id": "WT-001",
@@ -1517,6 +1517,38 @@
       "createdAt": "2026-11-05T11:00:08Z",
       "updatedAt": "2026-11-05T11:00:11Z",
       "rev": 2
+    },
+    {
+      "id": "WT-061",
+      "uid": "443e4b35-7341-4766-970b-eef1b6be849e",
+      "title": "Minor tasks with reminders, optional Board, working-day timeline (DK holidays), Current task popup fix, active filter",
+      "category": "feature",
+      "priority": "high",
+      "status": "review",
+      "rank": "zzzzzr",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Owner checks minor tasks + reminders, Current task switching without error, Board toggle, timeline calendar and the All active filter"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "507888f3-d28b-40ee-8afd-260accf788b4",
+          "type": "created",
+          "at": "2026-11-05T11:28:11Z",
+          "by": "claude",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-11-05T11:28:11Z",
+      "updatedAt": "2026-11-05T11:28:11Z",
+      "rev": 1
     }
   ]
 }

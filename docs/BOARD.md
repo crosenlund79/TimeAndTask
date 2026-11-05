@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 26 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 27 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -434,6 +434,14 @@ Commit 6a8d718; Windows CI run 48 green (RegistrationIntegrityTests + WPF smoke 
 **Evidence**
 
 Commit 70a8667; Windows CI run 49 green (incl. WPF smoke on every page); installer WorkTrace-Setup-0.2.49 (install, upgrade, uninstall checked)
+
+### WT-061 · Minor tasks with reminders, optional Board, working-day timeline (DK holidays), Current task popup fix, active filter
+
+`feature` · priority High
+
+**Acceptance criteria**
+
+- Owner checks minor tasks + reminders, Current task switching without error, Board toggle, timeline calendar and the All active filter
 
 ## To do
 
