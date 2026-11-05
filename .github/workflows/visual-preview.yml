@@ -1,0 +1,113 @@
+name: Visual previews
+
+# Five isolated WorkTrace skins ("WT - ..."), each with its own installer, built in one run.
+# Experimental only: the production CI (ci.yml) and WorkTrace-Setup.exe are not involved.
+on:
+  push:
+    branches: ["experiment/visual-refresh"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: visual-preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  previews:
+    runs-on: windows-latest
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Version
+        id: version
+        shell: pwsh
+        run: |
+          $base = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.WorkTraceVersionBase | Where-Object { $_ } | Select-Object -First 1
+          "version=$base.${{ github.run_number }}" >> $env:GITHUB_OUTPUT
+
+      - name: Build and test the shared code
+        shell: pwsh
+        run: |
+          dotnet build TimeAndTask.slnx -c Release
+          if ($LASTEXITCODE -ne 0) { throw "Build failed" }
+          dotnet test --project tests/WorkTrace.Tests/WorkTrace.Tests.csproj -c Release --no-build
+          if ($LASTEXITCODE -ne 0) { throw "Tests failed" }
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup --yes --no-progress | Out-Null }
+
+      # Per skin: render every page with the skin (fails on binding/XAML errors), publish, package.
+      - name: Build the five preview installers
+        shell: pwsh
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          $variants = [ordered]@{
+            'ModernFluent'     = @('Modern Fluent',     'F910F445-06AA-4109-9160-1FF8414735F3')
+            'DarkProfessional' = @('Dark Professional', '6029C414-1C78-4DA3-AFB7-F7335FF35CD1')
+            'RefinedNeutral'   = @('Refined Neutral',   'E1B71693-E33D-4600-BC4A-964859B84970')
+            'ModernGradient'   = @('Modern Gradient',   '06A149F0-B0DE-4C3D-A7AC-6C383C1F0967')
+            'GlassDepth'       = @('Glass & Depth',     '99F33F03-66CC-429C-BD28-0C2774D78A6D')
+          }
+          foreach ($v in $variants.Keys) {
+            $name, $guid = $variants[$v]
+            Write-Output "::group::$v ($name)"
+            Remove-Item -Recurse -Force src/WorkTrace.App/obj, src/WorkTrace.App/bin, tests/WorkTrace.App.Tests/obj, tests/WorkTrace.App.Tests/bin -ErrorAction SilentlyContinue
+            dotnet test --project tests/WorkTrace.App.Tests/WorkTrace.App.Tests.csproj -c Release -p:WorkTraceVariant=$v --filter-class "WorkTrace.App.Tests.UiSmokeTests"
+            if ($LASTEXITCODE -ne 0) { throw "${v}: UI smoke test failed" }
+            dotnet publish src/WorkTrace.App/WorkTrace.App.csproj -c Release -r win-x64 --self-contained false -o "publish/$v" -p:Version=$version -p:WorkTraceVariant=$v
+            if ($LASTEXITCODE -ne 0) { throw "${v}: publish failed" }
+            & $iscc /Qp "/DVariant=$v" "/DVariantName=$name" "/DAppIdGuid=$guid" "/DAppVersion=$version" "/DSourceDir=$PWD\publish\$v" installer\WorkTracePreview.iss
+            if ($LASTEXITCODE -ne 0) { throw "${v}: Inno Setup failed ($LASTEXITCODE)" }
+            Write-Output "::endgroup::"
+          }
+          Get-ChildItem installer-output\WT-*-Setup.exe | Format-Table Name, Length
+
+      # All five side by side: separate folders, Installed Apps entries and identities; WorkTrace itself untouched.
+      - name: Check the installers side by side
+        shell: pwsh
+        run: |
+          $uninstall = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall'
+          $names = @{ ModernFluent = 'WT - Modern Fluent'; DarkProfessional = 'WT - Dark Professional'; RefinedNeutral = 'WT - Refined Neutral'; ModernGradient = 'WT - Modern Gradient'; GlassDepth = 'WT - Glass & Depth' }
+          foreach ($v in $names.Keys) {
+            $p = Start-Process "installer-output\WT-$v-Setup.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/LOG=installer-output\$v.log" -Wait -PassThru
+            if ($p.ExitCode -ne 0) { Get-Content "installer-output\$v.log" -Tail 30; throw "$v install failed ($($p.ExitCode))" }
+          }
+          foreach ($v in $names.Keys) {
+            $exe = "$env:LOCALAPPDATA\Programs\WT-Preview-$v\WorkTrace.exe"
+            if (-not (Test-Path $exe)) { throw "$v not installed at $exe" }
+            $entry = @(Get-ChildItem $uninstall | Where-Object { $_.GetValue('DisplayName') -eq $names[$v] })
+            if ($entry.Count -ne 1) { throw "Expected one Installed Apps entry '$($names[$v])', found $($entry.Count)" }
+            $product = (Get-Item $exe).VersionInfo.ProductName
+            if ($product -ne $names[$v]) { throw "$v exe reports product '$product'" }
+          }
+          if (Test-Path "$env:LOCALAPPDATA\Programs\WorkTrace") { throw 'A preview installed into the WorkTrace folder' }
+          if (Get-ChildItem $uninstall | Where-Object { $_.GetValue('DisplayName') -eq 'WorkTrace' }) { throw 'A preview registered as WorkTrace' }
+          foreach ($v in $names.Keys) {
+            Start-Process "$env:LOCALAPPDATA\Programs\WT-Preview-$v\unins000.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART' -Wait
+          }
+          Write-Output 'All five previews installed side by side with separate identities, then uninstalled.'
+
+      - { name: Upload WT-ModernFluent-Setup, uses: actions/upload-artifact@v4, with: { name: WT-ModernFluent-Setup, path: installer-output/WT-ModernFluent-Setup.exe, retention-days: 30, if-no-files-found: error } }
+      - { name: Upload WT-DarkProfessional-Setup, uses: actions/upload-artifact@v4, with: { name: WT-DarkProfessional-Setup, path: installer-output/WT-DarkProfessional-Setup.exe, retention-days: 30, if-no-files-found: error } }
+      - { name: Upload WT-RefinedNeutral-Setup, uses: actions/upload-artifact@v4, with: { name: WT-RefinedNeutral-Setup, path: installer-output/WT-RefinedNeutral-Setup.exe, retention-days: 30, if-no-files-found: error } }
+      - { name: Upload WT-ModernGradient-Setup, uses: actions/upload-artifact@v4, with: { name: WT-ModernGradient-Setup, path: installer-output/WT-ModernGradient-Setup.exe, retention-days: 30, if-no-files-found: error } }
+      - { name: Upload WT-GlassDepth-Setup, uses: actions/upload-artifact@v4, with: { name: WT-GlassDepth-Setup, path: installer-output/WT-GlassDepth-Setup.exe, retention-days: 30, if-no-files-found: error } }
+      - name: Upload all five (one download)
+        uses: actions/upload-artifact@v4
+        with:
+          name: WT-Visual-Previews-${{ steps.version.outputs.version }}
+          path: installer-output/WT-*-Setup.exe
+          retention-days: 30
+          if-no-files-found: error

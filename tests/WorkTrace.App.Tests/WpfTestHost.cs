@@ -47,6 +47,9 @@ internal static class WpfTestHost
             {
                 Source = new Uri("pack://application:,,,/WorkTrace;component/Themes/Styles.xaml"),
             });
+
+            // Visual-preview builds (-p:WorkTraceVariant=...) render with their skin; no-op for WorkTrace.
+            WorkTrace.App.Shell.PreviewTheme.Apply(app);
             app.DispatcherUnhandledException += (_, e) =>
             {
                 UnhandledExceptions.Add(e.Exception);

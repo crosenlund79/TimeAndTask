@@ -1,0 +1,113 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="Palette.xaml" />
+  </ResourceDictionary.MergedDictionaries>
+
+  <!--
+    WT - Modern Fluent: Windows 11 at its cleanest. Cool-gray canvas, white surfaces, soft 1-px strokes, gentle
+    shadows, 10-px rounding, a restrained purple accent and Segoe UI Variable throughout.
+  -->
+
+  <!-- Typography -->
+  <FontFamily x:Key="AppFontFamily">Segoe UI Variable Text, Segoe UI</FontFamily>
+  <FontFamily x:Key="TitleFontFamily">Segoe UI Variable Display, Segoe UI</FontFamily>
+  <sys:Double x:Key="TitleFontSize">28</sys:Double>
+  <FontWeight x:Key="TitleFontWeight">SemiBold</FontWeight>
+  <SolidColorBrush x:Key="TitleForeground" Color="#15171F" />
+  <FontFamily x:Key="SectionFontFamily">Segoe UI Variable Display, Segoe UI</FontFamily>
+  <sys:Double x:Key="SectionFontSize">16</sys:Double>
+  <FontWeight x:Key="SectionFontWeight">SemiBold</FontWeight>
+  <FontFamily x:Key="BrandFontFamily">Segoe UI Variable Display, Segoe UI</FontFamily>
+  <FontWeight x:Key="BrandFontWeight">SemiBold</FontWeight>
+  <SolidColorBrush x:Key="BrandForeground" Color="#15171F" />
+
+  <!-- Shape -->
+  <CornerRadius x:Key="ControlCornerRadius">6</CornerRadius>
+  <CornerRadius x:Key="OverlayCornerRadius">10</CornerRadius>
+  <CornerRadius x:Key="PopupCornerRadius">10</CornerRadius>
+
+  <!-- Shell: canvas, rail and page surface -->
+  <SolidColorBrush x:Key="ShellBackground" Color="#F1F2F6" />
+  <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="#F8F9FB" />
+  <CornerRadius x:Key="PageSurfaceCornerRadius">12,0,0,0</CornerRadius>
+  <Thickness x:Key="PageSurfaceBorderThickness">1,1,0,0</Thickness>
+  <Thickness x:Key="PageSurfaceMargin">0,6,0,0</Thickness>
+  <SolidColorBrush x:Key="PageShadowBrush" Color="#F8F9FB" />
+  <DropShadowEffect x:Key="PageSurfaceEffect" x:Shared="False" BlurRadius="20" ShadowDepth="0" Opacity="0.06" Color="#1A2340" />
+
+  <!-- Cards -->
+  <SolidColorBrush x:Key="CardSurfaceBrush" Color="#FFFFFF" />
+  <LinearGradientBrush x:Key="CardSurfaceBorderBrush" StartPoint="0,0" EndPoint="0,1">
+    <GradientStop Color="#E6E8EF" Offset="0" />
+    <GradientStop Color="#E6E8EF" Offset="0.85" />
+    <GradientStop Color="#D3D7E1" Offset="1" />
+  </LinearGradientBrush>
+  <Thickness x:Key="CardBorderThickness">1,1,1,2</Thickness>
+  <CornerRadius x:Key="CardCornerRadius">10</CornerRadius>
+  <Thickness x:Key="CardPadding">18</Thickness>
+  <CornerRadius x:Key="BoardCardCornerRadius">8</CornerRadius>
+  <CornerRadius x:Key="BoardCardAccentRadius">8,0,0,8</CornerRadius>
+  <DropShadowEffect x:Key="BoardCardEffect" x:Shared="False" BlurRadius="8" ShadowDepth="1" Direction="270" Opacity="0.05" Color="#1A2340" />
+
+  <!-- Pills and badge -->
+  <SolidColorBrush x:Key="PillBackground" Color="#F1F2F7" />
+  <SolidColorBrush x:Key="PillBorderBrush" Color="#E3E5EC" />
+  <CornerRadius x:Key="PillCornerRadius">10</CornerRadius>
+  <SolidColorBrush x:Key="BadgeBackground" Color="#EFEDFC" />
+  <SolidColorBrush x:Key="BadgeBorderBrush" Color="#D9D4F8" />
+  <SolidColorBrush x:Key="BadgeForeground" Color="#5243B8" />
+
+  <!-- Lists -->
+  <CornerRadius x:Key="RowCornerRadius">8</CornerRadius>
+  <SolidColorBrush x:Key="RowHoverBackground" Color="#F2F3F7" />
+  <SolidColorBrush x:Key="RowSelectedBackground" Color="#EFEDFC" />
+  <SolidColorBrush x:Key="RowSelectedBorderBrush" Color="Transparent" />
+  <SolidColorBrush x:Key="RowIndicatorBrush" Color="#6352D6" />
+
+  <!-- Navigation -->
+  <SolidColorBrush x:Key="NavItemForeground" Color="#3A3E4D" />
+  <CornerRadius x:Key="NavItemCornerRadius">8</CornerRadius>
+  <sys:Double x:Key="NavIndicatorWidth">3</sys:Double>
+  <SolidColorBrush x:Key="NavIndicatorBrush" Color="#6352D6" />
+  <SolidColorBrush x:Key="NavItemHoverBackground" Color="#E8E9EF" />
+  <SolidColorBrush x:Key="NavItemSelectedBackground" Color="#E6E3FA" />
+  <SolidColorBrush x:Key="NavItemSelectedBorderBrush" Color="Transparent" />
+  <SolidColorBrush x:Key="NavItemSelectedForeground" Color="#3F3391" />
+
+  <DrawingImage x:Key="WorkTraceLogo">
+    <DrawingImage.Drawing>
+      <DrawingGroup>
+        <GeometryDrawing Brush="#6352D6">
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="8,8,240,240" RadiusX="56" RadiusY="56" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing>
+          <GeometryDrawing.Pen>
+            <Pen Brush="White" Thickness="22" />
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry Center="128,136" RadiusX="78" RadiusY="78" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M 94,138 L 120,164 L 166,108">
+          <GeometryDrawing.Pen>
+            <Pen Brush="White" Thickness="24" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+          </GeometryDrawing.Pen>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#6352D6">
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry Center="128,50" RadiusX="24" RadiusY="24" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#F5B94A">
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry Center="128,50" RadiusX="17" RadiusY="17" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+      </DrawingGroup>
+    </DrawingImage.Drawing>
+  </DrawingImage>
+</ResourceDictionary>

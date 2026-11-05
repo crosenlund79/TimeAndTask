@@ -8,7 +8,7 @@
         xmlns:shell="clr-namespace:WorkTrace.App.Shell"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
-        Title="WorkTrace"
+        Title="{Binding WindowTitle}"
         Icon="pack://application:,,,/WorkTrace;component/Assets/worktrace.ico"
         Width="1080" Height="700" MinWidth="820" MinHeight="520"
         WindowStartupLocation="CenterScreen">
@@ -55,17 +55,33 @@
     </DataTemplate>
   </Window.Resources>
 
-  <Grid>
+  <Grid Background="{DynamicResource ShellBackground}">
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="208" />
       <ColumnDefinition Width="*" />
     </Grid.ColumnDefinitions>
 
-    <!-- Navigation rail -->
+    <!-- Elevation layers behind the rail and the page (visual previews only; empty in WorkTrace). Shadows live on
+         these separate layers so text and lists never render through an effect. -->
+    <Border Background="{DynamicResource NavRailShadowBrush}" CornerRadius="{DynamicResource NavRailCornerRadius}"
+            Margin="{DynamicResource NavRailMargin}" Effect="{DynamicResource NavRailEffect}" IsHitTestVisible="False" />
+    <Border Grid.Column="1" Background="{DynamicResource PageShadowBrush}" CornerRadius="{DynamicResource PageSurfaceCornerRadius}"
+            Margin="{DynamicResource PageSurfaceMargin}" Effect="{DynamicResource PageSurfaceEffect}" IsHitTestVisible="False" />
+
+    <!-- Navigation rail (the surrounding Border is only styled by visual previews) -->
+    <Border Background="{DynamicResource NavRailBackground}" BorderBrush="{DynamicResource NavRailBorderBrush}"
+            BorderThickness="{DynamicResource NavRailBorderThickness}" CornerRadius="{DynamicResource NavRailCornerRadius}"
+            Margin="{DynamicResource NavRailMargin}">
     <DockPanel Margin="12,16,8,12">
-      <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,0,0,20">
-        <Image Source="{StaticResource WorkTraceLogo}" Width="28" Height="28" Margin="0,0,10,0" />
-        <TextBlock Text="WorkTrace" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+      <StackPanel DockPanel.Dock="Top" Margin="8,0,0,20">
+        <StackPanel Orientation="Horizontal">
+          <Image Source="{StaticResource WorkTraceLogo}" Width="28" Height="28" Margin="0,0,10,0" />
+          <TextBlock Text="WorkTrace" Style="{StaticResource BrandText}" VerticalAlignment="Center" />
+        </StackPanel>
+        <Border Style="{StaticResource PreviewBadge}" Margin="0,8,0,0" HorizontalAlignment="Left"
+                Visibility="{Binding PreviewBadge, Converter={StaticResource NullToCollapsed}}">
+          <TextBlock Text="{Binding PreviewBadge}" Style="{StaticResource PreviewBadgeText}" />
+        </Border>
       </StackPanel>
 
       <TextBlock DockPanel.Dock="Bottom" Margin="12,2,0,0" Style="{StaticResource CaptionText}" FontSize="11"
@@ -87,10 +103,12 @@
         </ListBox.ItemTemplate>
       </ListBox>
     </DockPanel>
+    </Border>
 
     <!-- Page -->
-    <Border Grid.Column="1" Background="{DynamicResource LayerFillColorDefaultBrush}"
-            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1,1,0,0" CornerRadius="8,0,0,0">
+    <Border Grid.Column="1" Background="{DynamicResource LayerFillColorDefaultBrush}" Margin="{DynamicResource PageSurfaceMargin}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="{DynamicResource PageSurfaceBorderThickness}"
+            CornerRadius="{DynamicResource PageSurfaceCornerRadius}">
       <ContentControl Content="{Binding SelectedSection.Page}" Margin="28,22,28,20" Focusable="False" />
     </Border>
 

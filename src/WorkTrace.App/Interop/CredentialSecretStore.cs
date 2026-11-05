@@ -15,7 +15,7 @@ internal sealed partial class CredentialSecretStore : ISecretStore
 
     public string? Read(string name)
     {
-        if (!CredReadW(name, CredTypeGeneric, 0, out var pointer))
+        if (!CredReadW(Shell.PreviewIdentity.SecretPrefix + name, CredTypeGeneric, 0, out var pointer))
         {
             return null;
         }
@@ -37,13 +37,13 @@ internal sealed partial class CredentialSecretStore : ISecretStore
     {
         if (string.IsNullOrEmpty(value))
         {
-            _ = CredDeleteW(name, CredTypeGeneric, 0);
+            _ = CredDeleteW(Shell.PreviewIdentity.SecretPrefix + name, CredTypeGeneric, 0);
             return;
         }
 
         var bytes = Encoding.Unicode.GetBytes(value);
         var blob = Marshal.AllocHGlobal(bytes.Length);
-        var target = Marshal.StringToHGlobalUni(name);
+        var target = Marshal.StringToHGlobalUni(Shell.PreviewIdentity.SecretPrefix + name);
         var user = Marshal.StringToHGlobalUni(Environment.UserName);
         try
         {

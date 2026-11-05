@@ -46,6 +46,12 @@ public sealed partial class MainViewModel : ObservableObject
 
     public string VersionText { get; } = $"WorkTrace {AppVersion.Text}";
 
+    /// <summary>"WorkTrace", or the preview's own name (e.g. "WT - Modern Fluent").</summary>
+    public string WindowTitle { get; } = Shell.PreviewIdentity.DisplayName;
+
+    /// <summary>"VISUAL PREVIEW · Modern Fluent" in preview builds; null (hidden) in WorkTrace.</summary>
+    public string? PreviewBadge { get; } = Shell.PreviewIdentity.IsPreview ? Shell.PreviewIdentity.PreviewBadge : null;
+
     [ObservableProperty]
     public partial NavigationItem? SelectedSection { get; set; }
 

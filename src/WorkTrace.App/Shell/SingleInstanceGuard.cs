@@ -9,11 +9,12 @@ namespace WorkTrace.App.Shell;
 internal sealed class SingleInstanceGuard : IDisposable
 {
     // "Local\" scopes the objects to the current logon session.
-    private const string MutexName = @"Local\WorkTrace.SingleInstance.6E1B9F4A";
-    private const string ActivateEventName = @"Local\WorkTrace.Activate.6E1B9F4A";
+    // Production names never change (the installer uses them); a visual preview appends its variant.
+    private static readonly string MutexName = @"Local\WorkTrace.SingleInstance.6E1B9F4A" + PreviewIdentity.InstanceSuffix;
+    private static readonly string ActivateEventName = @"Local\WorkTrace.Activate.6E1B9F4A" + PreviewIdentity.InstanceSuffix;
 
     // Set by the installer (installer/WorkTrace.iss) to close the running instance before replacing files.
-    private const string ExitEventName = @"Local\WorkTrace.Exit.6E1B9F4A";
+    private static readonly string ExitEventName = @"Local\WorkTrace.Exit.6E1B9F4A" + PreviewIdentity.InstanceSuffix;
 
     private readonly Mutex _mutex;
     private readonly EventWaitHandle _activateEvent;

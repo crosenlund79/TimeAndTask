@@ -1,0 +1,192 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="Palette.xaml" />
+  </ResourceDictionary.MergedDictionaries>
+
+  <!--
+    WT - Glass & Depth: a premium translucent desktop. A soft aurora backdrop (violet, sky, rose) shows through layered
+    frosted panels: a floating glass rail and page, milky cards with luminous top-lit edges and deep, diffuse shadows.
+    Light display titles, violet accents. Blur is suggested by the soft backdrop instead of live blur effects.
+  -->
+
+  <!-- Typography -->
+  <FontFamily x:Key="AppFontFamily">Segoe UI Variable Text, Segoe UI</FontFamily>
+  <FontFamily x:Key="TitleFontFamily">Segoe UI Variable Display, Segoe UI</FontFamily>
+  <sys:Double x:Key="TitleFontSize">32</sys:Double>
+  <FontWeight x:Key="TitleFontWeight">Light</FontWeight>
+  <SolidColorBrush x:Key="TitleForeground" Color="#1F1640" />
+  <FontFamily x:Key="SectionFontFamily">Segoe UI Variable Display, Segoe UI</FontFamily>
+  <sys:Double x:Key="SectionFontSize">17</sys:Double>
+  <FontWeight x:Key="SectionFontWeight">SemiBold</FontWeight>
+  <FontFamily x:Key="BrandFontFamily">Segoe UI Variable Display, Segoe UI</FontFamily>
+  <FontWeight x:Key="BrandFontWeight">Light</FontWeight>
+  <SolidColorBrush x:Key="BrandForeground" Color="#2A1D5C" />
+
+  <!-- Shape -->
+  <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
+  <CornerRadius x:Key="OverlayCornerRadius">12</CornerRadius>
+  <CornerRadius x:Key="PopupCornerRadius">12</CornerRadius>
+
+  <!-- Shell: aurora backdrop -->
+  <DrawingBrush x:Key="ShellBackground" Stretch="Fill">
+    <DrawingBrush.Drawing>
+      <DrawingGroup>
+        <GeometryDrawing Brush="#E3DDF4">
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="0,0,100,100" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing>
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="0,0,100,100" />
+          </GeometryDrawing.Geometry>
+          <GeometryDrawing.Brush>
+            <RadialGradientBrush Center="0.1,0.12" GradientOrigin="0.1,0.12" RadiusX="0.55" RadiusY="0.7">
+              <GradientStop Color="#CCA98BF5" Offset="0" />
+              <GradientStop Color="#59A98BF5" Offset="0.45" />
+              <GradientStop Color="#00A98BF5" Offset="1" />
+            </RadialGradientBrush>
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing>
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="0,0,100,100" />
+          </GeometryDrawing.Geometry>
+          <GeometryDrawing.Brush>
+            <RadialGradientBrush Center="0.95,0.35" GradientOrigin="0.95,0.35" RadiusX="0.5" RadiusY="0.75">
+              <GradientStop Color="#CC8FC0F5" Offset="0" />
+              <GradientStop Color="#598FC0F5" Offset="0.45" />
+              <GradientStop Color="#008FC0F5" Offset="1" />
+            </RadialGradientBrush>
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing>
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="0,0,100,100" />
+          </GeometryDrawing.Geometry>
+          <GeometryDrawing.Brush>
+            <RadialGradientBrush Center="0.3,1.0" GradientOrigin="0.3,1.0" RadiusX="0.55" RadiusY="0.6">
+              <GradientStop Color="#CCF2A9D3" Offset="0" />
+              <GradientStop Color="#59F2A9D3" Offset="0.45" />
+              <GradientStop Color="#00F2A9D3" Offset="1" />
+            </RadialGradientBrush>
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing>
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="0,0,100,100" />
+          </GeometryDrawing.Geometry>
+          <GeometryDrawing.Brush>
+            <RadialGradientBrush Center="0.65,0.0" GradientOrigin="0.65,0.0" RadiusX="0.35" RadiusY="0.4">
+              <GradientStop Color="#CCFFFFFF" Offset="0" />
+              <GradientStop Color="#59FFFFFF" Offset="0.45" />
+              <GradientStop Color="#00FFFFFF" Offset="1" />
+            </RadialGradientBrush>
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+      </DrawingGroup>
+    </DrawingBrush.Drawing>
+  </DrawingBrush>
+
+  <!-- Glass rail and page -->
+  <SolidColorBrush x:Key="NavRailBackground" Color="#4DFFFFFF" />
+  <LinearGradientBrush x:Key="NavRailBorderBrush" StartPoint="0,0" EndPoint="0.4,1">
+    <GradientStop Color="#F2FFFFFF" Offset="0" />
+    <GradientStop Color="#80FFFFFF" Offset="0.4" />
+    <GradientStop Color="#40FFFFFF" Offset="1" />
+  </LinearGradientBrush>
+  <Thickness x:Key="NavRailBorderThickness">1</Thickness>
+  <CornerRadius x:Key="NavRailCornerRadius">18</CornerRadius>
+  <Thickness x:Key="NavRailMargin">10,10,0,10</Thickness>
+  <SolidColorBrush x:Key="NavRailShadowBrush" Color="#4DFFFFFF" />
+  <DropShadowEffect x:Key="NavRailEffect" x:Shared="False" BlurRadius="30" ShadowDepth="6" Direction="270" Opacity="0.4" Color="#3B2A7A" />
+  <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="#38FFFFFF" />
+  <LinearGradientBrush x:Key="CardStrokeColorDefaultBrush" StartPoint="0,0" EndPoint="0.4,1">
+    <GradientStop Color="#F2FFFFFF" Offset="0" />
+    <GradientStop Color="#80FFFFFF" Offset="0.4" />
+    <GradientStop Color="#40FFFFFF" Offset="1" />
+  </LinearGradientBrush>
+  <CornerRadius x:Key="PageSurfaceCornerRadius">18</CornerRadius>
+  <Thickness x:Key="PageSurfaceBorderThickness">1</Thickness>
+  <Thickness x:Key="PageSurfaceMargin">10</Thickness>
+  <SolidColorBrush x:Key="PageShadowBrush" Color="#38FFFFFF" />
+  <DropShadowEffect x:Key="PageSurfaceEffect" x:Shared="False" BlurRadius="34" ShadowDepth="8" Direction="270" Opacity="0.45" Color="#3B2A7A" />
+
+  <!-- Frosted cards with luminous edges -->
+  <SolidColorBrush x:Key="CardSurfaceBrush" Color="#9EFFFFFF" />
+  <LinearGradientBrush x:Key="CardSurfaceBorderBrush" StartPoint="0,0" EndPoint="0.4,1">
+    <GradientStop Color="#F2FFFFFF" Offset="0" />
+    <GradientStop Color="#80FFFFFF" Offset="0.4" />
+    <GradientStop Color="#40FFFFFF" Offset="1" />
+  </LinearGradientBrush>
+  <Thickness x:Key="CardBorderThickness">1</Thickness>
+  <CornerRadius x:Key="CardCornerRadius">14</CornerRadius>
+  <Thickness x:Key="CardPadding">18</Thickness>
+  <CornerRadius x:Key="BoardCardCornerRadius">11</CornerRadius>
+  <CornerRadius x:Key="BoardCardAccentRadius">11,0,0,11</CornerRadius>
+  <DropShadowEffect x:Key="BoardCardEffect" x:Shared="False" BlurRadius="14" ShadowDepth="3" Direction="270" Opacity="0.09" Color="#3B2A7A" />
+
+  <!-- Pills and badge -->
+  <SolidColorBrush x:Key="PillBackground" Color="#73FFFFFF" />
+  <SolidColorBrush x:Key="PillBorderBrush" Color="#B3FFFFFF" />
+  <CornerRadius x:Key="PillCornerRadius">11</CornerRadius>
+  <SolidColorBrush x:Key="BadgeBackground" Color="#8CFFFFFF" />
+  <SolidColorBrush x:Key="BadgeBorderBrush" Color="#B39B7BF7" />
+  <SolidColorBrush x:Key="BadgeForeground" Color="#5B21B6" />
+
+  <!-- Lists -->
+  <CornerRadius x:Key="RowCornerRadius">10</CornerRadius>
+  <SolidColorBrush x:Key="RowHoverBackground" Color="#59FFFFFF" />
+  <SolidColorBrush x:Key="RowSelectedBackground" Color="#A6FFFFFF" />
+  <SolidColorBrush x:Key="RowSelectedBorderBrush" Color="#E6FFFFFF" />
+  <SolidColorBrush x:Key="RowIndicatorBrush" Color="#7C3AED" />
+
+  <!-- Navigation: milky pill with a luminous violet marker -->
+  <SolidColorBrush x:Key="NavItemForeground" Color="#352A5C" />
+  <CornerRadius x:Key="NavItemCornerRadius">11</CornerRadius>
+  <sys:Double x:Key="NavIndicatorWidth">3</sys:Double>
+  <SolidColorBrush x:Key="NavIndicatorBrush" Color="#8B5CF6" />
+  <DropShadowEffect x:Key="NavIndicatorEffect" x:Shared="False" BlurRadius="12" ShadowDepth="0" Opacity="0.9" Color="#A78BFA" />
+  <SolidColorBrush x:Key="NavItemHoverBackground" Color="#4DFFFFFF" />
+  <SolidColorBrush x:Key="NavItemSelectedBackground" Color="#B3FFFFFF" />
+  <SolidColorBrush x:Key="NavItemSelectedBorderBrush" Color="#F2FFFFFF" />
+  <SolidColorBrush x:Key="NavItemSelectedForeground" Color="#4C1D95" />
+  <DropShadowEffect x:Key="NavItemSelectedEffect" x:Shared="False" BlurRadius="16" ShadowDepth="3" Direction="270" Opacity="0.12" Color="#3B2A7A" />
+
+  <DrawingImage x:Key="WorkTraceLogo">
+    <DrawingImage.Drawing>
+      <DrawingGroup>
+        <GeometryDrawing Brush="#7C3AED">
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="8,8,240,240" RadiusX="56" RadiusY="56" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing>
+          <GeometryDrawing.Pen>
+            <Pen Brush="White" Thickness="22" />
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry Center="128,136" RadiusX="78" RadiusY="78" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M 94,138 L 120,164 L 166,108">
+          <GeometryDrawing.Pen>
+            <Pen Brush="White" Thickness="24" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+          </GeometryDrawing.Pen>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#7C3AED">
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry Center="128,50" RadiusX="24" RadiusY="24" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#F0ABFC">
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry Center="128,50" RadiusX="17" RadiusY="17" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+      </DrawingGroup>
+    </DrawingImage.Drawing>
+  </DrawingImage>
+</ResourceDictionary>

@@ -21,9 +21,43 @@
     <Using Remove="System.Drawing" />
   </ItemGroup>
 
+  <!--
+    Visual previews: dotnet build -p:WorkTraceVariant=ModernFluent (DarkProfessional, RefinedNeutral, ModernGradient,
+    GlassDepth). Only the chosen skin is compiled in; without a variant this is the normal WorkTrace build.
+  -->
   <ItemGroup>
+    <Page Remove="Themes\Variants\**\*.xaml" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(WorkTraceVariant)' != ''">
+    <Page Include="Themes\Variants\PreviewStyles.xaml" />
+    <Page Include="Themes\Variants\$(WorkTraceVariant)\*.xaml" />
+    <AssemblyMetadata Include="WorkTraceVariant" Value="$(WorkTraceVariant)" />
+  </ItemGroup>
+  <Choose>
+    <When Condition="'$(WorkTraceVariant)' == 'ModernFluent'"><PropertyGroup><WorkTraceVariantName>Modern Fluent</WorkTraceVariantName></PropertyGroup></When>
+    <When Condition="'$(WorkTraceVariant)' == 'DarkProfessional'"><PropertyGroup><WorkTraceVariantName>Dark Professional</WorkTraceVariantName></PropertyGroup></When>
+    <When Condition="'$(WorkTraceVariant)' == 'RefinedNeutral'"><PropertyGroup><WorkTraceVariantName>Refined Neutral</WorkTraceVariantName></PropertyGroup></When>
+    <When Condition="'$(WorkTraceVariant)' == 'ModernGradient'"><PropertyGroup><WorkTraceVariantName>Modern Gradient</WorkTraceVariantName></PropertyGroup></When>
+    <When Condition="'$(WorkTraceVariant)' == 'GlassDepth'"><PropertyGroup><WorkTraceVariantName>Glass &amp; Depth</WorkTraceVariantName></PropertyGroup></When>
+  </Choose>
+  <PropertyGroup Condition="'$(WorkTraceVariant)' != ''">
+    <Product>WT - $(WorkTraceVariantName)</Product>
+    <AssemblyTitle>WT - $(WorkTraceVariantName) (WorkTrace visual preview)</AssemblyTitle>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(WorkTraceVariant)' == ''">
     <Resource Include="..\..\assets\icons\worktrace.ico" Link="Assets\worktrace.ico" />
     <Resource Include="..\..\assets\icons\tray-active.ico" Link="Assets\tray-active.ico" />
+  </ItemGroup>
+  <!-- A preview carries the WorkTrace mark in its own colours (window, taskbar, tray, installer). -->
+  <PropertyGroup Condition="'$(WorkTraceVariant)' != ''">
+    <ApplicationIcon>..\..\assets\icons\preview\$(WorkTraceVariant).ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(WorkTraceVariant)' != ''">
+    <Resource Include="..\..\assets\icons\preview\$(WorkTraceVariant).ico" Link="Assets\worktrace.ico" />
+    <Resource Include="..\..\assets\icons\preview\$(WorkTraceVariant).ico" Link="Assets\tray-active.ico" />
+  </ItemGroup>
+  <ItemGroup>
     <Resource Include="..\..\assets\icons\tray-paused.ico" Link="Assets\tray-paused.ico" />
   </ItemGroup>
 

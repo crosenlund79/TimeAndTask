@@ -62,7 +62,20 @@
     </DrawingImage.Drawing>
   </DrawingImage>
 
+  <!--
+    Shell tokens. These are the production values; visual-preview builds (Themes/Variants) override them, together
+    with the keyed styles below, so the same views take on a different skin.
+  -->
+  <CornerRadius x:Key="PageSurfaceCornerRadius">8,0,0,0</CornerRadius>
+  <Thickness x:Key="PageSurfaceBorderThickness">1,1,0,0</Thickness>
+  <Thickness x:Key="PageSurfaceMargin">0</Thickness>
+
   <!-- Typography -->
+  <Style x:Key="BrandText" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="18" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
   <Style x:Key="PageTitleText" TargetType="TextBlock">
     <Setter Property="FontSize" Value="26" />
     <Setter Property="FontWeight" Value="SemiBold" />
@@ -384,6 +397,21 @@
         </ControlTemplate>
       </Setter.Value>
     </Setter>
+  </Style>
+
+  <!-- "VISUAL PREVIEW · theme" tag in the navigation rail (preview builds only). -->
+  <Style x:Key="PreviewBadge" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Padding" Value="6,1" />
+  </Style>
+
+  <Style x:Key="PreviewBadgeText" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="9.5" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
   </Style>
 
   <Style x:Key="SettingsDivider" TargetType="Border">

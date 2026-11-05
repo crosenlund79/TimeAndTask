@@ -40,10 +40,11 @@ public partial class App : Application, IAppLifetime
 
         RegisterGlobalExceptionHandlers();
         LookupBehavior.Register();
+        PreviewTheme.Apply(this);
 
         try
         {
-            var paths = AppPaths.Resolve();
+            var paths = AppPaths.Resolve(PreviewIdentity.DataDirectory);
             paths.EnsureDirectories();
 
             _host = BuildHost(paths, e.Args);
@@ -54,6 +55,10 @@ public partial class App : Application, IAppLifetime
 
             var firstRun = await _host.Services.GetRequiredService<DatabaseInitializer>().InitializeAsync();
             var settings = await _host.Services.GetRequiredService<ISettingsStore>().LoadAsync();
+            if (PreviewIdentity.IsPreview && firstRun)
+            {
+                settings = await PrepareVisualPreviewAsync(_host.Services);
+            }
             await RetireInboxAsync(_host.Services);
             ApplyTheme(settings.General.Theme);
 
@@ -77,7 +82,7 @@ public partial class App : Application, IAppLifetime
                 windows.ShowMainWindow();
             }
 
-            if (firstRun)
+            if (firstRun && !PreviewIdentity.IsPreview)
             {
                 tray.ShowNotification("WorkTrace is running", "WorkTrace lives in the notification area. Double-click the icon to open it.");
             }
@@ -95,6 +100,33 @@ public partial class App : Application, IAppLifetime
     }
 
     public void RequestExit() => _ = ExitAsync();
+
+    /// <summary>
+    /// First start of a visual preview (its own, new data folder): everything that runs in the background is off
+    /// (tracking, check-ins, screenshots, reminders, backups) and sample data fills the pages.
+    /// </summary>
+    private static async Task<WorkTraceSettings> PrepareVisualPreviewAsync(IServiceProvider services)
+    {
+        var store = services.GetRequiredService<ISettingsStore>();
+        await store.UpdateAsync(s =>
+        {
+            s.Tracking.Enabled = false;
+            s.Tracking.PeriodicPromptsEnabled = false;
+            s.Tracking.PromptOnStart = false;
+            s.Screenshots.Enabled = false;
+            s.Screenshots.Mode = ScreenshotMode.Off;
+            s.Reminders.Enabled = false;
+            s.Reminders.OnShutdown = false;
+            s.Backup.FolderEnabled = false;
+            s.Backup.EmailEnabled = false;
+            s.Tasks.MaintenanceReminderEnabled = false;
+            s.Tasks.PlanningReminderEnabled = false;
+            s.General.StartWithWindows = false;
+            s.General.StartMinimized = false;
+        });
+        await services.GetRequiredService<WorkTrace.Infrastructure.Preview.PreviewSampleData>().SeedAsync();
+        return store.Current;
+    }
 
     /// <summary>The Inbox was removed: archive what is left in it (once; the Board and tasks are untouched).</summary>
     private async Task RetireInboxAsync(IServiceProvider services)
@@ -132,7 +164,9 @@ public partial class App : Application, IAppLifetime
         var presenter = services.GetRequiredService<CheckInPresenter>();
         var hotkey = services.GetRequiredService<GlobalHotkey>();
         hotkey.Pressed += (_, _) => presenter.ShowManual();
-        if (!hotkey.Register(settings.General.GlobalShortcut))
+
+        // A visual preview never claims WorkTrace's global shortcut (manual check-ins still work from the window/tray).
+        if (!PreviewIdentity.IsPreview && !hotkey.Register(settings.General.GlobalShortcut))
         {
             tray.ShowNotification("Shortcut not available", $"{settings.General.GlobalShortcut} is used by another application. Choose another one in Settings.");
         }
@@ -169,7 +203,7 @@ public partial class App : Application, IAppLifetime
     private static void OnSettingsChanged(WorkTraceSettings settings, GlobalHotkey hotkey, TrayIconService tray)
     {
         ApplyTheme(settings.General.Theme);
-        if (!string.Equals(hotkey.Current, settings.General.GlobalShortcut, StringComparison.OrdinalIgnoreCase)
+        if (!PreviewIdentity.IsPreview && !string.Equals(hotkey.Current, settings.General.GlobalShortcut, StringComparison.OrdinalIgnoreCase)
             && !hotkey.Register(settings.General.GlobalShortcut))
         {
             tray.ShowNotification("Shortcut not available", $"{settings.General.GlobalShortcut} is used by another application or is not valid.");
@@ -212,6 +246,11 @@ public partial class App : Application, IAppLifetime
 
     private static void ApplyTheme(ThemePreference theme)
     {
+        if (PreviewIdentity.IsPreview)
+        {
+            return; // a visual preview always shows its own skin
+        }
+
         Current.ThemeMode = theme switch
         {
             ThemePreference.Light => ThemeMode.Light,

@@ -53,7 +53,7 @@ internal sealed class TrayIconService(
         menu.Items.Add(_pauseItem);
         menu.Items.Add(_resumeItem);
         menu.Items.Add(new Forms.ToolStripSeparator());
-        menu.Items.Add(Item("Open WorkTrace", windows.ShowMainWindow));
+        menu.Items.Add(Item("Open " + PreviewIdentity.DisplayName, windows.ShowMainWindow));
         menu.Items.Add(Item("Board", () => windows.ShowMainWindow(AppSection.Board)));
         menu.Items.Add(Item("Tasks and stakeholders", () => windows.ShowMainWindow(AppSection.Tasks)));
         menu.Items.Add(Item("Settings", () => windows.ShowMainWindow(AppSection.Settings)));
@@ -129,7 +129,7 @@ internal sealed class TrayIconService(
         _notifyIcon.Icon = tracking.IsTracking ? _trackingIcon : _idleIcon;
 
         // NotifyIcon.Text is limited to 127 characters.
-        var tooltip = $"WorkTrace – {tracking.StatusText}{detail}";
+        var tooltip = $"{PreviewIdentity.DisplayName} – {tracking.StatusText}{detail}";
         _notifyIcon.Text = tooltip.Length > 127 ? tooltip[..127] : tooltip;
     }
 

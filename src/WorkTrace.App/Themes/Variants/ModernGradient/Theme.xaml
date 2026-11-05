@@ -1,0 +1,241 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="Palette.xaml" />
+  </ResourceDictionary.MergedDictionaries>
+
+  <!--
+    WT - Modern Gradient: contemporary and expressive. A lavender-to-ice-blue canvas, a floating white page with
+    generous 18-px rounding, elevated cards with violet-tinted shadows, and violet-to-blue gradients on everything
+    interactive (accent buttons, checks, toggles, the active navigation pill). Bold display titles.
+  -->
+
+  <!-- Typography -->
+  <FontFamily x:Key="AppFontFamily">Segoe UI Variable Text, Segoe UI</FontFamily>
+  <FontFamily x:Key="TitleFontFamily">Segoe UI Variable Display, Segoe UI</FontFamily>
+  <sys:Double x:Key="TitleFontSize">30</sys:Double>
+  <FontWeight x:Key="TitleFontWeight">Bold</FontWeight>
+  <LinearGradientBrush x:Key="TitleForeground" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Color="#2A1F66" Offset="0" />
+    <GradientStop Color="#5733D6" Offset="1" />
+  </LinearGradientBrush>
+  <FontFamily x:Key="SectionFontFamily">Segoe UI Variable Display, Segoe UI</FontFamily>
+  <sys:Double x:Key="SectionFontSize">16.5</sys:Double>
+  <FontWeight x:Key="SectionFontWeight">Bold</FontWeight>
+  <FontFamily x:Key="BrandFontFamily">Segoe UI Variable Display, Segoe UI</FontFamily>
+  <FontWeight x:Key="BrandFontWeight">Bold</FontWeight>
+  <LinearGradientBrush x:Key="BrandForeground" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Color="#6A45F5" Offset="0" />
+    <GradientStop Color="#3E6BF0" Offset="1" />
+  </LinearGradientBrush>
+
+  <!-- Shape -->
+  <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
+  <CornerRadius x:Key="OverlayCornerRadius">12</CornerRadius>
+  <CornerRadius x:Key="PopupCornerRadius">12</CornerRadius>
+
+  <!-- Shell: gradient canvas with a soft violet glow, floating page -->
+  <DrawingBrush x:Key="ShellBackground" Stretch="Fill">
+    <DrawingBrush.Drawing>
+      <DrawingGroup>
+        <GeometryDrawing>
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="0,0,100,100" />
+          </GeometryDrawing.Geometry>
+          <GeometryDrawing.Brush>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+              <GradientStop Color="#EAE3FF" Offset="0" />
+              <GradientStop Color="#E4E6FF" Offset="0.5" />
+              <GradientStop Color="#DDEBFF" Offset="1" />
+            </LinearGradientBrush>
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing>
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="0,0,100,100" />
+          </GeometryDrawing.Geometry>
+          <GeometryDrawing.Brush>
+            <RadialGradientBrush Center="0.08,0.05" GradientOrigin="0.08,0.05" RadiusX="0.45" RadiusY="0.6">
+              <GradientStop Color="#4D9B7BFF" Offset="0" />
+              <GradientStop Color="#009B7BFF" Offset="1" />
+            </RadialGradientBrush>
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing>
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="0,0,100,100" />
+          </GeometryDrawing.Geometry>
+          <GeometryDrawing.Brush>
+            <RadialGradientBrush Center="0.95,0.95" GradientOrigin="0.95,0.95" RadiusX="0.5" RadiusY="0.6">
+              <GradientStop Color="#405FA8FF" Offset="0" />
+              <GradientStop Color="#005FA8FF" Offset="1" />
+            </RadialGradientBrush>
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+      </DrawingGroup>
+    </DrawingBrush.Drawing>
+  </DrawingBrush>
+  <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="#F2FFFFFF" />
+  <CornerRadius x:Key="PageSurfaceCornerRadius">18</CornerRadius>
+  <Thickness x:Key="PageSurfaceBorderThickness">1</Thickness>
+  <Thickness x:Key="PageSurfaceMargin">0,10,10,10</Thickness>
+  <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#E8E2FF" />
+  <SolidColorBrush x:Key="PageShadowBrush" Color="#F2FFFFFF" />
+  <DropShadowEffect x:Key="PageSurfaceEffect" x:Shared="False" BlurRadius="30" ShadowDepth="6" Direction="270" Opacity="0.14" Color="#4B2FC2" />
+
+  <!-- Cards: crisp white, elevated with violet-tinted shadows -->
+  <SolidColorBrush x:Key="CardSurfaceBrush" Color="#FFFFFF" />
+  <LinearGradientBrush x:Key="CardSurfaceBorderBrush" StartPoint="0,0" EndPoint="0,1">
+    <GradientStop Color="#ECE7FF" Offset="0" />
+    <GradientStop Color="#ECE7FF" Offset="0.85" />
+    <GradientStop Color="#D4C8FF" Offset="1" />
+  </LinearGradientBrush>
+  <Thickness x:Key="CardBorderThickness">1,1,1,2</Thickness>
+  <CornerRadius x:Key="CardCornerRadius">14</CornerRadius>
+  <Thickness x:Key="CardPadding">18</Thickness>
+  <CornerRadius x:Key="BoardCardCornerRadius">11</CornerRadius>
+  <CornerRadius x:Key="BoardCardAccentRadius">11,0,0,11</CornerRadius>
+  <DropShadowEffect x:Key="BoardCardEffect" x:Shared="False" BlurRadius="12" ShadowDepth="2" Direction="270" Opacity="0.1" Color="#5B3FD6" />
+
+  <!-- Gradient accents on interactive controls -->
+  <LinearGradientBrush x:Key="AccentFillColorDefaultBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#7B5CFF" Offset="0" />
+    <GradientStop Color="#4F7CFF" Offset="1" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="AccentFillColorSecondaryBrush" StartPoint="0,0" EndPoint="1,1" Opacity="0.9">
+    <GradientStop Color="#7B5CFF" Offset="0" />
+    <GradientStop Color="#4F7CFF" Offset="1" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="AccentFillColorTertiaryBrush" StartPoint="0,0" EndPoint="1,1" Opacity="0.8">
+    <GradientStop Color="#7B5CFF" Offset="0" />
+    <GradientStop Color="#4F7CFF" Offset="1" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="AccentButtonBackground" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#7B5CFF" Offset="0" />
+    <GradientStop Color="#4F7CFF" Offset="1" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="AccentButtonBackgroundPointerOver" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#8A6EFF" Offset="0" />
+    <GradientStop Color="#5E89FF" Offset="1" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="AccentButtonBackgroundPressed" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#6A45F5" Offset="0" />
+    <GradientStop Color="#4169E8" Offset="1" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="CheckBoxCheckBackgroundFillChecked" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#7B5CFF" Offset="0" />
+    <GradientStop Color="#4F7CFF" Offset="1" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#8A6EFF" Offset="0" />
+    <GradientStop Color="#5E89FF" Offset="1" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#6A45F5" Offset="0" />
+    <GradientStop Color="#4169E8" Offset="1" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="CheckBoxCheckBackgroundStrokeChecked" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#7B5CFF" Offset="0" />
+    <GradientStop Color="#4F7CFF" Offset="1" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="ToggleButtonBackgroundChecked" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#7B5CFF" Offset="0" />
+    <GradientStop Color="#4F7CFF" Offset="1" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#8A6EFF" Offset="0" />
+    <GradientStop Color="#5E89FF" Offset="1" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="ToggleButtonBackgroundCheckedPressed" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#6A45F5" Offset="0" />
+    <GradientStop Color="#4169E8" Offset="1" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="RadioButtonOuterEllipseCheckedFill" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#7B5CFF" Offset="0" />
+    <GradientStop Color="#4F7CFF" Offset="1" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="RadioButtonOuterEllipseCheckedStroke" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#7B5CFF" Offset="0" />
+    <GradientStop Color="#4F7CFF" Offset="1" />
+  </LinearGradientBrush>
+
+  <!-- Pills and badge -->
+  <SolidColorBrush x:Key="PillBackground" Color="#F2EEFF" />
+  <SolidColorBrush x:Key="PillBorderBrush" Color="#E2DAFF" />
+  <CornerRadius x:Key="PillCornerRadius">11</CornerRadius>
+  <LinearGradientBrush x:Key="BadgeBackground" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Color="#7B5CFF" Offset="0" />
+    <GradientStop Color="#4F7CFF" Offset="1" />
+  </LinearGradientBrush>
+  <SolidColorBrush x:Key="BadgeBorderBrush" Color="Transparent" />
+  <SolidColorBrush x:Key="BadgeForeground" Color="#FFFFFF" />
+
+  <!-- Lists -->
+  <CornerRadius x:Key="RowCornerRadius">10</CornerRadius>
+  <SolidColorBrush x:Key="RowHoverBackground" Color="#F4F1FF" />
+  <LinearGradientBrush x:Key="RowSelectedBackground" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Color="#EDE7FF" Offset="0" />
+    <GradientStop Color="#E6EEFF" Offset="1" />
+  </LinearGradientBrush>
+  <SolidColorBrush x:Key="RowSelectedBorderBrush" Color="#DCD2FF" />
+  <LinearGradientBrush x:Key="RowIndicatorBrush" StartPoint="0,0" EndPoint="0,1">
+    <GradientStop Color="#7B5CFF" Offset="0" />
+    <GradientStop Color="#4F7CFF" Offset="1" />
+  </LinearGradientBrush>
+
+  <!-- Navigation: gradient pill for the active page -->
+  <SolidColorBrush x:Key="NavItemForeground" Color="#3B3566" />
+  <CornerRadius x:Key="NavItemCornerRadius">11</CornerRadius>
+  <sys:Double x:Key="NavIndicatorWidth">0</sys:Double>
+  <SolidColorBrush x:Key="NavIndicatorBrush" Color="Transparent" />
+  <SolidColorBrush x:Key="NavItemHoverBackground" Color="#80FFFFFF" />
+  <LinearGradientBrush x:Key="NavItemSelectedBackground" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#7B5CFF" Offset="0" />
+    <GradientStop Color="#4F7CFF" Offset="1" />
+  </LinearGradientBrush>
+  <SolidColorBrush x:Key="NavItemSelectedBorderBrush" Color="#33FFFFFF" />
+  <SolidColorBrush x:Key="NavItemSelectedForeground" Color="#FFFFFF" />
+  <DropShadowEffect x:Key="NavItemSelectedEffect" x:Shared="False" BlurRadius="14" ShadowDepth="3" Direction="270" Opacity="0.3" Color="#5B3FD6" />
+
+  <DrawingImage x:Key="WorkTraceLogo">
+    <DrawingImage.Drawing>
+      <DrawingGroup>
+        <GeometryDrawing>
+          <GeometryDrawing.Brush>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+              <GradientStop Color="#7B5CFF" Offset="0" />
+              <GradientStop Color="#4F7CFF" Offset="1" />
+            </LinearGradientBrush>
+          </GeometryDrawing.Brush>
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="8,8,240,240" RadiusX="56" RadiusY="56" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing>
+          <GeometryDrawing.Pen>
+            <Pen Brush="White" Thickness="22" />
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry Center="128,136" RadiusX="78" RadiusY="78" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M 94,138 L 120,164 L 166,108">
+          <GeometryDrawing.Pen>
+            <Pen Brush="White" Thickness="24" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+          </GeometryDrawing.Pen>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#6A45F5">
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry Center="128,50" RadiusX="24" RadiusY="24" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#5FD3FF">
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry Center="128,50" RadiusX="17" RadiusY="17" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+      </DrawingGroup>
+    </DrawingImage.Drawing>
+  </DrawingImage>
+</ResourceDictionary>
