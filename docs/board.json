@@ -1565,7 +1565,7 @@
         "Owner checks the collapsed rail (tooltips, remembered), Lists tabs incl. Stakeholders, and System > Screenshots"
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Commit fc44d57; Windows CI run 51 green (incl. WPF smoke: Lists tabs, collapsed rail, every System tab); installer WorkTrace-Setup-0.2.51",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -1579,8 +1579,8 @@
         }
       ],
       "createdAt": "2026-11-05T14:56:04Z",
-      "updatedAt": "2026-11-05T14:56:04Z",
-      "rev": 1
+      "updatedAt": "2026-11-05T14:56:11Z",
+      "rev": 2
     }
   ]
 }

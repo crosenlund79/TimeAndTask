@@ -455,6 +455,10 @@ Commit e901e4f; Windows CI run 50 green (incl. WPF smoke with Minor Tasks); inst
 
 - Owner checks the collapsed rail (tooltips, remembered), Lists tabs incl. Stakeholders, and System > Screenshots
 
+**Evidence**
+
+Commit fc44d57; Windows CI run 51 green (incl. WPF smoke: Lists tabs, collapsed rail, every System tab); installer WorkTrace-Setup-0.2.51
+
 ## To do
 
 ### WT-030 · Estimation engine
