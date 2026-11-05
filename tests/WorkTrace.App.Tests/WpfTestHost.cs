@@ -47,6 +47,7 @@ internal static class WpfTestHost
             {
                 Source = new Uri("pack://application:,,,/WorkTrace;component/Themes/Styles.xaml"),
             });
+            WorkTrace.App.Shell.ThemeResources.Apply(app); // WorkTrace's design over the Fluent theme, as at start-up
             app.DispatcherUnhandledException += (_, e) =>
             {
                 UnhandledExceptions.Add(e.Exception);

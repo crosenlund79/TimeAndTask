@@ -15,8 +15,8 @@ SIZES = [16, 20, 24, 32, 40, 48, 64, 128, 256]
 
 VARIANTS = {
     # name: (tile colour, marker colour)
-    "worktrace": ("#0F766E", "#F59E0B"),
-    "tray-active": ("#0F766E", "#F59E0B"),
+    "worktrace": ("#5F6B45", "#D9B36C"),
+    "tray-active": ("#5F6B45", "#D9B36C"),
     "tray-paused": ("#6B7280", "#D1D5DB"),
 }
 

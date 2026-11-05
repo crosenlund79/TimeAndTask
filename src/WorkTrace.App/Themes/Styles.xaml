@@ -4,8 +4,8 @@
                     xmlns:controls="clr-namespace:WorkTrace.App.Controls">
 
   <!--
-    Shared look for WorkTrace. Theme colours come from the built-in Fluent theme and are always
-    referenced with DynamicResource so light/dark switching works and a missing key can never crash.
+    Shared look for WorkTrace (Refined Neutral design). Colours, radii and typography tokens come from Theme.xaml
+    (applied over the Fluent theme at start-up by ThemeResources) and are referenced with DynamicResource.
   -->
 
   <views:NullToCollapsedConverter x:Key="NullToCollapsed" />
@@ -19,9 +19,9 @@
   <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas</FontFamily>
 
   <!-- Semantic colours for time classifications (used from Phase 4). -->
-  <SolidColorBrush x:Key="ConfirmedBrush" Color="#0F766E" />
-  <SolidColorBrush x:Key="EstimatedBrush" Color="#D97706" />
-  <SolidColorBrush x:Key="UnclassifiedBrush" Color="#9CA3AF" />
+  <SolidColorBrush x:Key="ConfirmedBrush" Color="#4E7A3A" />
+  <SolidColorBrush x:Key="EstimatedBrush" Color="#A0682A" />
+  <SolidColorBrush x:Key="UnclassifiedBrush" Color="#A79F90" />
 
   <!--
     WorkTrace logo as vector artwork (same geometry as assets/icons/worktrace.svg): crisp at any size and DPI,
@@ -30,14 +30,14 @@
   <DrawingImage x:Key="WorkTraceLogo">
     <DrawingImage.Drawing>
       <DrawingGroup>
-        <GeometryDrawing Brush="#0F766E">
+        <GeometryDrawing Brush="#5F6B45">
           <GeometryDrawing.Geometry>
             <RectangleGeometry Rect="8,8,240,240" RadiusX="56" RadiusY="56" />
           </GeometryDrawing.Geometry>
         </GeometryDrawing>
         <GeometryDrawing>
           <GeometryDrawing.Pen>
-            <Pen Brush="White" Thickness="22" />
+            <Pen Brush="#FBF7EE" Thickness="22" />
           </GeometryDrawing.Pen>
           <GeometryDrawing.Geometry>
             <EllipseGeometry Center="128,136" RadiusX="78" RadiusY="78" />
@@ -45,15 +45,15 @@
         </GeometryDrawing>
         <GeometryDrawing Geometry="M 94,138 L 120,164 L 166,108">
           <GeometryDrawing.Pen>
-            <Pen Brush="White" Thickness="24" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+            <Pen Brush="#FBF7EE" Thickness="24" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
           </GeometryDrawing.Pen>
         </GeometryDrawing>
-        <GeometryDrawing Brush="#0F766E">
+        <GeometryDrawing Brush="#5F6B45">
           <GeometryDrawing.Geometry>
             <EllipseGeometry Center="128,50" RadiusX="24" RadiusY="24" />
           </GeometryDrawing.Geometry>
         </GeometryDrawing>
-        <GeometryDrawing Brush="#F59E0B">
+        <GeometryDrawing Brush="#D9B36C">
           <GeometryDrawing.Geometry>
             <EllipseGeometry Center="128,50" RadiusX="17" RadiusY="17" />
           </GeometryDrawing.Geometry>
@@ -63,9 +63,18 @@
   </DrawingImage>
 
   <!-- Typography -->
+  <Style x:Key="BrandText" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{DynamicResource BrandFontFamily}" />
+    <Setter Property="FontSize" Value="19" />
+    <Setter Property="FontWeight" Value="{DynamicResource BrandFontWeight}" />
+    <Setter Property="Foreground" Value="{DynamicResource BrandForeground}" />
+  </Style>
+
   <Style x:Key="PageTitleText" TargetType="TextBlock">
-    <Setter Property="FontSize" Value="26" />
-    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontFamily" Value="{DynamicResource TitleFontFamily}" />
+    <Setter Property="FontSize" Value="{DynamicResource TitleFontSize}" />
+    <Setter Property="FontWeight" Value="{DynamicResource TitleFontWeight}" />
+    <Setter Property="Foreground" Value="{DynamicResource TitleForeground}" />
   </Style>
 
   <Style x:Key="PageSubtitleText" TargetType="TextBlock">
@@ -75,8 +84,9 @@
   </Style>
 
   <Style x:Key="SectionTitleText" TargetType="TextBlock">
-    <Setter Property="FontSize" Value="16" />
-    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontFamily" Value="{DynamicResource SectionFontFamily}" />
+    <Setter Property="FontSize" Value="{DynamicResource SectionFontSize}" />
+    <Setter Property="FontWeight" Value="{DynamicResource SectionFontWeight}" />
     <Setter Property="TextTrimming" Value="CharacterEllipsis" />
   </Style>
 
@@ -108,19 +118,19 @@
 
   <!-- Surfaces -->
   <Style x:Key="Card" TargetType="Border">
-    <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
-    <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="CornerRadius" Value="8" />
-    <Setter Property="Padding" Value="16" />
+    <Setter Property="Background" Value="{DynamicResource CardSurfaceBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CardSurfaceBorderBrush}" />
+    <Setter Property="BorderThickness" Value="{DynamicResource CardBorderThickness}" />
+    <Setter Property="CornerRadius" Value="{DynamicResource CardCornerRadius}" />
+    <Setter Property="Padding" Value="{DynamicResource CardPadding}" />
   </Style>
 
   <!-- Small rounded label, e.g. external task IDs and status tags. -->
   <Style x:Key="Pill" TargetType="Border">
-    <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+    <Setter Property="Background" Value="{DynamicResource PillBackground}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource PillBorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="CornerRadius" Value="{DynamicResource PillCornerRadius}" />
     <Setter Property="Padding" Value="7,1" />
     <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
@@ -142,7 +152,7 @@
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderBrush" Value="Transparent" />
     <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
-    <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
+    <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
     <Setter Property="FontSize" Value="13" />
     <Setter Property="Width" Value="32" />
     <Setter Property="Height" Value="32" />
@@ -153,17 +163,17 @@
       <Setter.Value>
         <ControlTemplate TargetType="Button">
           <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
-                  BorderThickness="1" CornerRadius="4">
+                  BorderThickness="1" CornerRadius="{DynamicResource ControlCornerRadius}">
             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowHoverBackground}" />
               <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
-              <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+              <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
-              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowSelectedBackground}" />
             </Trigger>
             <Trigger Property="IsKeyboardFocused" Value="True">
               <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
@@ -188,21 +198,21 @@
     <Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
     <Setter Property="ToolTipService.InitialShowDelay" Value="300" />
     <Setter Property="FontSize" Value="12" />
-    <Setter Property="Padding" Value="8,0" />
+    <Setter Property="Padding" Value="9,0" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
           <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                  BorderThickness="1" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                  BorderThickness="1" CornerRadius="{DynamicResource ControlCornerRadius}" Padding="{TemplateBinding Padding}">
             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowHoverBackground}" />
               <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
-              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowSelectedBackground}" />
             </Trigger>
             <Trigger Property="IsKeyboardFocused" Value="True">
               <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
@@ -247,23 +257,24 @@
       <Setter.Value>
         <ControlTemplate TargetType="ListBoxItem">
           <Grid>
-            <Border x:Name="Bd" Background="Transparent" CornerRadius="6" Padding="{TemplateBinding Padding}"
+            <Border x:Name="Bd" Background="Transparent" CornerRadius="{DynamicResource RowCornerRadius}" Padding="{TemplateBinding Padding}"
                     BorderThickness="1" BorderBrush="Transparent">
               <ContentPresenter />
             </Border>
             <Border x:Name="Indicator" Width="3" Height="18" CornerRadius="1.5" HorizontalAlignment="Left"
-                    Background="{DynamicResource AccentFillColorDefaultBrush}" Visibility="Collapsed" Margin="1,0,0,0" />
+                    Background="{DynamicResource RowIndicatorBrush}" Visibility="Collapsed" Margin="1,0,0,0" />
           </Grid>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowHoverBackground}" />
             </Trigger>
             <Trigger Property="IsSelected" Value="True">
-              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowSelectedBackground}" />
+              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource RowSelectedBorderBrush}" />
               <Setter TargetName="Indicator" Property="Visibility" Value="Visible" />
             </Trigger>
             <Trigger Property="IsKeyboardFocused" Value="True">
-              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ControlStrokeColorSecondaryBrush}" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -290,19 +301,19 @@
   <!-- Board cards: a raised tile per item; selection and keyboard focus use the accent outline. -->
   <Style x:Key="BoardCardItem" TargetType="ListBoxItem">
     <Setter Property="Padding" Value="10,8" />
-    <Setter Property="Margin" Value="0,0,0,6" />
+    <Setter Property="Margin" Value="0,0,0,7" />
     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
     <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ListBoxItem">
-          <Border x:Name="Bd" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="6"
-                  BorderThickness="1" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-            <!-- Stakeholder tint (none = neutral card) and a thin accent on the left -->
-            <Border CornerRadius="5" Background="{Binding StakeholderColor, Converter={StaticResource HexBrush}, ConverterParameter=0.10}">
+          <Border x:Name="Bd" Background="{DynamicResource CardSurfaceBrush}" CornerRadius="{DynamicResource BoardCardCornerRadius}"
+                  BorderThickness="1" BorderBrush="{DynamicResource CardSurfaceBorderBrush}">
+            <Border CornerRadius="{DynamicResource BoardCardCornerRadius}"
+                    Background="{Binding StakeholderColor, Converter={StaticResource HexBrush}, ConverterParameter=0.10}">
               <Grid>
-                <Border Width="3" HorizontalAlignment="Left" CornerRadius="5,0,0,5"
+                <Border Width="3" HorizontalAlignment="Left" CornerRadius="{DynamicResource BoardCardAccentRadius}"
                         Background="{Binding StakeholderColor, Converter={StaticResource HexBrush}}" />
                 <ContentPresenter Margin="{TemplateBinding Padding}" />
               </Grid>
@@ -314,7 +325,7 @@
               <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
             </DataTrigger>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ControlStrokeColorSecondaryBrush}" />
             </Trigger>
             <Trigger Property="IsSelected" Value="True">
               <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
@@ -335,26 +346,31 @@
     <Setter Property="Margin" Value="0,2" />
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
     <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Foreground" Value="{DynamicResource NavItemForeground}" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ListBoxItem">
           <Grid>
-            <Border x:Name="Bd" Background="Transparent" CornerRadius="6" Padding="{TemplateBinding Padding}">
+            <Border x:Name="Bd" Background="Transparent" CornerRadius="{DynamicResource NavItemCornerRadius}" Padding="{TemplateBinding Padding}"
+                    BorderThickness="1" BorderBrush="Transparent">
               <ContentPresenter />
             </Border>
-            <Border x:Name="Indicator" Width="3" Height="16" CornerRadius="1.5" HorizontalAlignment="Left"
-                    Background="{DynamicResource AccentFillColorDefaultBrush}" Visibility="Collapsed" />
+            <Border x:Name="Indicator" Width="{DynamicResource NavIndicatorWidth}" Height="16" CornerRadius="1.5" HorizontalAlignment="Left"
+                    Background="{DynamicResource NavIndicatorBrush}" Visibility="Collapsed" />
           </Grid>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource NavItemHoverBackground}" />
             </Trigger>
             <Trigger Property="IsSelected" Value="True">
-              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource NavItemSelectedBackground}" />
+              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource NavItemSelectedBorderBrush}" />
+              <Setter Property="Foreground" Value="{DynamicResource NavItemSelectedForeground}" />
+              <Setter Property="FontWeight" Value="SemiBold" />
               <Setter TargetName="Indicator" Property="Visibility" Value="Visible" />
             </Trigger>
             <Trigger Property="IsKeyboardFocused" Value="True">
-              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -388,7 +404,7 @@
 
   <Style x:Key="SettingsDivider" TargetType="Border">
     <Setter Property="Height" Value="1" />
-    <Setter Property="Margin" Value="0,6" />
+    <Setter Property="Margin" Value="0,8" />
     <Setter Property="Background" Value="{DynamicResource DividerStrokeColorDefaultBrush}" />
   </Style>
 </ResourceDictionary>

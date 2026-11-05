@@ -110,6 +110,7 @@ public sealed class GeneralSettings
 
     public bool CloseToTray { get; set; } = true;
 
+    /// <summary>No longer used: WorkTrace has a single design (kept so existing settings files load unchanged).</summary>
     public ThemePreference Theme { get; set; } = ThemePreference.System;
 
     /// <summary>Global shortcut for opening the check-in popup, e.g. "Ctrl+Alt+Space".</summary>

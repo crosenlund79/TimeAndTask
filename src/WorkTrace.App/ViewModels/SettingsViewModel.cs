@@ -49,11 +49,6 @@ public sealed partial class SettingsViewModel(
         new((int)PopupPosition.BottomRight, "Bottom right"), new((int)PopupPosition.TopRight, "Top right"), new((int)PopupPosition.Center, "Centre of the screen"),
     ];
 
-    public IReadOnlyList<PickerOption> ThemeOptions { get; } =
-    [
-        new((int)ThemePreference.System, "Follow Windows"), new((int)ThemePreference.Light, "Light"), new((int)ThemePreference.Dark, "Dark"),
-    ];
-
     [ObservableProperty]
     public partial bool PeriodicPromptsEnabled { get; set; }
 
@@ -99,9 +94,6 @@ public sealed partial class SettingsViewModel(
 
     [ObservableProperty]
     public partial string? ShortcutError { get; private set; }
-
-    [ObservableProperty]
-    public partial int? ThemeKey { get; set; }
 
     [ObservableProperty]
     public partial bool StartMinimized { get; set; }
@@ -319,7 +311,6 @@ public sealed partial class SettingsViewModel(
         LockedTimeIsNotWork = s.Tracking.LockedTimeHandling == LockedTimeHandling.NotWorking;
         Shortcut = s.General.GlobalShortcut;
         ShortcutError = null;
-        ThemeKey = (int)s.General.Theme;
         StartMinimized = s.General.StartMinimized;
         CloseToTray = s.General.CloseToTray;
         AutoAddTasksToBoard = s.Board.AutoAddTasks;
@@ -427,14 +418,6 @@ public sealed partial class SettingsViewModel(
 
     partial void OnLockedTimeIsNotWorkChanged(bool value) =>
         Apply(s => s.Tracking.LockedTimeHandling = value ? LockedTimeHandling.NotWorking : LockedTimeHandling.Unclassified);
-
-    partial void OnThemeKeyChanged(int? value)
-    {
-        if (value is { } key)
-        {
-            Apply(s => s.General.Theme = (ThemePreference)key);
-        }
-    }
 
     partial void OnAutoAddTasksToBoardChanged(bool value) => Apply(s => s.Board.AutoAddTasks = value);
 

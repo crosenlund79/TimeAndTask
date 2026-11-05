@@ -40,6 +40,7 @@ public partial class App : Application, IAppLifetime
 
         RegisterGlobalExceptionHandlers();
         LookupBehavior.Register();
+        ThemeResources.Apply(this);
 
         try
         {
@@ -55,7 +56,6 @@ public partial class App : Application, IAppLifetime
             var firstRun = await _host.Services.GetRequiredService<DatabaseInitializer>().InitializeAsync();
             var settings = await _host.Services.GetRequiredService<ISettingsStore>().LoadAsync();
             await RetireInboxAsync(_host.Services);
-            ApplyTheme(settings.General.Theme);
 
             var tray = _host.Services.GetRequiredService<TrayIconService>();
             tray.Initialize();
@@ -168,7 +168,6 @@ public partial class App : Application, IAppLifetime
 
     private static void OnSettingsChanged(WorkTraceSettings settings, GlobalHotkey hotkey, TrayIconService tray)
     {
-        ApplyTheme(settings.General.Theme);
         if (!string.Equals(hotkey.Current, settings.General.GlobalShortcut, StringComparison.OrdinalIgnoreCase)
             && !hotkey.Register(settings.General.GlobalShortcut))
         {
@@ -208,16 +207,6 @@ public partial class App : Application, IAppLifetime
         builder.Services.AddWorkTraceApp(this);
 
         return builder.Build();
-    }
-
-    private static void ApplyTheme(ThemePreference theme)
-    {
-        Current.ThemeMode = theme switch
-        {
-            ThemePreference.Light => ThemeMode.Light,
-            ThemePreference.Dark => ThemeMode.Dark,
-            _ => ThemeMode.System,
-        };
     }
 
     /// <summary>
