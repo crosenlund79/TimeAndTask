@@ -78,6 +78,24 @@ public abstract class TrackingTestBase : IAsyncLifetime
         await StartEngineAsync();
     }
 
+    /// <summary>
+    /// Simulates restarting WorkTrace: everything is rebuilt from the same data directory (database and settings file),
+    /// so only what was saved survives.
+    /// </summary>
+    protected async Task ReopenAsync()
+    {
+        if (Engine is not null)
+        {
+            await Engine.DisposeAsync();
+            Engine = null!;
+        }
+
+        await Services.DisposeAsync();
+        Services = _data.BuildServices();
+        await Services.GetRequiredService<DatabaseInitializer>().InitializeAsync(Ct);
+        await Settings.LoadAsync(Ct);
+    }
+
     /// <summary>Moves real time forward (wall clock and elapsed time) and lets the engine catch up.</summary>
     /// <summary>
     /// The computer sleeps: both clocks move on but no timer fires (nothing runs while asleep). Timers that

@@ -153,7 +153,14 @@ public class UiSmokeTests
             window.ViewModel.NavigateTo(AppSection.Home);
             await WpfTestHost.SettleAsync(10);
             Assert.NotEmpty(ctx.Get<HomeViewModel>().Today);
-            Assert.NotEmpty(ctx.Get<HomeViewModel>().DailySummary);
+            var home = ctx.Get<HomeViewModel>();
+            Assert.NotEmpty(home.DailySummary);
+            home.PreviousDayCommand.Execute(null); // Overview calendar: another day, then back to today
+            await WpfTestHost.SettleAsync(5);
+            Assert.False(home.IsToday);
+            home.GoToTodayCommand.Execute(null);
+            await WpfTestHost.SettleAsync(5);
+            Assert.True(home.IsToday);
 
             ctx.Get<INotificationService>().Show("Toast with action", NotificationKind.Success, "Undo", () => Task.CompletedTask);
             await WpfTestHost.SettleAsync();

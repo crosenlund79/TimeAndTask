@@ -203,7 +203,7 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
     private void BuildTimeline()
     {
         var group = TimelineGroupKey switch { 2 => TaskGroup.Regular, 3 => TaskGroup.Recurring, 4 => TaskGroup.Waiting, 5 => TaskGroup.Closed, _ => (TaskGroup?)null };
-        var queue = TaskQueue.Build(_lastResults.Where(t => group is null || t.Group == group), includeClosed: group == TaskGroup.Closed);
+        var queue = TaskPipeline.Build(_lastResults.Where(t => group is null || t.Group == group), includeClosed: group == TaskGroup.Closed);
         var total = queue.Sum(e => e.DurationMinutes);
         Timeline.Clear();
         foreach (var entry in queue)
@@ -214,7 +214,7 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         var unknown = queue.Count(e => e.IsProvisional);
         TimelineSummary = queue.Count == 0
             ? "No active tasks match."
-            : $"{queue.Count} task{(queue.Count == 1 ? "" : "s")} · about {TaskQueue.FormatDuration(total)}"
+            : $"{queue.Count} task{(queue.Count == 1 ? "" : "s")} · about {TaskPipeline.FormatDuration(total)}"
                 + (unknown > 0 ? $" · {unknown} without an estimate (planned as 4 h each)" : "");
     }
 

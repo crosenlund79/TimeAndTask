@@ -74,7 +74,6 @@ internal sealed class TimesheetService(
             .ToDictionaryAsync(t => t.Id, cancellationToken);
         var clientIds = lineKeys.Select(k => k.Client).OfType<int>().ToList();
         var clients = await db.Clients.AsNoTracking().Where(c => clientIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => c.Name, cancellationToken);
-        var rounding = s.Reporting.RoundingMinutes;
 
         var lines = new List<TimesheetLine>();
         foreach (var (taskId, clientId) in lineKeys)
@@ -82,7 +81,7 @@ internal sealed class TimesheetService(
             var cells = new List<TimesheetCell>();
             for (var d = 0; d < 7; d++)
             {
-                var computed = Round((int)Math.Round(work.GetValueOrDefault((d, taskId, clientId)).TotalMinutes), rounding);
+                var computed = (int)Math.Round(work.GetValueOrDefault((d, taskId, clientId)).TotalMinutes); // exact; rounding is for exports only
                 var adjustment = taskId is null && clientId is null ? null
                     : adjustments.FirstOrDefault(a => a.TaskId == taskId && (taskId is not null || a.ClientId == clientId) && a.LocalDate == monday.AddDays(d));
                 cells.Add(adjustment is null
@@ -117,8 +116,16 @@ internal sealed class TimesheetService(
     private static async Task<(IReadOnlyList<TimelinePeriod> Periods, List<EstimationSegment> Segments, List<EstimationSegment> Locks, List<Observation> Observations, List<DateTime> Prompts)> EstimateAsync(
         WorkTraceDbContext db, DateTime from, DateTime to, DateTime now, WorkTraceSettings s, CancellationToken cancellationToken)
     {
-        // Evidence from a day before, so estimates continue across midnight.
+        // Evidence from before the range, so estimates continue across midnight: at least a day, and back to the start
+        // of any tracking segment still running at `from` (its last check-in may be older than a day).
         var lookBack = from.AddDays(-1);
+        var earliest = await db.TrackingSegments.AsNoTracking().Where(x => x.StartUtc < from && (x.EndUtc == null || x.EndUtc > from))
+            .MinAsync(x => (DateTime?)x.StartUtc, cancellationToken);
+        if (earliest is { } start && start < lookBack)
+        {
+            lookBack = start;
+        }
+
         var segments = (await db.TrackingSegments.AsNoTracking().Where(x => x.StartUtc < to && (x.EndUtc == null || x.EndUtc > lookBack)).ToListAsync(cancellationToken))
             .Select(x => new EstimationSegment(x.StartUtc, x.EndUtc ?? (now < to ? now : to))).ToList();
         var locks = (await db.LockPeriods.AsNoTracking().Where(x => x.StartUtc < to && (x.EndUtc == null || x.EndUtc > lookBack)).ToListAsync(cancellationToken))
@@ -137,11 +144,63 @@ internal sealed class TimesheetService(
             [.. observations.Select(o => new EstimationObservation(o.Id, o.ObservedAtUtc, o.CreatedAtUtc, o.TaskId, o.ClientId))],
             prompts,
             [.. allocations.Select(a => new EstimationAllocation(a.Id, a.StartUtc, a.EndUtc, a.CreatedAtUtc, a.TaskId, a.Kind == AllocationKind.NonWork))],
-            TimeSpan.FromMinutes(s.Tracking.MaxEstimationHorizonMinutes),
+            // Without periodic check-ins nothing would ever end the active task before the horizon, so a task started
+            // with a manual check-in runs until the next check-in, a lock or the end of tracking (the "timer" model).
+            s.Tracking.PeriodicPromptsEnabled ? TimeSpan.FromMinutes(s.Tracking.MaxEstimationHorizonMinutes) : TimeSpan.MaxValue,
             s.Tracking.LockedTimeHandling,
             TimeSpan.FromMinutes(s.Tracking.LockGraceMinutes));
         var periods = TimeEstimator.Estimate(input, from, to);
         return (periods, segments, locks, observations, prompts);
+    }
+
+    public async Task<DayRegistrations> GetDayAsync(DateOnly day, CancellationToken cancellationToken = default)
+    {
+        var zone = TimeZoneInfo.Local;
+        var now = UtcTime.Now(timeProvider);
+        var from = ToUtc(day, zone);
+        var to = ToUtc(day.AddDays(1), zone);
+        var until = now < to ? now : to;
+        var summary = await GetDaySummaryAsync(day, cancellationToken);
+        var week = await GetWeekAsync(day, cancellationToken);
+        var index = week.Days.ToList().IndexOf(day);
+        var timesheetMinutes = week.DayTotals[index];
+        var corrected = week.Lines.Any(l => l.Days[index].IsAdjusted);
+        if (until <= from)
+        {
+            return new DayRegistrations(day, [], summary, 0, timesheetMinutes, corrected);
+        }
+
+        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var (periods, _, _, _, _) = await EstimateAsync(db, from, until, now, settings.Current, cancellationToken);
+        var registered = periods.Where(p => p.Kind is PeriodKind.Estimated or PeriodKind.Manual).ToList();
+
+        var taskIds = registered.Select(p => p.TaskId).OfType<int>().Distinct().ToList();
+        var tasks = await db.Tasks.AsNoTracking().Where(t => taskIds.Contains(t.Id))
+            .Select(t => new { t.Id, t.Title, t.ExternalId, t.ClientId, Stakeholder = t.Client!.Name, t.Client.Color })
+            .ToDictionaryAsync(t => t.Id, cancellationToken);
+        var clientIds = registered.Select(p => p.ClientId).OfType<int>().Distinct().ToList();
+        var clients = await db.Clients.AsNoTracking().Where(c => clientIds.Contains(c.Id))
+            .Select(c => new { c.Id, c.Name, c.Color }).ToDictionaryAsync(c => c.Id, cancellationToken);
+
+        var entries = registered.Select(p =>
+        {
+            if (p.TaskId is { } tid && tasks.TryGetValue(tid, out var t))
+            {
+                return new RegistrationEntry(p.StartUtc, p.EndUtc, p.Kind == PeriodKind.Manual, p.IsNonWork, tid, t.Title, t.ExternalId, t.ClientId,
+                    t.Stakeholder, StakeholderColors.For(t.ClientId, t.Color));
+            }
+
+            var c = p.ClientId is { } cid ? clients.GetValueOrDefault(cid) : null;
+            return new RegistrationEntry(p.StartUtc, p.EndUtc, p.Kind == PeriodKind.Manual, p.IsNonWork, null,
+                p.IsNonWork ? "Break / not work" : c is null ? NoTask : NoTaskForStakeholder, null,
+                c?.Id, c?.Name, c is null ? null : StakeholderColors.For(c.Id, c.Color));
+        }).ToList();
+
+        // Same per-line rounding as the Timesheet, so both show the same total for the day.
+        var registeredMinutes = entries.Where(e => !e.IsBreak)
+            .GroupBy(e => (e.TaskId, Client: e.TaskId is null ? e.ClientId : null))
+            .Sum(g => (int)Math.Round(g.Sum(e => e.Duration.TotalMinutes)));
+        return new DayRegistrations(day, entries, summary, registeredMinutes, timesheetMinutes, corrected);
     }
 
     public async Task<DaySummary> GetDaySummaryAsync(DateOnly day, CancellationToken cancellationToken = default)
@@ -230,8 +289,17 @@ internal sealed class TimesheetService(
 
     private static readonly string[] LineHeaders = ["Date", "Day", "Stakeholder", "System", "Reference", "Task", "Hours", "Comments"];
 
-    private TimesheetWeek ForExport(TimesheetWeek week) =>
-        settings.Current.Reporting.ExportRoundUpToQuarter ? week.RoundedUpToQuarter() : week;
+    /// <summary>Rounding happens only here: "Round hours" (nearest) per entry, then the optional round-up to 15 minutes.</summary>
+    private TimesheetWeek ForExport(TimesheetWeek week)
+    {
+        var r = settings.Current.Reporting;
+        if (r.RoundingMinutes > 0)
+        {
+            week = week.Rounded(m => Round(m, r.RoundingMinutes));
+        }
+
+        return r.ExportRoundUpToQuarter ? week.RoundedUpToQuarter() : week;
+    }
 
     private static IEnumerable<object[]> LineRows(TimesheetWeek week) =>
         from d in Enumerable.Range(0, 7)

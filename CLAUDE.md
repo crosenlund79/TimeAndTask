@@ -85,7 +85,10 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
    the previous task ends there, the new one starts; the same task again just continues (one merged interval).
 4. After a missed/dismissed prompt: unclassified from the prompt's scheduled time until the next observation.
 5. Segment start → first observation: unclassified (no backward extrapolation).
-6. Trailing estimate capped at `MaxEstimationHorizonMinutes`; still labelled Estimated, never Confirmed.
+6. With periodic check-ins on, an active task is capped at `MaxEstimationHorizonMinutes` after its check-in (also before
+   a lock or missed prompt); with them off it runs until the next check-in, lock or stop. Labelled Estimated, never Confirmed.
+   The Timesheet keeps exact minutes; rounding is applied only to exports. Overview day view and Timesheet use
+   `ITimesheetService` (same estimate), so their day totals are equal.
 7. Locked periods are uncertain by default (`LockedTimeHandling.Unclassified`, grace 0 min).
 8. Manual allocations overlay the estimate (latest created wins) and are never discarded by recalculation.
 9. Deterministic: ties broken by CreatedAtUtc, then Id. Durations from UTC differences (DST-safe).

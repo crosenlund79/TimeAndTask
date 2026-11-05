@@ -22,9 +22,9 @@ public sealed class QueueItemViewModel(QueueEntry entry, int totalMinutes)
     /// <summary>No estimate: shown red and dashed with a provisional block (never stored).</summary>
     public bool IsProvisional => Entry.IsProvisional;
 
-    public string DurationText => IsProvisional ? "4 h? · no estimate" : TaskQueue.FormatDuration(Entry.DurationMinutes);
+    public string DurationText => IsProvisional ? "4 h? · no estimate" : TaskPipeline.FormatDuration(Entry.DurationMinutes);
 
-    public string StartText => Entry.StartMinutes == 0 ? "Next up" : "after " + TaskQueue.FormatDuration(Entry.StartMinutes);
+    public string StartText => Entry.StartMinutes == 0 ? "Next up" : "after " + TaskPipeline.FormatDuration(Entry.StartMinutes);
 
     public string? PlannedText => Entry.Task.PlannedStart is { } d ? "planned " + d.ToString("d MMM", CultureInfo.CurrentCulture) : null;
 

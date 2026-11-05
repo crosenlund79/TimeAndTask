@@ -30,9 +30,12 @@ public sealed record TimesheetWeek(
     public int WeekTotal => Lines.Sum(l => l.TotalMinutes);
 
     /// <summary>Every day of every line rounded up to the next quarter hour (export option); totals follow from the rounded values.</summary>
-    public TimesheetWeek RoundedUpToQuarter() => this with
+    public TimesheetWeek RoundedUpToQuarter() => Rounded(Hours.RoundUpToQuarter);
+
+    /// <summary>Every day of every line passed through <paramref name="round"/> (exports only; the timesheet keeps exact minutes).</summary>
+    public TimesheetWeek Rounded(Func<int, int> round) => this with
     {
-        Lines = [.. Lines.Select(l => l with { Days = [.. l.Days.Select(c => c with { Minutes = Hours.RoundUpToQuarter(c.Minutes) })] })],
+        Lines = [.. Lines.Select(l => l with { Days = [.. l.Days.Select(c => c with { Minutes = round(c.Minutes) })] })],
     };
 
     public static DateOnly MondayOf(DateOnly day) => day.AddDays(-(((int)day.DayOfWeek + 6) % 7));
@@ -55,10 +58,43 @@ public sealed record DaySummary(
     public int TaskMinutes => ConfirmedTaskMinutes + EstimatedTaskMinutes;
 }
 
+/// <summary>
+/// One registered interval of a day (the part inside that day for intervals spanning midnight). Confirmed = a manual
+/// allocation; otherwise started by a check-in and running until the next check-in or stop (estimated).
+/// </summary>
+public sealed record RegistrationEntry(
+    DateTime StartUtc,
+    DateTime EndUtc,
+    bool IsConfirmed,
+    bool IsBreak,
+    int? TaskId,
+    string? Task,
+    string? Reference,
+    int? ClientId,
+    string? Stakeholder,
+    string? StakeholderColor)
+{
+    public TimeSpan Duration => EndUtc - StartUtc;
+}
+
+/// <summary>A day's registrations with the totals the Timesheet uses for the same day.</summary>
+/// <param name="RegisteredMinutes">Work time of the entries, summed per timesheet line exactly as the Timesheet does.</param>
+/// <param name="TimesheetMinutes">The Timesheet's total for this day (equals RegisteredMinutes unless corrected there).</param>
+public sealed record DayRegistrations(
+    DateOnly Day,
+    IReadOnlyList<RegistrationEntry> Entries,
+    DaySummary Summary,
+    int RegisteredMinutes,
+    int TimesheetMinutes,
+    bool HasCorrections);
+
 /// <summary>Weekly timesheet built from the estimated timeline, with per-day corrections and exports.</summary>
 public interface ITimesheetService
 {
     Task<TimesheetWeek> GetWeekAsync(DateOnly anyDay, CancellationToken cancellationToken = default);
+
+    /// <summary>The registrations of one local day (clipped to the day), with its summary and Timesheet total.</summary>
+    Task<DayRegistrations> GetDayAsync(DateOnly day, CancellationToken cancellationToken = default);
 
     /// <summary>Totals for one local day up to now.</summary>
     Task<DaySummary> GetDaySummaryAsync(DateOnly day, CancellationToken cancellationToken = default);

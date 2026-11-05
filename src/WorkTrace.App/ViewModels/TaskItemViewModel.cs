@@ -38,7 +38,7 @@ public sealed class TaskItemViewModel(TaskSummary summary, string lastUsedText, 
 
     public bool HasEstimate => Summary.EstimatedRemainingMinutes is not null;
 
-    public string EstimateText => Summary.EstimatedRemainingMinutes is { } m ? "≈ " + TaskQueue.FormatDuration(m) + " left" : "No estimate";
+    public string EstimateText => Summary.EstimatedRemainingMinutes is { } m ? "≈ " + TaskPipeline.FormatDuration(m) + " left" : "No estimate";
 
     public string? WaitingReason => Summary.WaitingReason;
 

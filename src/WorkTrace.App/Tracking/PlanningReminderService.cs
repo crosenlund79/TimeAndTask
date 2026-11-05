@@ -76,12 +76,12 @@ internal sealed class PlanningReminderService(
         try
         {
             await settings.UpdateAsync(x => x.Tasks.PlanningReminderShownOn = today);
-            var queue = TaskQueue.Build(await tasks.SearchAsync(new TaskQuery(Limit: 500)));
+            var queue = TaskPipeline.Build(await tasks.SearchAsync(new TaskQuery(Limit: 500)));
             var text = new StringBuilder();
             foreach (var entry in queue.Take(5))
             {
                 text.Append("• ").Append(entry.Task.Title).Append(" — ")
-                    .AppendLine(entry.IsProvisional ? "no estimate" : TaskQueue.FormatDuration(entry.DurationMinutes));
+                    .AppendLine(entry.IsProvisional ? "no estimate" : TaskPipeline.FormatDuration(entry.DurationMinutes));
             }
 
             if (queue.Count > 5)

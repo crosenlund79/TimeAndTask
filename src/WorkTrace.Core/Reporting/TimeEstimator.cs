@@ -77,6 +77,14 @@ public static class TimeEstimator
             }
         }
 
+        // The active task runs from its check-in until `to`, but never past the horizon (then unclassified).
+        void EmitActive(EstimationObservation of, DateTime to)
+        {
+            var end = input.Horizon >= to - of.AtUtc ? to : of.AtUtc + input.Horizon;
+            Emit(of.AtUtc, end, PeriodKind.Estimated, of);
+            Emit(end, to, PeriodKind.Unclassified);
+        }
+
         // Evidence inside the segment, in time order (ties: observations by CreatedAt, then Id).
         var items = new List<(DateTime At, int Order, EstimationObservation? Obs, DateTime? LockEnd)>();
         foreach (var o in input.Observations.Where(o => o.AtUtc >= s && o.AtUtc < e))
@@ -127,7 +135,7 @@ public static class TimeEstimator
                 {
                     // A check-in switches the active task: the previous one runs until this moment, the new one
                     // starts here. The same task again just continues (merged into one interval by Flatten).
-                    Emit(previous.AtUtc < cursor ? cursor : previous.AtUtc, at, PeriodKind.Estimated, previous);
+                    EmitActive(previous.AtUtc < cursor ? previous with { AtUtc = cursor } : previous, at);
                 }
 
                 previous = obs with { AtUtc = at };
@@ -137,7 +145,7 @@ public static class TimeEstimator
             {
                 if (previous is not null)
                 {
-                    Emit(previous.AtUtc, at, PeriodKind.Estimated, previous);
+                    EmitActive(previous, at);
                 }
                 else
                 {
@@ -151,7 +159,7 @@ public static class TimeEstimator
             else if (previous is not null)
             {
                 // Missed/dismissed/suppressed prompt: estimated until it, uncertain after it.
-                Emit(previous.AtUtc, at, PeriodKind.Estimated, previous);
+                EmitActive(previous, at);
                 previous = null;
                 cursor = at;
             }
@@ -159,10 +167,7 @@ public static class TimeEstimator
 
         if (previous is not null)
         {
-            var capped = previous.AtUtc + input.Horizon;
-            var end = capped < e ? capped : e;
-            Emit(previous.AtUtc, end, PeriodKind.Estimated, previous);
-            Emit(end, e, PeriodKind.Unclassified);
+            EmitActive(previous, e);
         }
         else
         {

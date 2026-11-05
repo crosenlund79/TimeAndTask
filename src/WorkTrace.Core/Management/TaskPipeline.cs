@@ -1,6 +1,6 @@
 namespace WorkTrace.Core.Management;
 
-/// <summary>One task in the planning queue. <see cref="IsProvisional"/>: no estimate, planned with <see cref="TaskQueue.ProvisionalMinutes"/>.</summary>
+/// <summary>One task in the planning queue. <see cref="IsProvisional"/>: no estimate, planned with <see cref="TaskPipeline.ProvisionalMinutes"/>.</summary>
 public sealed record QueueEntry(TaskSummary Task, int Position, int StartMinutes, int DurationMinutes, bool IsProvisional);
 
 /// <summary>
@@ -8,7 +8,7 @@ public sealed record QueueEntry(TaskSummary Task, int Position, int StartMinutes
 /// priority (Board card priority and order), deadline and recent use. Effort comes from the estimate; tasks without
 /// one get a provisional block that is never stored.
 /// </summary>
-public static class TaskQueue
+public static class TaskPipeline
 {
     public const int ProvisionalMinutes = 240;
 

@@ -92,16 +92,88 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
         await LoadCurrentTaskAsync();
     }
 
+    private DateOnly CurrentDay => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(_timeProvider.GetUtcNow().UtcDateTime, TimeZoneInfo.Local));
+
+    /// <summary>The day shown (defaults to today). DatePicker-friendly; any earlier day can be chosen.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsToday), nameof(DayTitle))]
+    [NotifyCanExecuteChangedFor(nameof(NextDayCommand), nameof(GoToTodayCommand))]
+    public partial DateTime? SelectedDate { get; set; }
+
+    [ObservableProperty]
+    public partial bool HasNoRegistrations { get; private set; }
+
+    public DateOnly SelectedDay => SelectedDate is { } d ? DateOnly.FromDateTime(d) : CurrentDay;
+
+    public bool IsToday => SelectedDay == CurrentDay;
+
+    public string DayTitle => IsToday ? "Today" : SelectedDay.ToString("dddd d MMMM yyyy", System.Globalization.CultureInfo.CurrentCulture);
+
+    /// <summary>Registrations of the selected day (the part inside the day for intervals spanning midnight).</summary>
+    public ObservableCollection<RegistrationItemViewModel> Registrations { get; } = [];
+
+    [ObservableProperty]
+    public partial string? RegistrationTotal { get; private set; }
+
+    [ObservableProperty]
+    public partial string? TimesheetNote { get; private set; }
+
+    partial void OnSelectedDateChanged(DateTime? value)
+    {
+        if (value is { } d && DateOnly.FromDateTime(d) > CurrentDay)
+        {
+            SelectedDate = CurrentDay.ToDateTime(TimeOnly.MinValue); // nothing is registered in the future
+            return;
+        }
+
+        _ = LoadTimelineAsync();
+    }
+
+    [RelayCommand]
+    private void PreviousDay() => SelectedDate = SelectedDay.AddDays(-1).ToDateTime(TimeOnly.MinValue);
+
+    private bool CanGoForward() => !IsToday;
+
+    [RelayCommand(CanExecute = nameof(CanGoForward))]
+    private void NextDay() => SelectedDate = SelectedDay.AddDays(1).ToDateTime(TimeOnly.MinValue);
+
+    [RelayCommand(CanExecute = nameof(CanGoForward))]
+    private void GoToToday() => SelectedDate = CurrentDay.ToDateTime(TimeOnly.MinValue);
+
     private async Task LoadTimelineAsync()
     {
+        var day = SelectedDay;
         IReadOnlyList<TimelineEvent> events = [];
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(_timeProvider.GetUtcNow().UtcDateTime, TimeZoneInfo.Local));
-        if (!await RunAsync(async () => events = await _checkIns.GetDayTimelineAsync(today, TimeZoneInfo.Local), "Could not load today's activity."))
+        WorkTrace.Core.Reporting.DayRegistrations? registrations = null;
+        if (!await RunAsync(
+            async () =>
+            {
+                events = await _checkIns.GetDayTimelineAsync(day, TimeZoneInfo.Local);
+                registrations = await _timesheets.GetDayAsync(day);
+            },
+            "Could not load the day's registrations."))
         {
             return;
         }
 
-        await LoadSummaryAsync(today);
+        if (day != SelectedDay || registrations is null)
+        {
+            return; // another day was chosen meanwhile
+        }
+
+        ShowSummary(registrations.Summary);
+        Registrations.Clear();
+        foreach (var entry in registrations.Entries)
+        {
+            Registrations.Add(new RegistrationItemViewModel(entry));
+        }
+
+        HasNoRegistrations = Registrations.Count == 0;
+        RegistrationTotal = $"{Registrations.Count} registration{(Registrations.Count == 1 ? "" : "s")} · {F(registrations.RegisteredMinutes)} work";
+        TimesheetNote = registrations.HasCorrections
+            ? $"Timesheet total for this day: {F(registrations.TimesheetMinutes)} (includes your corrections there)"
+            : null;
+
         Today.Clear();
         foreach (var item in events.Reverse())
         {
@@ -111,21 +183,16 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
         var checkIns = events.Count(e => e.Kind == TimelineEventKind.CheckIn);
         var missed = events.Count(e => e.Kind is TimelineEventKind.MissedCheckIn or TimelineEventKind.DismissedCheckIn or TimelineEventKind.SuppressedCheckIn);
         TodaySummary = events.Count == 0
-            ? "Nothing recorded today yet."
+            ? "Nothing recorded on this day."
             : $"{checkIns} check-in{(checkIns == 1 ? string.Empty : "s")}" + (missed > 0 ? $" · {missed} without an answer" : string.Empty);
     }
 
-    private async Task LoadSummaryAsync(DateOnly today)
-    {
-        WorkTrace.Core.Reporting.DaySummary? sum = null;
-        if (!await RunAsync(async () => sum = await _timesheets.GetDaySummaryAsync(today), "Could not calculate today's summary.") || sum is null)
-        {
-            return;
-        }
+    private static string F(int minutes) => $"{minutes / 60}:{minutes % 60:00}";
 
-        static string F(int minutes) => $"{minutes / 60}:{minutes % 60:00}";
+    private void ShowSummary(WorkTrace.Core.Reporting.DaySummary sum)
+    {
         DailySummary.Clear();
-        DailySummary.Add(new("Tracked today", F(sum.TrackedMinutes), "Time WorkTrace was tracking (not paused, asleep or closed)"));
+        DailySummary.Add(new("Tracked", F(sum.TrackedMinutes), "Time WorkTrace was tracking (not paused, asleep or closed)"));
         DailySummary.Add(new("On tasks", "≈ " + F(sum.TaskMinutes), "Registered tasks: confirmed plus estimated from check-ins"));
         if (sum.ConfirmedTaskMinutes > 0)
         {
@@ -220,6 +287,25 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
 }
 
 /// <param name="IsDetail">Indented sub-line (part of the line above).</param>
+/// <summary>One registration row in the Overview day list.</summary>
+public sealed class RegistrationItemViewModel(WorkTrace.Core.Reporting.RegistrationEntry entry)
+{
+    public WorkTrace.Core.Reporting.RegistrationEntry Entry { get; } = entry;
+
+    public string Time { get; } =
+        $"{TimeZoneInfo.ConvertTimeFromUtc(entry.StartUtc, TimeZoneInfo.Local):HH:mm}–{TimeZoneInfo.ConvertTimeFromUtc(entry.EndUtc, TimeZoneInfo.Local):HH:mm}";
+
+    public string Duration { get; } = $"{(entry.IsConfirmed ? "" : "≈ ")}{(int)entry.Duration.TotalHours}:{entry.Duration.Minutes:00}";
+
+    public string Task => Entry.Reference is { Length: > 0 } r ? $"{r} · {Entry.Task}" : Entry.Task ?? "";
+
+    public string Stakeholder => Entry.Stakeholder ?? (Entry.IsBreak ? "Not work" : "No stakeholder");
+
+    public string StakeholderColor => Entry.StakeholderColor ?? "#7A7F87";
+
+    public string KindText => Entry.IsBreak ? "Break" : Entry.IsConfirmed ? "Confirmed" : "From check-in (estimated)";
+}
+
 public sealed record SummaryRow(string Label, string Value, string? Hint = null, bool IsDetail = false);
 
 /// <param name="HasDeadlineWarning">Deadline within the warning period or overdue: the lookup shows a bell.</param>

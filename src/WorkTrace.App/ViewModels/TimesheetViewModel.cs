@@ -93,12 +93,15 @@ public sealed class TimesheetRowViewModel
 /// </summary>
 public sealed partial class TimesheetViewModel(
     ITimesheetService timesheets,
+    WorkTrace.App.Tracking.TrackingController tracking,
+    WorkTrace.Core.Settings.ISettingsStore settings,
     IFileDialogService files,
     INotificationService notifications,
     TimeProvider timeProvider,
     ILogger<TimesheetViewModel> logger) : ViewModelBase(notifications, logger), ISectionViewModel
 {
     private TimesheetWeek? _week;
+    private bool _listening;
 
     public bool HasUnsavedChanges => false;
 
@@ -124,7 +127,28 @@ public sealed partial class TimesheetViewModel(
 
     private DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(UtcTime.Now(timeProvider), TimeZoneInfo.Local));
 
-    public async Task ActivateAsync(object? parameter) => await LoadAsync(Monday == default ? Today : Monday);
+    public async Task ActivateAsync(object? parameter)
+    {
+        if (!_listening)
+        {
+            // Registrations change without leaving the page (check-ins, task switches, pause/stop, estimation settings):
+            // rebuild the shown week from the saved data, so it never shows stale totals.
+            _listening = true;
+            tracking.CheckInRecorded += (_, _) => _ = RefreshAsync();
+            tracking.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(WorkTrace.App.Tracking.TrackingController.Status))
+                {
+                    _ = RefreshAsync();
+                }
+            };
+            settings.Changed += (_, _) => System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => _ = RefreshAsync());
+        }
+
+        await LoadAsync(Monday == default ? Today : Monday);
+    }
+
+    private Task RefreshAsync() => Monday == default ? System.Threading.Tasks.Task.CompletedTask : LoadAsync(Monday);
 
     [RelayCommand]
     private Task PreviousWeekAsync() => LoadAsync(Monday.AddDays(-7));
