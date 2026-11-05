@@ -1469,7 +1469,7 @@
         "Owner checks that registered time appears in full in the Timesheet, the Overview day view per date, and equal day totals"
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Commit 6a8d718; Windows CI run 48 green (RegistrationIntegrityTests + WPF smoke with the Overview calendar); installer WorkTrace-Setup-0.2.48",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -1483,8 +1483,8 @@
         }
       ],
       "createdAt": "2026-11-05T08:22:42Z",
-      "updatedAt": "2026-11-05T08:22:42Z",
-      "rev": 1
+      "updatedAt": "2026-11-05T08:31:06Z",
+      "rev": 2
     }
   ]
 }

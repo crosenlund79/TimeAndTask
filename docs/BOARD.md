@@ -419,6 +419,10 @@ Commit bcc7fc7; Windows CI run 47 green (incl. WPF smoke with the daily summary)
 
 - Owner checks that registered time appears in full in the Timesheet, the Overview day view per date, and equal day totals
 
+**Evidence**
+
+Commit 6a8d718; Windows CI run 48 green (RegistrationIntegrityTests + WPF smoke with the Overview calendar); installer WorkTrace-Setup-0.2.48
+
 ## To do
 
 ### WT-030 · Estimation engine
