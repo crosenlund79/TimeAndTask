@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 24 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 25 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -410,6 +410,14 @@ Commit 44556e9; Windows CI run 46 green (incl. WPF smoke with the timeline); ins
 **Evidence**
 
 Commit bcc7fc7; Windows CI run 47 green (incl. WPF smoke with the daily summary); installer WorkTrace-Setup-0.2.47
+
+### WT-059 · Time registration integrity (timesheet gaps fixed) + Overview calendar with the day's registrations
+
+`bug` · priority High
+
+**Acceptance criteria**
+
+- Owner checks that registered time appears in full in the Timesheet, the Overview day view per date, and equal day totals
 
 ## To do
 

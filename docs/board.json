@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 59,
+  "nextId": 60,
   "cards": [
     {
       "id": "WT-001",
@@ -1453,6 +1453,38 @@
       "createdAt": "2026-11-04T15:42:23Z",
       "updatedAt": "2026-11-04T15:50:39Z",
       "rev": 2
+    },
+    {
+      "id": "WT-059",
+      "uid": "641ff9ed-1693-4a44-ae57-fe9275be8781",
+      "title": "Time registration integrity (timesheet gaps fixed) + Overview calendar with the day's registrations",
+      "category": "bug",
+      "priority": "high",
+      "status": "review",
+      "rank": "zzzzz",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Owner checks that registered time appears in full in the Timesheet, the Overview day view per date, and equal day totals"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "ae266114-7a0a-4c1a-b35e-9edaec0465b7",
+          "type": "created",
+          "at": "2026-11-05T08:22:42Z",
+          "by": "claude",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-11-05T08:22:42Z",
+      "updatedAt": "2026-11-05T08:22:42Z",
+      "rev": 1
     }
   ]
 }
