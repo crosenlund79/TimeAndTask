@@ -1533,7 +1533,7 @@
         "Owner checks minor tasks + reminders, Current task switching without error, Board toggle, timeline calendar and the All active filter"
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Commit e901e4f; Windows CI run 50 green (incl. WPF smoke with Minor Tasks); installer WorkTrace-Setup-0.2.50",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -1547,8 +1547,8 @@
         }
       ],
       "createdAt": "2026-11-05T11:28:11Z",
-      "updatedAt": "2026-11-05T11:28:11Z",
-      "rev": 1
+      "updatedAt": "2026-11-05T11:28:16Z",
+      "rev": 2
     }
   ]
 }

@@ -443,6 +443,10 @@ Commit 70a8667; Windows CI run 49 green (incl. WPF smoke on every page); install
 
 - Owner checks minor tasks + reminders, Current task switching without error, Board toggle, timeline calendar and the All active filter
 
+**Evidence**
+
+Commit e901e4f; Windows CI run 50 green (incl. WPF smoke with Minor Tasks); installer WorkTrace-Setup-0.2.50
+
 ## To do
 
 ### WT-030 · Estimation engine
