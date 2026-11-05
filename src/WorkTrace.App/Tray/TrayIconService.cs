@@ -66,7 +66,7 @@ internal sealed class TrayIconService(
         });
         menu.Items.Add(_boardItem);
         menu.Items.Add(Item("Tasks and stakeholders", () => windows.ShowMainWindow(AppSection.Tasks)));
-        menu.Items.Add(Item("Settings", () => windows.ShowMainWindow(AppSection.Settings)));
+        menu.Items.Add(Item("System", () => windows.ShowMainWindow(AppSection.Settings)));
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add(Item("Exit", lifetime.RequestExit));
 

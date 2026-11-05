@@ -27,7 +27,6 @@ public sealed partial class ScreenshotsViewModel(
     ISettingsStore settings,
     IDialogService dialogs,
     IFileDialogService files,
-    INavigationService navigation,
     INotificationService notifications,
     TimeProvider timeProvider,
     ILogger<ScreenshotsViewModel> logger) : ViewModelBase(notifications, logger), ISectionViewModel
@@ -103,9 +102,6 @@ public sealed partial class ScreenshotsViewModel(
 
     [RelayCommand]
     private void Open(ScreenshotItemViewModel item) => files.OpenFile(item.FullPath);
-
-    [RelayCommand]
-    private void OpenSettings() => navigation.Navigate(Shell.AppSection.Settings);
 
     [RelayCommand]
     private async Task DeleteSelectedAsync()

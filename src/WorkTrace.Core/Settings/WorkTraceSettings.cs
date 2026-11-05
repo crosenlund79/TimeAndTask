@@ -110,6 +110,9 @@ public sealed class GeneralSettings
 
     public bool CloseToTray { get; set; } = true;
 
+    /// <summary>The navigation rail shows icons only (remembered between sessions).</summary>
+    public bool NavigationCollapsed { get; set; }
+
     /// <summary>No longer used: WorkTrace has a single design (kept so existing settings files load unchanged).</summary>
     public ThemePreference Theme { get; set; } = ThemePreference.System;
 

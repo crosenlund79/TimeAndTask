@@ -4,7 +4,17 @@ using WorkTrace.App.Shell;
 
 namespace WorkTrace.App.ViewModels;
 
-public sealed record NavigationItem(AppSection Section, string Title, string Glyph, string Shortcut, ISectionViewModel Page);
+public sealed record NavigationItem(AppSection Section, string Title, string Glyph, string Shortcut, ISectionViewModel Page)
+{
+    /// <summary>Tooltip, also the label when the rail is collapsed to icons: "Tasks (Ctrl+2)".</summary>
+    public string ToolTip => $"{Title} ({Shortcut})";
+}
+
+/// <summary>Opens the Lists page on a tab (0 Stakeholders, 1 Task systems, 2 Channels), passing <see cref="Inner"/> on.</summary>
+public sealed record ListsTabRequest(int Tab, object? Inner = null);
+
+/// <summary>Opens the System page on a tab (see <see cref="SettingsViewModel"/> tab constants).</summary>
+public sealed record SystemTabRequest(int Tab);
 
 /// <summary>Main window: navigation between sections and the shared notification area.</summary>
 public sealed partial class MainViewModel : ObservableObject
@@ -14,13 +24,11 @@ public sealed partial class MainViewModel : ObservableObject
     public MainViewModel(
         HomeViewModel home,
         TasksViewModel tasks,
-        ClientsViewModel clients,
         ListsViewModel lists,
         SettingsViewModel settings,
         BoardViewModel board,
         GuidesViewModel guides,
         TimesheetViewModel timesheet,
-        ScreenshotsViewModel screenshots,
         INavigationService navigation,
         NotificationService notifications,
         WorkTrace.Core.Settings.ISettingsStore settingsStore)
@@ -32,14 +40,13 @@ public sealed partial class MainViewModel : ObservableObject
             new(AppSection.Home, "Overview", "", "Ctrl+1", home),
             new(AppSection.Timesheet, "Timesheet", "\uE787", "Ctrl+8", timesheet),
             new(AppSection.Tasks, "Tasks", "", "Ctrl+2", tasks),
-            new(AppSection.Clients, "Stakeholders", "", "Ctrl+3", clients),
             new(AppSection.Lists, "Lists", "", "Ctrl+4", lists),
             new(AppSection.Board, "Board", "\uE8A9", "Ctrl+6", board),
             new(AppSection.Guides, "Guides", "\uE82D", "Ctrl+7", guides),
-            new(AppSection.Screenshots, "Screenshots", "\uE722", "Ctrl+9", screenshots),
-            new(AppSection.Settings, "Settings", "\uE713", "Ctrl+5", settings),
+            new(AppSection.Settings, "System", "\uE713", "Ctrl+5", settings),
         ];
         navigation.NavigationRequested += (_, request) => NavigateTo(request.Section, request.Parameter);
+        IsNavCollapsed = settingsStore.Current.General.NavigationCollapsed;
         UpdateVisibleSections();
         settingsStore.Changed += (_, _) => System.Windows.Application.Current?.Dispatcher.BeginInvoke(UpdateVisibleSections);
     }
@@ -85,8 +92,37 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     public partial NavigationItem? SelectedSection { get; set; }
 
+    /// <summary>Navigation rail collapsed to icons (with tooltips), giving the page the room.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NavWidth), nameof(NavToggleGlyph), nameof(NavToggleToolTip))]
+    public partial bool IsNavCollapsed { get; set; }
+
+    public System.Windows.GridLength NavWidth => new(IsNavCollapsed ? 64 : 208);
+
+    public string NavToggleGlyph => IsNavCollapsed ? "\uE76C" : "\uE76B";
+
+    public string NavToggleToolTip => IsNavCollapsed ? "Expand the navigation" : "Collapse the navigation to icons";
+
+    [RelayCommand]
+    private void ToggleNav()
+    {
+        IsNavCollapsed = !IsNavCollapsed;
+        var collapsed = IsNavCollapsed;
+        _ = _settings.UpdateAsync(s => s.General.NavigationCollapsed = collapsed);
+    }
+
     public void NavigateTo(AppSection section, object? parameter = null)
     {
+        // Stakeholders live on the Lists page, Screenshots on the System page.
+        if (section == AppSection.Clients)
+        {
+            (section, parameter) = (AppSection.Lists, new ListsTabRequest(0, parameter));
+        }
+        else if (section == AppSection.Screenshots)
+        {
+            (section, parameter) = (AppSection.Settings, new SystemTabRequest(SettingsViewModel.ScreenshotsTab));
+        }
+
         if (!IsVisible(section))
         {
             section = AppSection.Home; // the Board is switched off

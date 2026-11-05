@@ -32,9 +32,6 @@
     <DataTemplate DataType="{x:Type vm:TasksViewModel}">
       <views:TasksView />
     </DataTemplate>
-    <DataTemplate DataType="{x:Type vm:ClientsViewModel}">
-      <views:ClientsView />
-    </DataTemplate>
     <DataTemplate DataType="{x:Type vm:ListsViewModel}">
       <views:ListsView />
     </DataTemplate>
@@ -50,14 +47,11 @@
     <DataTemplate DataType="{x:Type vm:TimesheetViewModel}">
       <views:TimesheetView />
     </DataTemplate>
-    <DataTemplate DataType="{x:Type vm:ScreenshotsViewModel}">
-      <views:ScreenshotsView />
-    </DataTemplate>
   </Window.Resources>
 
   <Grid Background="{DynamicResource ShellBackground}">
     <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="208" />
+      <ColumnDefinition Width="{Binding NavWidth}" />
       <ColumnDefinition Width="*" />
     </Grid.ColumnDefinitions>
 
@@ -67,23 +61,30 @@
     <DockPanel Margin="12,16,8,12">
       <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,0,0,20">
         <Image Source="{StaticResource WorkTraceLogo}" Width="28" Height="28" Margin="0,0,10,0" />
-        <TextBlock Text="WorkTrace" Style="{StaticResource BrandText}" VerticalAlignment="Center" />
+        <TextBlock Text="WorkTrace" Style="{StaticResource BrandText}" VerticalAlignment="Center"
+                   Visibility="{Binding IsNavCollapsed, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
       </StackPanel>
 
       <TextBlock DockPanel.Dock="Bottom" Margin="12,2,0,0" Style="{StaticResource CaptionText}" FontSize="11"
-                 Text="{Binding VersionText}" AutomationProperties.Name="Version" />
+                 Text="{Binding VersionText}" AutomationProperties.Name="Version"
+                 Visibility="{Binding IsNavCollapsed, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
       <TextBlock DockPanel.Dock="Bottom" Margin="12,8,0,0" Style="{StaticResource CaptionText}" FontSize="11"
-                 Text="Data is stored only on this PC" ToolTip="All data lives under %LocalAppData%\WorkTrace" />
+                 Text="Data is stored only on this PC" ToolTip="All data lives under %LocalAppData%\WorkTrace"
+                 Visibility="{Binding IsNavCollapsed, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+      <Button DockPanel.Dock="Bottom" Style="{StaticResource IconButton}" HorizontalAlignment="Left" Margin="4,8,0,0"
+              Content="{Binding NavToggleGlyph}" ToolTip="{Binding NavToggleToolTip}" AutomationProperties.Name="{Binding NavToggleToolTip}"
+              Command="{Binding ToggleNavCommand}" />
 
       <ListBox ItemsSource="{Binding VisibleSections}" SelectedItem="{Binding SelectedSection}"
-               Background="Transparent" BorderThickness="0"
+               Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                ItemContainerStyle="{StaticResource NavListBoxItem}"
                AutomationProperties.Name="Navigation">
         <ListBox.ItemTemplate>
           <DataTemplate DataType="{x:Type vm:NavigationItem}">
-            <StackPanel Orientation="Horizontal" ToolTip="{Binding Shortcut}">
+            <StackPanel Orientation="Horizontal" ToolTip="{Binding ToolTip}" AutomationProperties.Name="{Binding Title}">
               <TextBlock Text="{Binding Glyph}" Style="{StaticResource IconText}" FontSize="16" Margin="2,0,12,0" />
-              <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+              <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                         Visibility="{Binding DataContext.IsNavCollapsed, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
             </StackPanel>
           </DataTemplate>
         </ListBox.ItemTemplate>
@@ -99,7 +100,7 @@
     </Border>
 
     <!-- Notification (toast) -->
-    <Border Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="208,0,0,24"
+    <Border Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,24"
             MinWidth="320" MaxWidth="640" Padding="14,10" CornerRadius="8"
             Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
             BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1"

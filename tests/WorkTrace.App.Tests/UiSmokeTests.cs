@@ -123,6 +123,19 @@ public class UiSmokeTests
             clients.SelectedItem = clients.Items[0];
             await WpfTestHost.SettleAsync();
             Assert.False(clients.HasUnsavedChanges);
+            Assert.Equal(AppSection.Lists, window.ViewModel.SelectedSection!.Section); // Stakeholders are a Lists tab
+            var lists = ctx.Get<ListsViewModel>();
+            for (var tab = 2; tab >= 0; tab--)
+            {
+                lists.SelectedTab = tab;
+                await WpfTestHost.SettleAsync(3);
+            }
+
+            window.ViewModel.ToggleNavCommand.Execute(null); // icons-only navigation
+            await WpfTestHost.SettleAsync(3);
+            Assert.True(window.ViewModel.IsNavCollapsed);
+            window.ViewModel.ToggleNavCommand.Execute(null);
+            await WpfTestHost.SettleAsync(3);
 
             // Board: open a rich card, the archive, then the Inbox with an open item.
             window.ViewModel.NavigateTo(AppSection.Board);
@@ -148,7 +161,7 @@ public class UiSmokeTests
                 await WpfTestHost.SettleAsync(5);
             }
 
-            settingsPage.SelectedTab = 4; // Backup & restore
+            settingsPage.SelectedTab = SettingsViewModel.BackupTab;
             await WpfTestHost.SettleAsync(5);
             await backupPanel.PreviewRestoreAsync(zip);
             await WpfTestHost.SettleAsync(10);

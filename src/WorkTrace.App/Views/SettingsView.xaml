@@ -10,10 +10,10 @@
              d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}">
   <DockPanel>
     <StackPanel DockPanel.Dock="Top">
-      <TextBlock Text="Settings" Style="{StaticResource PageTitleText}" />
-      <TextBlock Style="{StaticResource PageSubtitleText}" Text="Changes are saved immediately." />
+      <TextBlock Text="System" Style="{StaticResource PageTitleText}" />
+      <TextBlock Style="{StaticResource PageSubtitleText}" Text="Configuration, screenshots, backups and maintenance. Changes are saved immediately." />
     </StackPanel>
-    <TabControl Margin="0,16,0,0" SelectedIndex="{Binding SelectedTab}" AutomationProperties.Name="Settings sections">
+    <TabControl Margin="0,16,0,0" SelectedIndex="{Binding SelectedTab}" AutomationProperties.Name="System sections">
       <TabItem Header="Tracking &amp; popup">
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
           <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,16,12,16">
@@ -154,7 +154,7 @@
           </StackPanel>
         </ScrollViewer>
       </TabItem>
-      <TabItem Header="Timesheet &amp; screenshots">
+      <TabItem Header="Timesheet">
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
           <StackPanel MaxWidth="760" HorizontalAlignment="Left" Margin="0,16,12,16">
             <!-- Weekly timesheet -->
@@ -172,10 +172,15 @@
               </StackPanel>
             </Border>
 
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+      <TabItem Header="Screenshots">
+        <DockPanel Margin="0,16,12,12">
             <!-- Screenshots -->
-            <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+            <Border DockPanel.Dock="Top" Style="{StaticResource Card}" MaxWidth="760" HorizontalAlignment="Left">
               <StackPanel>
-                <TextBlock Text="Screenshots" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+                <TextBlock Text="Capture" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
                 <controls:SettingRow Header="Automatic screenshots"
                                      Description="Silent captures while tracking runs (never while paused, asleep or locked). Unchanged screens are skipped. Stored only on this PC.">
                   <ComboBox Width="180" ItemsSource="{Binding ScreenshotModeOptions}" DisplayMemberPath="Name"
@@ -191,8 +196,8 @@
                 </controls:SettingRow>
               </StackPanel>
             </Border>
-          </StackPanel>
-        </ScrollViewer>
+            <views:ScreenshotsView DataContext="{Binding Screenshots}" Margin="0,18,0,0" />
+        </DockPanel>
       </TabItem>
       <TabItem Header="Tasks &amp; Board">
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">

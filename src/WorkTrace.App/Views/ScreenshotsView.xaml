@@ -14,8 +14,9 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
+    <!-- Shown in System › Screenshots, below the capture settings -->
     <StackPanel>
-      <TextBlock Text="Screenshots" Style="{StaticResource PageTitleText}" />
+      <TextBlock Text="Captured screenshots" Style="{StaticResource SectionTitleText}" />
       <TextBlock Style="{StaticResource PageSubtitleText}"
                  Text="Automatic captures while tracking runs, with the task you had checked in on. They stay on this PC." />
     </StackPanel>
@@ -42,8 +43,7 @@
     <Border Grid.Row="2" Margin="0,0,0,10" Padding="10,6" CornerRadius="4" Background="{DynamicResource SubtleFillColorSecondaryBrush}"
             Visibility="{Binding IsOff, Converter={StaticResource BoolToVisibility}}">
       <DockPanel>
-        <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="Open Settings" Command="{Binding OpenSettingsCommand}" VerticalAlignment="Center" />
-        <TextBlock Text="Automatic screenshots are off. Turn them on under Settings › Screenshots." VerticalAlignment="Center" />
+        <TextBlock Text="Automatic screenshots are off. Turn them on above." VerticalAlignment="Center" />
       </DockPanel>
     </Border>
 

@@ -15,9 +15,13 @@ public sealed partial class SettingsViewModel(
     TrackingController tracking,
     TimeReminderService reminders,
     BackupViewModel backup,
+    ScreenshotsViewModel screenshots,
     INotificationService notifications,
     ILogger<SettingsViewModel> logger) : ViewModelBase(notifications, logger), ISectionViewModel
 {
+    /// <summary>System › Screenshots: capture settings and the captured screenshots (browse, open, delete).</summary>
+    public ScreenshotsViewModel Screenshots { get; } = screenshots;
+
     private bool _loading;
 
     public TrackingController Tracking { get; } = tracking;
@@ -177,11 +181,26 @@ public sealed partial class SettingsViewModel(
 
     // ---- Tasks & Board ----
 
-    /// <summary>Index of the open settings tab (Tracking, Reminders, Timesheet, Tasks &amp; Board, Backup, General).</summary>
+    /// <summary>
+    /// Index of the open System tab: Tracking &amp; popup, Reminders, Timesheet, Screenshots, Tasks &amp; Board,
+    /// Backup &amp; restore, General.
+    /// </summary>
     [ObservableProperty]
     public partial int SelectedTab { get; set; }
 
-    public const int TabCount = 6;
+    public const int TabCount = 7;
+
+    public const int ScreenshotsTab = 3;
+
+    public const int BackupTab = 5;
+
+    partial void OnSelectedTabChanged(int value)
+    {
+        if (value == ScreenshotsTab)
+        {
+            _ = Screenshots.ActivateAsync(null); // load the captures only when the tab is opened
+        }
+    }
 
     [ObservableProperty]
     public partial bool AutoAddTasksToBoard { get; set; }
@@ -300,6 +319,16 @@ public sealed partial class SettingsViewModel(
 
     public Task ActivateAsync(object? parameter)
     {
+        if (parameter is SystemTabRequest request)
+        {
+            SelectedTab = request.Tab;
+        }
+
+        if (SelectedTab == ScreenshotsTab)
+        {
+            _ = Screenshots.ActivateAsync(null);
+        }
+
         _loading = true;
         var s = settings.Current;
         PeriodicPromptsEnabled = s.Tracking.PeriodicPromptsEnabled;

@@ -13,20 +13,22 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
-    <StackPanel Margin="0,0,0,18">
+    <StackPanel Margin="0,0,0,14">
       <TextBlock Text="Lists" Style="{StaticResource PageTitleText}" />
       <TextBlock Style="{StaticResource PageSubtitleText}"
-                 Text="Choices offered when creating tasks and recording activity. Changes are saved immediately; items in use can be hidden but not deleted." />
+                 Text="The lists you maintain: stakeholders, task systems and communication channels. Items in use can be hidden but not deleted." />
     </StackPanel>
 
-    <Grid Grid.Row="1">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="16" />
-        <ColumnDefinition Width="*" />
-      </Grid.ColumnDefinitions>
-      <views:LookupListView DataContext="{Binding TaskSystems}" />
-      <views:LookupListView Grid.Column="2" DataContext="{Binding Channels}" />
-    </Grid>
+    <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTab}" AutomationProperties.Name="Lists">
+      <TabItem Header="Stakeholders">
+        <views:ClientsView DataContext="{Binding Clients}" Margin="0,14,0,0" />
+      </TabItem>
+      <TabItem Header="Task systems">
+        <views:LookupListView DataContext="{Binding TaskSystems}" Margin="0,14,0,0" HorizontalAlignment="Left" Width="560" />
+      </TabItem>
+      <TabItem Header="Communication channels">
+        <views:LookupListView DataContext="{Binding Channels}" Margin="0,14,0,0" HorizontalAlignment="Left" Width="560" />
+      </TabItem>
+    </TabControl>
   </Grid>
 </UserControl>
