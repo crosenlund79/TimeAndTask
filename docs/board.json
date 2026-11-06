@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 63,
+  "nextId": 64,
   "cards": [
     {
       "id": "WT-001",
@@ -1581,6 +1581,38 @@
       "createdAt": "2026-11-05T14:56:04Z",
       "updatedAt": "2026-11-05T14:56:11Z",
       "rev": 2
+    },
+    {
+      "id": "WT-063",
+      "uid": "d7afa32c-0474-4c42-a382-112fc157351e",
+      "title": "Hourly perspective quote above the task list",
+      "category": "feature",
+      "priority": "low",
+      "status": "review",
+      "rank": "zzzzzy",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Owner finds the quote readable, calm and not distracting; refresh works; quote stays put across pages"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "9329186f-3101-4d70-9b04-8f3c8d26d417",
+          "type": "created",
+          "at": "2026-11-06T09:15:13Z",
+          "by": "claude",
+          "to": "review"
+        }
+      ],
+      "createdAt": "2026-11-06T09:15:13Z",
+      "updatedAt": "2026-11-06T09:15:13Z",
+      "rev": 1
     }
   ]
 }

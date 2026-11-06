@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 28 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 29 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -458,6 +458,14 @@ Commit e901e4f; Windows CI run 50 green (incl. WPF smoke with Minor Tasks); inst
 **Evidence**
 
 Commit fc44d57; Windows CI run 51 green (incl. WPF smoke: Lists tabs, collapsed rail, every System tab); installer WorkTrace-Setup-0.2.51
+
+### WT-063 · Hourly perspective quote above the task list
+
+`feature` · priority Low
+
+**Acceptance criteria**
+
+- Owner finds the quote readable, calm and not distracting; refresh works; quote stays put across pages
 
 ## To do
 
