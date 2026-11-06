@@ -93,6 +93,11 @@ public class UiSmokeTests
             Assert.Equal(tasks.Timeline[0].Id, tasks.Editor!.Id);
             tasks.ShowTimeline = false;
 
+            // Perspective quote above the list: refresh shows another one.
+            var quote = tasks.Quote.CurrentQuote;
+            tasks.Quote.NextCommand.Execute(null);
+            Assert.NotEqual(quote, tasks.Quote.CurrentQuote);
+
             // Minor Tasks group: quick add, inline edit, tick to complete (moves to Completed).
             tasks.Minor.NewTitle = "Buy stamps";
             tasks.Minor.NewReminderDate = DateTime.Today.AddDays(1);

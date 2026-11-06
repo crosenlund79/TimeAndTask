@@ -42,6 +42,7 @@ public static class AppServices
         // unsaved edits) survives hiding the window to the tray.
         services.AddSingleton<HomeViewModel>();
         services.AddSingleton<TasksViewModel>();
+        services.AddSingleton<QuoteViewModel>();
         services.AddSingleton<MinorTasksViewModel>();
         services.AddSingleton<ClientsViewModel>();
         services.AddSingleton<ListsViewModel>();

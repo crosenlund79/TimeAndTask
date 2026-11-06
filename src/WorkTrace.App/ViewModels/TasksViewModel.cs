@@ -43,10 +43,12 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         TimeProvider timeProvider,
         ISettingsStore settings,
         MinorTasksViewModel minor,
+        QuoteViewModel quote,
         ILogger<TasksViewModel> logger)
         : base(notifications, logger)
     {
         Minor = minor;
+        Quote = quote;
         MinorGroup = new(TaskGroup.Minor, "Minor Tasks", "\uE73A", "#A0675E", SaveGroupState)
         {
             IsExpanded = !settings.Current.Tasks.CollapsedGroups.Contains(TaskGroup.Minor),
@@ -80,6 +82,9 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
 
     /// <summary>Regular, Recurring and Waiting for External Input, in display order.</summary>
     public List<TaskGroupViewModel> Groups { get; }
+
+    /// <summary>The perspective quote shown above the task list.</summary>
+    public QuoteViewModel Quote { get; }
 
     /// <summary>Reminder-only minor tasks, shown as the first group (never offered for time registration).</summary>
     public MinorTasksViewModel Minor { get; }

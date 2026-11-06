@@ -29,6 +29,25 @@
       <StackPanel>
         <TextBlock Text="Tasks" Style="{StaticResource PageTitleText}" />
         <TextBlock Style="{StaticResource PageSubtitleText}" Text="Reusable work items. Type a title, ticket number or stakeholder to find one." />
+
+        <!-- Perspective quote: one at a time, a new one about every hour (or on request) -->
+        <Border DataContext="{Binding Quote}" Margin="0,14,0,0" Padding="14,8,6,8" CornerRadius="4" HorizontalAlignment="Left" MaxWidth="780"
+                Background="#F4F1E6" BorderBrush="#E2DCCB" BorderThickness="1" AutomationProperties.Name="Perspective">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="&#x201C;" FontFamily="Georgia" FontSize="30" Foreground="#8A9770" Margin="0,-7,10,-16" VerticalAlignment="Top"
+                       IsHitTestVisible="False" />
+            <TextBlock Grid.Column="1" Text="{Binding CurrentQuote}" TextWrapping="Wrap" VerticalAlignment="Center"
+                       FontFamily="{DynamicResource TitleFontFamily}" FontStyle="Italic" FontSize="13.5" Foreground="#4A4438" />
+            <Button Grid.Column="2" Style="{StaticResource IconButton}" Content="&#xE72C;" FontSize="11" Width="26" Height="26" Margin="10,0,0,0"
+                    VerticalAlignment="Center" Opacity="0.75" Command="{Binding NextCommand}" ToolTip="Another thought"
+                    AutomationProperties.Name="Show another quote" />
+          </Grid>
+        </Border>
       </StackPanel>
     </DockPanel>
 
