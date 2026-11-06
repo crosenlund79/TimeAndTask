@@ -1597,7 +1597,7 @@
         "Owner finds the quote readable, calm and not distracting; refresh works; quote stays put across pages"
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Commit 4082442; Windows CI run 52 green (incl. WPF smoke: quote refresh); installer WorkTrace-Setup-0.2.52",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -1611,8 +1611,8 @@
         }
       ],
       "createdAt": "2026-11-06T09:15:13Z",
-      "updatedAt": "2026-11-06T09:15:13Z",
-      "rev": 1
+      "updatedAt": "2026-11-06T09:15:18Z",
+      "rev": 2
     }
   ]
 }

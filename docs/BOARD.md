@@ -467,6 +467,10 @@ Commit fc44d57; Windows CI run 51 green (incl. WPF smoke: Lists tabs, collapsed 
 
 - Owner finds the quote readable, calm and not distracting; refresh works; quote stays put across pages
 
+**Evidence**
+
+Commit 4082442; Windows CI run 52 green (incl. WPF smoke: quote refresh); installer WorkTrace-Setup-0.2.52
+
 ## To do
 
 ### WT-030 · Estimation engine
