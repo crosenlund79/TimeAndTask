@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 32 | 5 | 0 |
+| 0 | 2 | 8 | 1 | 31 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,7 +13,17 @@ _Empty._
 
 ## In progress
 
-_None._
+### WT-066 · Continuous time registration (one active interval) + daily task history
+
+`bug` · priority High
+
+**Acceptance criteria**
+
+- Start-up time goes to the first chosen task; switching splits at the selection time; same task continues; dismiss/miss changes nothing; Waiting tasks selectable; pause/restart/exit/crash never overlap or invent time; Overview = Timesheet; Overview 'Tasks this day' and Timesheet 'Tasks worked on this week' list each task once per day.
+
+**Evidence**
+
+Commit 9903c7f; Windows CI run 55 green (ContinuousRegistrationTests, RegistrationIntegrityTests, TimeEstimatorTests, popup stale-search test); installer WorkTrace-Setup-0.2.55; code backup branch backup/pre-continuous-registration-2026-11-09
 
 ## Review / Test
 
@@ -494,18 +504,6 @@ Commit 6ea6b88; Windows CI run 53 green (all tests incl. new RegistrationIntegri
 **Evidence**
 
 Commit f75ebe1; Windows CI run 54 green (TimelineExportTests: per-day hours, workbook structure/order, PDF pagination + xref); sample xlsx/pdf rendered and checked; installer WorkTrace-Setup-0.2.54
-
-### WT-066 · Continuous time registration (one active interval) + daily task history
-
-`bug` · priority High
-
-**Acceptance criteria**
-
-- Start-up time goes to the first chosen task; switching splits at the selection time; same task continues; dismiss/miss changes nothing; Waiting tasks selectable; pause/restart/exit/crash never overlap or invent time; Overview = Timesheet; Overview 'Tasks this day' and Timesheet 'Tasks worked on this week' list each task once per day.
-
-**Evidence**
-
-Commit 9903c7f; Windows CI run 55 green (ContinuousRegistrationTests, RegistrationIntegrityTests, TimeEstimatorTests, popup stale-search test); installer WorkTrace-Setup-0.2.55; code backup branch backup/pre-continuous-registration-2026-11-09
 
 ## To do
 
