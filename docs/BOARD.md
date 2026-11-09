@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 1 | 31 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 32 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,24 +13,7 @@ _Empty._
 
 ## In progress
 
-### WT-066 · Continuous time registration (one active interval) + daily task history
-
-`bug` · priority High
-
-**Acceptance criteria**
-
-- Start-up time goes to the first chosen task; switching splits at the selection time; same task continues; dismiss/miss changes nothing; Waiting tasks selectable; pause/restart/exit/crash never overlap or invent time; Overview = Timesheet; Overview 'Tasks this day' and Timesheet 'Tasks worked on this week' list each task once per day.
-
-**Evidence**
-
-Commit 9903c7f; Windows CI run 55 green (ContinuousRegistrationTests, RegistrationIntegrityTests, TimeEstimatorTests, popup stale-search test); installer WorkTrace-Setup-0.2.55; code backup branch backup/pre-continuous-registration-2026-11-09
-Commit 1321524; Windows CI run 56 green (lifecycle tests: sleep/lock/missed unlock/frozen process/popup open for hours/midnight/diagnostic report read-only); installer WorkTrace-Setup-0.2.56; backup branch backup/pre-registration-debugging-2026-11-09
-Commit dcf29be; Windows CI run 58 green (regression tests: future-reaching registration refused/ignored, A->B->C(waiting)->A, editor running-row and equal-times tests); replay of owner backup: selections active again, task 15 673->32 min on 9 Nov, 799->0 on 10 Nov; installer WorkTrace-Setup-0.2.58
-
-**Comments (2)**
-
-- 2026-11-09 16:32 · claude: Owner report 2026-11-09: still unclassified gaps and repeated rows. Root cause: non-explicit tracking breaks (sleep/Modern Standby/clock change) restarted as Unclassified; locked time shown as Unclassified; check-ins during a stale lock/sleep state registered nothing. Fixed in 1321524 (ADR-039); diagnostic: WorkTrace.exe --registration-report <date>.
-- 2026-11-09 17:26 · claude: Owner report 2026-11-09 (selection reverts), analysed on the owner's backup: root cause = registration editor saved '13:19-13:19' as 13:19 -> 13:19 next day (24 h manual registration #4 on task 15) which overrode every later selection. Fixed in dcf29be (ADR-040). Stored record #4 left untouched for the owner to decide.
+_None._
 
 ## Review / Test
 
@@ -511,6 +494,25 @@ Commit 6ea6b88; Windows CI run 53 green (all tests incl. new RegistrationIntegri
 **Evidence**
 
 Commit f75ebe1; Windows CI run 54 green (TimelineExportTests: per-day hours, workbook structure/order, PDF pagination + xref); sample xlsx/pdf rendered and checked; installer WorkTrace-Setup-0.2.54
+
+### WT-066 · Continuous time registration (one active interval) + daily task history
+
+`bug` · priority High
+
+**Acceptance criteria**
+
+- Start-up time goes to the first chosen task; switching splits at the selection time; same task continues; dismiss/miss changes nothing; Waiting tasks selectable; pause/restart/exit/crash never overlap or invent time; Overview = Timesheet; Overview 'Tasks this day' and Timesheet 'Tasks worked on this week' list each task once per day.
+
+**Evidence**
+
+Commit 9903c7f; Windows CI run 55 green (ContinuousRegistrationTests, RegistrationIntegrityTests, TimeEstimatorTests, popup stale-search test); installer WorkTrace-Setup-0.2.55; code backup branch backup/pre-continuous-registration-2026-11-09
+Commit 1321524; Windows CI run 56 green (lifecycle tests: sleep/lock/missed unlock/frozen process/popup open for hours/midnight/diagnostic report read-only); installer WorkTrace-Setup-0.2.56; backup branch backup/pre-registration-debugging-2026-11-09
+Commit dcf29be; Windows CI run 58 green (regression tests: future-reaching registration refused/ignored, A->B->C(waiting)->A, editor running-row and equal-times tests); replay of owner backup: selections active again, task 15 673->32 min on 9 Nov, 799->0 on 10 Nov; installer WorkTrace-Setup-0.2.58
+
+**Comments (2)**
+
+- 2026-11-09 16:32 · claude: Owner report 2026-11-09: still unclassified gaps and repeated rows. Root cause: non-explicit tracking breaks (sleep/Modern Standby/clock change) restarted as Unclassified; locked time shown as Unclassified; check-ins during a stale lock/sleep state registered nothing. Fixed in 1321524 (ADR-039); diagnostic: WorkTrace.exe --registration-report <date>.
+- 2026-11-09 17:26 · claude: Owner report 2026-11-09 (selection reverts), analysed on the owner's backup: root cause = registration editor saved '13:19-13:19' as 13:19 -> 13:19 next day (24 h manual registration #4 on task 15) which overrode every later selection. Fixed in dcf29be (ADR-040). Stored record #4 left untouched for the owner to decide.
 
 ## To do
 
