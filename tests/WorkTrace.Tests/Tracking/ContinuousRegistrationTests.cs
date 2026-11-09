@@ -307,4 +307,60 @@ public class ContinuousRegistrationTests : TrackingTestBase
         Assert.DoesNotContain("OVERLAPPING", report, StringComparison.Ordinal);
         TestContext.Current.AddAttachment("registration-report", report);
     }
+
+    /// <summary>
+    /// Regression (owner data, 9 Nov 2026, allocation #4): editing the running row 13:19:29–13:19:36 to another task saved
+    /// 13:19 → 13:19 as "end before start = next day": a 24-hour manual registration that overrode every later selection.
+    /// </summary>
+    [Fact]
+    public async Task AManualRegistration_CannotReachIntoTheFuture_SoLaterSelectionsAlwaysWin()
+    {
+        await ConfigureAsync(t => { t.PeriodicPromptsEnabled = false; t.PromptOnStart = false; });
+        var (a, b, waiting) = await SeedAsync();
+        await StartEngineAsync();
+        await Select(a);
+        await AdvanceToAsync(9, 19, 36);
+
+        // What the editor produced for the running row: start 09:19, "end 09:19" read as the next day.
+        await Assert.ThrowsAsync<WorkTrace.Core.Validation.DomainValidationException>(() =>
+            Registrations.EditAsync(At(9, 7), At(9, 19, 36), At(9, 19), At(9, 19).AddDays(1), waiting.Id, null, Ct));
+        Assert.Equal(a.Id, (await Registrations.GetActiveAsync(Now, Ct))!.TaskId);
+    }
+
+    /// <summary>Records already saved that way (like the owner's allocation #4) must not override what was chosen after they were made.</summary>
+    [Fact]
+    public async Task AnExistingFutureReachingRegistration_IsIgnoredAfterItWasMade_AndSelectionsTakeOver()
+    {
+        await ConfigureAsync(t => { t.PeriodicPromptsEnabled = false; t.PromptOnStart = false; });
+        var (a, b, waiting) = await SeedAsync();
+        await StartEngineAsync();
+        await Select(a);
+        await AdvanceToAsync(9, 20);
+        await using (var db = await Services.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<WorkTrace.Infrastructure.Persistence.WorkTraceDbContext>>().CreateDbContextAsync(Ct))
+        {
+            db.ManualAllocations.Add(new ManualAllocation
+            {
+                StartUtc = At(9, 19), EndUtc = At(9, 19).AddDays(1), Kind = AllocationKind.Task, TaskId = waiting.Id, CreatedAtUtc = Now, ModifiedAtUtc = Now,
+            });
+            await db.SaveChangesAsync(Ct);
+        }
+
+        // A → B → C(waiting) → A after the bad record was saved: every selection is the active task, and is registered.
+        await AdvanceToAsync(10, 0);
+        await Select(b);
+        Assert.Equal(b.Id, (await Registrations.GetActiveAsync(Now, Ct))!.TaskId);
+        await AdvanceToAsync(10, 30);
+        await Select(waiting);
+        await AdvanceToAsync(11, 0);
+        await Select(a);
+        Assert.Equal(a.Id, (await Registrations.GetActiveAsync(Now, Ct))!.TaskId);
+        await AdvanceToAsync(11, 30);
+        await Engine.StopAsync();
+
+        Assert.Equal(
+            [(At(9, 7), At(9, 19), "Task A"), (At(9, 19), At(9, 20), "Waiting task"), (At(9, 20), At(10, 0), "Task A"),
+             (At(10, 0), At(10, 30), "Task B"), (At(10, 30), At(11, 0), "Waiting task"), (At(11, 0), At(11, 30), "Task A")],
+            await WorkAsync(Day(Now)));
+        Assert.Empty((await Timesheets.GetDayAsync(Day(Now).AddDays(1), Ct)).Entries); // nothing spills into tomorrow
+    }
 }

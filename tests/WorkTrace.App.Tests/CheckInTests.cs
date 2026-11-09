@@ -112,6 +112,54 @@ public class CheckInTests
         Assert.True(errors.Count == 0, "Binding errors:\n" + string.Join("\n", errors));
     });
 
+    /// <summary>
+    /// Regression (owner data 9 Nov 2026): the running row 13:19:29–13:19:36 shows as 13:19–13:19; changing its task saved
+    /// "13:19 → 13:19 tomorrow", a 24-hour registration that overrode every later selection.
+    /// </summary>
+    [Fact]
+    public Task EditingTheRunningRow_EndsNow_AndTheChosenTaskBecomesActive() => WpfTestHost.RunAsync(async () =>
+    {
+        var (ctx, invoice, meeting) = await SeedAsync();
+        await using var _ = ctx;
+        ctx.Time.Advance(TimeSpan.FromSeconds(36)); // 09:00:36; the row started at 09:00:29
+        var start = ctx.Time.GetUtcNow().UtcDateTime.AddSeconds(-7);
+        var running = new WorkTrace.Core.Reporting.RegistrationEntry(
+            start, ctx.Time.GetUtcNow().UtcDateTime, false, false, invoice.Id, invoice.Title, null, invoice.ClientId, null, null) { IsActive = true };
+        var vm = Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance<RegistrationEditorViewModel>(ctx.Services);
+        await vm.LoadAsync(running);
+        Assert.Equal(vm.StartText, vm.EndText); // same minute, as in the owner's case
+        bool? saved = null;
+        vm.CloseRequested += (_, ok) => saved = ok;
+
+        vm.ClientKey = meeting.ClientId;
+        vm.TaskKey = meeting.Id;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        Assert.True(saved, vm.Error);
+        await using var db = await ctx.Get<Microsoft.EntityFrameworkCore.IDbContextFactory<WorkTrace.Infrastructure.Persistence.WorkTraceDbContext>>().CreateDbContextAsync();
+        var registered = db.ManualAllocations.Single(x => x.Kind == AllocationKind.Task);
+        Assert.Equal((start, meeting.Id), (registered.StartUtc, registered.TaskId));
+        Assert.True(registered.EndUtc <= ctx.Time.GetUtcNow().UtcDateTime, "never into the future");
+        Assert.Equal(meeting.Id, (await ctx.Get<ICheckInService>().GetLastObservationAsync())!.TaskId); // now the active task
+    });
+
+    [Fact]
+    public Task EditedTimes_WithTheSameStartAndEnd_AreRejected() => WpfTestHost.RunAsync(async () =>
+    {
+        var (ctx, invoice, _) = await SeedAsync();
+        await using var _ = ctx;
+        var end = ctx.Time.GetUtcNow().UtcDateTime.AddHours(-1);
+        var vm = Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance<RegistrationEditorViewModel>(ctx.Services);
+        await vm.LoadAsync(new WorkTrace.Core.Reporting.RegistrationEntry(end.AddMinutes(-30), end, false, false, invoice.Id, invoice.Title, null, invoice.ClientId, null, null));
+
+        vm.EndText = vm.StartText;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        Assert.Equal("The end must be after the start.", vm.Error);
+        await using var db = await ctx.Get<Microsoft.EntityFrameworkCore.IDbContextFactory<WorkTrace.Infrastructure.Persistence.WorkTraceDbContext>>().CreateDbContextAsync();
+        Assert.Empty(db.ManualAllocations);
+    });
+
     [Fact]
     public Task Enter_OnEmptySearch_RepeatsThePreviousTask() => WpfTestHost.RunAsync(async () =>
     {

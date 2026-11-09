@@ -34,7 +34,7 @@ internal sealed class TrayIconService(
         _idleIcon = LoadIcon("tray-paused.ico");
 
         _statusItem = new Forms.ToolStripMenuItem { Enabled = false };
-        var record = Item("Record activity now", () => tracking.RecordNowCommand.Execute(null), bold: true);
+        var record = Item("Record activity now", () => tracking.RecordNowCommand.Execute("tray"), bold: true);
         _recordItem = record;
         UpdateShortcut(settings.Current.General.GlobalShortcut);
 

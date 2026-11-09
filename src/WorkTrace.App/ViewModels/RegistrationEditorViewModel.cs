@@ -12,7 +12,12 @@ namespace WorkTrace.App.ViewModels;
 /// Edits one registration (or classifies an unclassified interval): stakeholder, task, date, start, end and duration.
 /// Saving replaces the original range; nothing is rounded and the history keeps the earlier values.
 /// </summary>
-public sealed partial class RegistrationEditorViewModel(ITaskService tasks, IClientService clients, IRegistrationService registrations) : ObservableObject
+public sealed partial class RegistrationEditorViewModel(
+    ITaskService tasks,
+    IClientService clients,
+    IRegistrationService registrations,
+    WorkTrace.Core.Tracking.ICheckInService checkIns,
+    TimeProvider timeProvider) : ObservableObject
 {
     private RegistrationEntry? _original;
     private IReadOnlyList<TaskSummary> _allTasks = [];
@@ -159,8 +164,15 @@ public sealed partial class RegistrationEditorViewModel(ITaskService tasks, ICli
         }
 
         var day = DateOnly.FromDateTime(date);
+        if (endTime == startTime && !(IsUnchanged(original.StartUtc, day, startTime) && IsUnchanged(original.EndUtc, day, endTime)))
+        {
+            // "13:19–13:19" once meant 13:19 tomorrow: a 24-hour registration that overrode every later task (9 Nov 2026).
+            Error = "The end must be after the start.";
+            return;
+        }
+
         var startLocal = day.ToDateTime(startTime);
-        var endLocal = (endTime > startTime ? day : day.AddDays(1)).ToDateTime(endTime); // an end before the start is the next morning
+        var endLocal = (endTime >= startTime ? day : day.AddDays(1)).ToDateTime(endTime); // an end before the start is the next morning
         var startUtc = DateTime.SpecifyKind(TimeZoneInfo.ConvertTimeToUtc(startLocal, TimeZoneInfo.Local), DateTimeKind.Utc);
         var endUtc = DateTime.SpecifyKind(TimeZoneInfo.ConvertTimeToUtc(endLocal, TimeZoneInfo.Local), DateTimeKind.Utc);
 
@@ -175,6 +187,13 @@ public sealed partial class RegistrationEditorViewModel(ITaskService tasks, ICli
         {
             endUtc = original.EndUtc;
         }
+
+        // The running row ends "now": unchanged, it means now at saving (not when the dialog opened).
+        var now = DateTime.SpecifyKind(timeProvider.GetUtcNow().UtcDateTime, DateTimeKind.Utc);
+        if (original.IsActive && endUtc == original.EndUtc)
+        {
+            endUtc = now;
+        }
         var taskId = PickerOption.FromKey(TaskKey ?? 0);
         var clientId = PickerOption.FromKey(ClientKey ?? 0);
         try
@@ -186,6 +205,13 @@ public sealed partial class RegistrationEditorViewModel(ITaskService tasks, ICli
             else
             {
                 await registrations.AssignAsync(startUtc, endUtc, taskId, clientId);
+            }
+
+            // Changing the task of the running row means "I am on this task": it becomes the active task (a selection),
+            // instead of the previous task carrying on right after the edited part.
+            if (original.IsActive && endUtc >= now && (taskId != original.TaskId || taskId is null && clientId != original.ClientId))
+            {
+                await checkIns.RecordAsync(new WorkTrace.Core.Tracking.CheckInRequest(null, taskId, null, ClientId: taskId is null ? clientId : null));
             }
 
             CloseRequested?.Invoke(this, true);
@@ -201,6 +227,12 @@ public sealed partial class RegistrationEditorViewModel(ITaskService tasks, ICli
 
     private static bool TryTime(string? text, out TimeOnly time) =>
         TimeOnly.TryParseExact(text?.Trim(), ["H:mm", "HH:mm", "H.mm", "HHmm"], CultureInfo.InvariantCulture, DateTimeStyles.None, out time);
+
+    private static bool IsUnchanged(DateTime originalUtc, DateOnly day, TimeOnly time)
+    {
+        var local = TimeZoneInfo.ConvertTimeFromUtc(originalUtc, TimeZoneInfo.Local);
+        return DateOnly.FromDateTime(local) == day && TimeOnly.FromDateTime(local) is var t && t.Hour == time.Hour && t.Minute == time.Minute;
+    }
 
     private static DateTime Truncate(DateTime utc) => new(utc.Ticks - (utc.Ticks % TimeSpan.TicksPerMinute), DateTimeKind.Utc);
 

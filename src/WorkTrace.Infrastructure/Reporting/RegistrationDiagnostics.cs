@@ -364,6 +364,12 @@ public static class RegistrationDiagnostics
             findings.Add($"{Period(a)} is split at {L(a.EndUtc)}–{L(b.StartUtc)} by time that was not tracked (sleep, clock change or a restart).");
         }
 
+        foreach (var a in allocations.Where(a => !a.IsDeleted && a.Kind != AllocationKind.Cleared && a.EndUtc > a.CreatedAtUtc.AddMinutes(1)))
+        {
+            findings.Add($"Manual registration #{a.Id} ({L(a.StartUtc)}–{TimeZoneInfo.ConvertTimeFromUtc(a.EndUtc, zone):yyyy-MM-dd HH:mm}) ends {D(a.EndUtc - a.CreatedAtUtc)} after it was saved at "
+                + $"{L(a.CreatedAtUtc)}: the part after saving is ignored, so later task choices count (it would otherwise override them).");
+        }
+
         if (adjustments.Count > 0)
         {
             findings.Add($"{adjustments.Count} timesheet correction(s) on this day change the Timesheet total but not the registrations.");

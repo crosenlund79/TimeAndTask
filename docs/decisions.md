@@ -246,3 +246,12 @@ sleep so that time is not counted. The Overview marks the running interval Activ
 shows the check-ins behind each row. `--registration-report` writes a read-only, redacted diagnostic of one day.
 **Reason:** every non-explicit tracking break restarted the day as "Unclassified" until the next answered check-in, which
 split one task into repeated rows with unclassified gaps, and check-ins during a stale lock or sleep state registered nothing.
+
+## ADR-040 — Manual registrations never reach past the moment they were saved
+**Evidence (owner backup, 9 Nov 2026):** editing the running 7-second row 13:19:29–13:19:36 (shown "13:19–13:19") to another
+task saved "13:19 → 13:19 the next day", because the editor read an end not after the start as the next day. The resulting
+24-hour manual registration overrode every task chosen afterwards, so each selection seemed to revert to that task, and it
+spilled 13 h into the next day.
+**Decision:** a manual registration counts only up to its creation time (read-time rule; stored records stay untouched);
+saving one that ends in the future, or lasts 24 h or more, is refused; the editor rejects equal start and end times; editing
+the running row ends it "now" at saving and makes the chosen task the active task (a check-in).

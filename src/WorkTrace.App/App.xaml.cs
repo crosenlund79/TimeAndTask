@@ -155,7 +155,7 @@ public partial class App : Application, IAppLifetime
     {
         var presenter = services.GetRequiredService<CheckInPresenter>();
         var hotkey = services.GetRequiredService<GlobalHotkey>();
-        hotkey.Pressed += (_, _) => presenter.ShowManual();
+        hotkey.Pressed += (_, _) => presenter.ShowManual("global shortcut");
         if (!hotkey.Register(settings.General.GlobalShortcut))
         {
             tray.ShowNotification("Shortcut not available", $"{settings.General.GlobalShortcut} is used by another application. Choose another one in Settings.");

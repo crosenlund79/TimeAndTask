@@ -16,6 +16,7 @@ internal sealed class RegistrationService(
     ILogger<RegistrationService> logger) : IRegistrationService
 {
     private static readonly TimeSpan MaxLength = TimeSpan.FromHours(24);
+    private static readonly TimeSpan FutureTolerance = TimeSpan.FromMinutes(1);
 
     public async Task AssignAsync(DateTime startUtc, DateTime endUtc, int? taskId, int? clientId, CancellationToken cancellationToken = default)
     {
@@ -48,6 +49,7 @@ internal sealed class RegistrationService(
     {
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
         CheckRange(startUtc, endUtc, "Start");
+        CheckNotFuture(endUtc, "End");
         db.ManualAllocations.Add(Cleared(startUtc, endUtc));
         await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Registration deleted (now unclassified)");
@@ -115,15 +117,31 @@ internal sealed class RegistrationService(
             throw DomainValidationException.ForField(field, "The end must be after the start.");
         }
 
-        if (endUtc - startUtc > MaxLength)
+        if (endUtc - startUtc >= MaxLength)
         {
-            throw DomainValidationException.ForField(field, "A registration can be at most 24 hours.");
+            throw DomainValidationException.ForField(field, "A registration must be shorter than 24 hours.");
         }
     }
 
-    private static async Task ValidateAsync(WorkTraceDbContext db, DateTime startUtc, DateTime endUtc, int? taskId, int? clientId, CancellationToken cancellationToken)
+    /// <summary>
+    /// Registrations describe time that has passed. One ending in the future would override every task chosen until then
+    /// (owner data 9 Nov 2026: a 24-hour registration made from a 7-second row kept "reverting" each selection).
+    /// </summary>
+    private void CheckNotFuture(DateTime endUtc, string field)
+    {
+        var now = UtcTime.Now(timeProvider);
+        if (endUtc > now + FutureTolerance)
+        {
+            var local = TimeZoneInfo.ConvertTimeFromUtc(now, TimeZoneInfo.Local);
+            throw DomainValidationException.ForField(field,
+                $"The end can't be later than now ({local:HH:mm}). Time from now on follows the task you choose.");
+        }
+    }
+
+    private async Task ValidateAsync(WorkTraceDbContext db, DateTime startUtc, DateTime endUtc, int? taskId, int? clientId, CancellationToken cancellationToken)
     {
         CheckRange(startUtc, endUtc, "Start");
+        CheckNotFuture(endUtc, "End");
         if (taskId is { } t && !await db.Tasks.AnyAsync(x => x.Id == t, cancellationToken))
         {
             throw DomainValidationException.ForField("Task", "Choose an existing task.");

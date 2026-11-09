@@ -67,9 +67,17 @@ public static class TimeEstimator
             carried = activeAtEnd;
         }
 
-        // Manual allocations overlay everything (latest created wins), also outside tracking.
-        foreach (var allocation in input.Allocations.Where(a => a.EndUtc > a.StartUtc).OrderBy(a => a.CreatedAtUtc).ThenBy(a => a.Id))
+        // Manual allocations overlay everything (latest created wins), also outside tracking, but only up to the moment they
+        // were made: time after that belongs to the tasks chosen then. (A registration saved with a future end, e.g. the
+        // 24-hour one from 9 Nov 2026, would otherwise override every later selection.)
+        foreach (var stored in input.Allocations.Where(a => a.EndUtc > a.StartUtc).OrderBy(a => a.CreatedAtUtc).ThenBy(a => a.Id))
         {
+            var allocation = stored.EndUtc > stored.CreatedAtUtc ? stored with { EndUtc = stored.CreatedAtUtc } : stored;
+            if (allocation.EndUtc <= allocation.StartUtc)
+            {
+                continue;
+            }
+
             periods = Paint(periods, allocation.IsCleared
                 ? new TimelinePeriod(allocation.StartUtc, allocation.EndUtc, PeriodKind.Unclassified, null)
                 : new TimelinePeriod(allocation.StartUtc, allocation.EndUtc, PeriodKind.Manual, allocation.TaskId, allocation.IsNonWork,

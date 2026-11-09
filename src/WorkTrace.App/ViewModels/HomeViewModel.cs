@@ -333,7 +333,14 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
         }
 
         var taskId = CurrentTaskId;
+        var previous = _recordedTaskId;
         _recordedTaskId = taskId;
+
+        // Diagnostics (no titles): which entry the lookup committed and whether the visible text was that entry, to tell a
+        // deliberate choice from a stale selection behind typed text.
+        Logger.LogInformation(
+            "Current task lookup committed task {TaskId} (previous {PreviousTaskId}; text matches the entry: {TextMatches})",
+            taskId, previous, string.Equals(CurrentTaskText?.Trim(), CurrentTasks.FirstOrDefault(o => o.Id == taskId)?.Display, StringComparison.Ordinal));
         if (await RunAsync(() => _checkIns.RecordAsync(new CheckInRequest(null, taskId, null)), "Could not record the current task."))
         {
             Notifications.Show("Current task recorded.", NotificationKind.Success);

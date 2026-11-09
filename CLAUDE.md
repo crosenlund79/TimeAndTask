@@ -100,7 +100,9 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
 7. Locked periods are `PeriodKind.Locked` by default (not work, not "unclassified", classifiable; grace 0 min) or
    NotTracking with "locked time is not work"; the active task continues after the unlock. A check-in during a recorded
    lock ends the lock there. Diagnostics: `WorkTrace.exe --registration-report [yyyy-MM-dd] [--names]` (docs/diagnostics.md).
-8. Manual allocations overlay the estimate (latest created wins) and are never discarded by recalculation.
+8. Manual allocations overlay the estimate (latest created wins) and are never discarded by recalculation, but only up to
+   their `CreatedAtUtc`: later time belongs to the tasks chosen then. Registrations can't be saved ending in the future,
+   must be shorter than 24 h, and the editor rejects equal start/end times (ADR-040).
 9. Deterministic: ties broken by CreatedAtUtc, then Id. Durations from UTC differences (DST-safe).
 
 ## Conventions

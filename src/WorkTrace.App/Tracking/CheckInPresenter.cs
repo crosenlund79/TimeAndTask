@@ -41,8 +41,10 @@ public sealed class CheckInPresenter(IServiceProvider services, ISettingsStore s
         }).Task.Unwrap();
 
     /// <summary>Opens a manual check-in, or brings the open popup forward. Call on the UI thread.</summary>
-    public void ShowManual()
+    /// <param name="source">What asked for it (logged: owner data showed manual popups opening ~0.5 s after a scheduled answer).</param>
+    public void ShowManual(string source = "unknown")
     {
+        logger.LogInformation("Manual check-in requested ({Source}; a popup is {State})", source, _window is null ? "not open" : "already open");
         if (_window is not null)
         {
             // The user asked for this popup: never auto-close it under their hands.

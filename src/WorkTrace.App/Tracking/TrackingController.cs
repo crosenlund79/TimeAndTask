@@ -76,8 +76,9 @@ public sealed partial class TrackingController : ObservableObject
 
     public bool HasWarning => Warning is not null;
 
+    /// <param name="source">"overview" (button) or "tray" (menu); logged to tell the two apart.</param>
     [RelayCommand]
-    private void RecordNow() => _presenter.ShowManual();
+    private void RecordNow(string? source) => _presenter.ShowManual(source ?? "command");
 
     /// <param name="minutes">Pause length in minutes; "0" or empty pauses until resumed.</param>
     [RelayCommand]
