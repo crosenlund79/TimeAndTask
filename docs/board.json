@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 64,
+  "nextId": 65,
   "cards": [
     {
       "id": "WT-001",
@@ -1613,6 +1613,38 @@
       "createdAt": "2026-11-06T09:15:13Z",
       "updatedAt": "2026-11-06T09:15:18Z",
       "rev": 2
+    },
+    {
+      "id": "WT-064",
+      "uid": "047bcb34-7e68-4251-8aeb-64370c05c433",
+      "title": "Time registration corrections: edit/delete/classify registrations, pause from check-in, continuous time accounting, sequential timeline",
+      "category": "feature",
+      "priority": "high",
+      "status": "doing",
+      "rank": "i",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Registrations can be edited (stakeholder, task, date, start, end, duration) and deleted from Overview (Timesheet day headers open the day); totals update at once; pause from the popup stops work time and resumes by itself; time since start-up is unclassified until assigned; timeline tasks follow each other with no gaps and deadlines only change the title emphasis."
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "e7c6fd44-62e0-43f6-a6bb-bdb7f02d0c82",
+          "type": "created",
+          "at": "2026-11-09T08:50:30Z",
+          "by": "claude",
+          "to": "doing"
+        }
+      ],
+      "createdAt": "2026-11-09T08:50:30Z",
+      "updatedAt": "2026-11-09T08:50:30Z",
+      "rev": 1
     }
   ]
 }

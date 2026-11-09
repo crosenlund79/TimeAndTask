@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 29 | 5 | 0 |
+| 0 | 2 | 8 | 1 | 29 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,7 +13,13 @@ _Empty._
 
 ## In progress
 
-_None._
+### WT-064 · Time registration corrections: edit/delete/classify registrations, pause from check-in, continuous time accounting, sequential timeline
+
+`feature` · priority High
+
+**Acceptance criteria**
+
+- Registrations can be edited (stakeholder, task, date, start, end, duration) and deleted from Overview (Timesheet day headers open the day); totals update at once; pause from the popup stops work time and resumes by itself; time since start-up is unclassified until assigned; timeline tasks follow each other with no gaps and deadlines only change the title emphasis.
 
 ## Review / Test
 
