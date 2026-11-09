@@ -44,6 +44,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<WorkTrace.Core.Reporting.ITimesheetService, Reporting.TimesheetService>();
         services.AddSingleton<WorkTrace.Core.Guides.IGuideService, GuideService>();
         services.AddSingleton<IMinorTaskService, MinorTaskService>();
+        services.AddSingleton<WorkTrace.Core.Reporting.IRegistrationService, Reporting.RegistrationService>();
         services.AddSingleton<ICheckInService, CheckInService>();
         services.AddSingleton<ITrackingStore, TrackingStore>();
 

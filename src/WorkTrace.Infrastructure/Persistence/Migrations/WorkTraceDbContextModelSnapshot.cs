@@ -580,6 +580,9 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                     b.Property<int?>("ChannelId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
@@ -608,6 +611,8 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ChannelId");
+
+                    b.HasIndex("ClientId");
 
                     b.HasIndex("TaskId");
 
@@ -1026,12 +1031,19 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ChannelId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("WorkTrace.Core.Entities.Client", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("WorkTrace.Core.Entities.WorkTask", "Task")
                         .WithMany()
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Channel");
+
+                    b.Navigation("Client");
 
                     b.Navigation("Task");
                 });

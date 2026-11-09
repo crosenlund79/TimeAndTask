@@ -43,6 +43,7 @@ public static class AppServices
         services.AddSingleton<HomeViewModel>();
         services.AddSingleton<TasksViewModel>();
         services.AddSingleton<QuoteViewModel>();
+        services.AddSingleton<IRegistrationEditor, RegistrationEditor>();
         services.AddSingleton<MinorTasksViewModel>();
         services.AddSingleton<ClientsViewModel>();
         services.AddSingleton<ListsViewModel>();

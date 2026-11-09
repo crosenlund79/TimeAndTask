@@ -19,7 +19,7 @@ public class PlanningCalendarTests
         Assert.Equal(kind, DanishHolidays.Get(DateOnly.Parse(date, System.Globalization.CultureInfo.InvariantCulture))?.Kind);
 
     [Fact]
-    public void Pipeline_UsesWorkingDays_SkipsWeekendsAndHolidays_AndRespectsPlannedStarts()
+    public void Pipeline_UsesWorkingDays_SkipsWeekendsAndHolidays_AndLeavesNoGaps()
     {
         TaskSummary Task(int id, int? minutes, DateOnly? planned = null, bool recurring = false) => new(
             id, 1, "S", true, null, null, null, $"T{id}", null, null, null, false, DateTime.UnixEpoch, DateTime.UnixEpoch, null,
@@ -35,7 +35,7 @@ public class PlanningCalendarTests
         Assert.Equal(new DateOnly(2026, 12, 28), first.EndDate);          // 7.5 h on the 24th, Juledag skipped, 2.5 h on the 28th
         Assert.Equal(0, plan.Days[1].CapacityMinutes);                     // Friday 25 December
         var second = plan.Entries[1];
-        Assert.Equal((2, new DateOnly(2027, 1, 5), true), (second.Task.Id, second.StartDate, second.IsProvisional)); // at its planned start
+        Assert.Equal((2, first.EndDay, true), (second.Task.Id, second.StartDay, second.IsProvisional)); // right after the previous one, no gap
         Assert.Equal(2, plan.Entries.Count);                               // recurring tasks are not active work
         Assert.DoesNotContain(plan.Days, d => d.Date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday);
     }

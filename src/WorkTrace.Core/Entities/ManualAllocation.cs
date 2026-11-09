@@ -7,6 +7,12 @@ public enum AllocationKind
 
     /// <summary>The period was explicitly not work (break, private errand).</summary>
     NonWork = 1,
+
+    /// <summary>A deleted registration: the period is unclassified again (nothing is counted for it).</summary>
+    Cleared = 2,
+
+    /// <summary>The period was spent for <see cref="ManualAllocation.ClientId"/> without a task.</summary>
+    Stakeholder = 3,
 }
 
 /// <summary>
@@ -29,6 +35,11 @@ public class ManualAllocation : IAuditedEntity, IChangeTracked
     public int? TaskId { get; set; }
 
     public WorkTask? Task { get; set; }
+
+    /// <summary>Stakeholder of a <see cref="AllocationKind.Stakeholder"/> allocation (time without a task).</summary>
+    public int? ClientId { get; set; }
+
+    public Client? Client { get; set; }
 
     public int? ChannelId { get; set; }
 

@@ -25,11 +25,11 @@ public sealed record PlanDay(DateOnly Date, Holiday? Holiday)
 public sealed record PipelinePlan(IReadOnlyList<QueueEntry> Entries, IReadOnlyList<PlanDay> Days);
 
 /// <summary>
-/// The active task pipeline for planning, in chronological order: tasks with a planned start at that date, the rest
-/// filling the days in priority order (Board card priority and order, deadline, recent use). Effort comes from the estimate; tasks without
-/// one get a provisional block that is never stored. Work is laid out on Monday-Friday days of 7.5 hours, from the
-/// first working day on or after <c>from</c>; Danish public holidays and weekends get no work, and a task never
-/// starts before its planned start.
+/// The active task pipeline for planning, in planning order: unplanned tasks by priority (Board card priority and
+/// order, recent use); a task with a planned start joins once the schedule reaches that date. Each task starts where
+/// the previous one's effort ends; deadlines change neither order nor position. Effort comes from the estimate; tasks
+/// without one get a provisional block that is never stored. Work is laid out on Monday-Friday days of 7.5 hours from
+/// the first working day on or after <c>from</c>; Danish public holidays and weekends get no work.
 /// </summary>
 public static class TaskPipeline
 {
@@ -51,8 +51,6 @@ public static class TaskPipeline
         var planned = new Queue<TaskSummary>(active.Where(t => t.PlannedStart is not null).OrderBy(t => t.PlannedStart).ThenBy(t => t.Id));
         var unplanned = new Queue<TaskSummary>(active.Where(t => t.PlannedStart is null)
             .OrderByDescending(t => t.BoardPriority ?? Entities.BoardPriority.Normal)
-            .ThenBy(t => t.Deadline is null)
-            .ThenBy(t => t.Deadline)
             .ThenBy(t => t.BoardSortOrder ?? double.MaxValue)
             .ThenByDescending(t => t.LastUsedAtUtc ?? DateTime.MinValue)
             .ThenBy(t => t.Id));
@@ -89,8 +87,9 @@ public static class TaskPipeline
             }
         }
 
-        // Chronological: unplanned work (by priority) fills the days from today; a planned task enters the queue once
-        // the schedule reaches its planned start, and never starts before it.
+        // Planning order: unplanned work by priority; a task with a planned start joins the queue once the schedule
+        // reaches that date. Every task starts right where the previous one's effort ends (no gaps); deadlines never
+        // move a task.
         var result = new List<QueueEntry>();
         while (planned.Count > 0 || unplanned.Count > 0)
         {
@@ -98,10 +97,6 @@ public static class TaskPipeline
             var task = planned.Count > 0 && (unplanned.Count == 0 || IndexOf(planned.Peek().PlannedStart!.Value) <= day)
                 ? planned.Dequeue()
                 : unplanned.Dequeue();
-            if (task.PlannedStart is { } plannedStart && IndexOf(plannedStart) is var plannedDay && plannedDay > day)
-            {
-                (day, minute) = (plannedDay, 0);
-            }
 
             var provisional = task.EstimatedRemainingMinutes is null;
             var duration = task.EstimatedRemainingMinutes ?? ProvisionalMinutes;

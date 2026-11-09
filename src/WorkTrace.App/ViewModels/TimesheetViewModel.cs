@@ -96,6 +96,7 @@ public sealed partial class TimesheetViewModel(
     WorkTrace.App.Tracking.TrackingController tracking,
     WorkTrace.Core.Settings.ISettingsStore settings,
     IFileDialogService files,
+    INavigationService navigation,
     INotificationService notifications,
     TimeProvider timeProvider,
     ILogger<TimesheetViewModel> logger) : ViewModelBase(notifications, logger), ISectionViewModel
@@ -149,6 +150,16 @@ public sealed partial class TimesheetViewModel(
     }
 
     private Task RefreshAsync() => Monday == default ? System.Threading.Tasks.Task.CompletedTask : LoadAsync(Monday);
+
+    /// <summary>Opens the Overview on one day of the shown week, where its registrations can be edited or deleted.</summary>
+    [RelayCommand]
+    private void OpenDay(string? index)
+    {
+        if (_week is not null && int.TryParse(index, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i) && i is >= 0 and < 7)
+        {
+            navigation.Navigate(AppSection.Home, _week.Days[i]);
+        }
+    }
 
     [RelayCommand]
     private Task PreviousWeekAsync() => LoadAsync(Monday.AddDays(-7));

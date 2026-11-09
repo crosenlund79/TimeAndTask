@@ -113,7 +113,7 @@ internal sealed class TimesheetService(
     }
 
     /// <summary>The estimated timeline for [from, to), with the segments and lock periods it was built from.</summary>
-    private static async Task<(IReadOnlyList<TimelinePeriod> Periods, List<EstimationSegment> Segments, List<EstimationSegment> Locks, List<Observation> Observations, List<DateTime> Prompts)> EstimateAsync(
+    internal static async Task<(IReadOnlyList<TimelinePeriod> Periods, List<EstimationSegment> Segments, List<EstimationSegment> Locks, List<Observation> Observations, List<DateTime> Prompts)> EstimateAsync(
         WorkTraceDbContext db, DateTime from, DateTime to, DateTime now, WorkTraceSettings s, CancellationToken cancellationToken)
     {
         // Evidence from before the range, so estimates continue across midnight: at least a day, and back to the start
@@ -143,7 +143,8 @@ internal sealed class TimesheetService(
             locks,
             [.. observations.Select(o => new EstimationObservation(o.Id, o.ObservedAtUtc, o.CreatedAtUtc, o.TaskId, o.ClientId))],
             prompts,
-            [.. allocations.Select(a => new EstimationAllocation(a.Id, a.StartUtc, a.EndUtc, a.CreatedAtUtc, a.TaskId, a.Kind == AllocationKind.NonWork))],
+            [.. allocations.Select(a => new EstimationAllocation(a.Id, a.StartUtc, a.EndUtc, a.CreatedAtUtc, a.TaskId, a.Kind == AllocationKind.NonWork,
+                a.ClientId, a.Kind == AllocationKind.Cleared))],
             // Without periodic check-ins nothing would ever end the active task before the horizon, so a task started
             // with a manual check-in runs until the next check-in, a lock or the end of tracking (the "timer" model).
             s.Tracking.PeriodicPromptsEnabled ? TimeSpan.FromMinutes(s.Tracking.MaxEstimationHorizonMinutes) : TimeSpan.MaxValue,
@@ -173,6 +174,18 @@ internal sealed class TimesheetService(
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
         var (periods, _, _, _, _) = await EstimateAsync(db, from, until, now, settings.Current, cancellationToken);
         var registered = periods.Where(p => p.Kind is PeriodKind.Estimated or PeriodKind.Manual).ToList();
+        var unclassified = periods.Where(p => p.Kind == PeriodKind.Unclassified && p.Duration >= TimeSpan.FromMinutes(1)).ToList();
+
+        // Pauses: from a segment that ended because tracking was paused to the next segment (or now).
+        var pausedEnds = await db.TrackingSegments.AsNoTracking()
+            .Where(s => s.EndReason == TrackingEndReason.Paused && s.EndUtc != null && s.EndUtc < until && s.EndUtc > from.AddDays(-1))
+            .Select(s => s.EndUtc!.Value).ToListAsync(cancellationToken);
+        var starts = await db.TrackingSegments.AsNoTracking().Where(s => s.StartUtc > from.AddDays(-1)).Select(s => s.StartUtc).ToListAsync(cancellationToken);
+        var pauses = pausedEnds
+            .Select(end => (Start: end, End: starts.Where(s => s >= end).DefaultIfEmpty(until).Min()))
+            .Select(p => (Start: p.Start < from ? from : p.Start, End: p.End > until ? until : p.End))
+            .Where(p => p.End - p.Start >= TimeSpan.FromMinutes(1))
+            .ToList();
 
         var taskIds = registered.Select(p => p.TaskId).OfType<int>().Distinct().ToList();
         var tasks = await db.Tasks.AsNoTracking().Where(t => taskIds.Contains(t.Id))
@@ -193,11 +206,16 @@ internal sealed class TimesheetService(
             var c = p.ClientId is { } cid ? clients.GetValueOrDefault(cid) : null;
             return new RegistrationEntry(p.StartUtc, p.EndUtc, p.Kind == PeriodKind.Manual, p.IsNonWork, null,
                 p.IsNonWork ? "Break / not work" : c is null ? NoTask : NoTaskForStakeholder, null,
-                c?.Id, c?.Name, c is null ? null : StakeholderColors.For(c.Id, c.Color));
+                c?.Id, c?.Name, c is null ? null : StakeholderColors.For(c.Id, c.Color), p.IsNonWork ? RegistrationKind.Break : RegistrationKind.Work);
         }).ToList();
+        var registeredOnly = entries.ToList();
+        entries.AddRange(unclassified.Select(p => new RegistrationEntry(p.StartUtc, p.EndUtc, false, false, null, "Unclassified", null, null, null, null,
+            RegistrationKind.Unclassified)));
+        entries.AddRange(pauses.Select(p => new RegistrationEntry(p.Start, p.End, true, false, null, "Paused", null, null, null, null, RegistrationKind.Paused)));
+        entries = [.. entries.OrderBy(e => e.StartUtc)];
 
         // Same per-line rounding as the Timesheet, so both show the same total for the day.
-        var registeredMinutes = entries.Where(e => !e.IsBreak)
+        var registeredMinutes = registeredOnly.Where(e => !e.IsBreak)
             .GroupBy(e => (e.TaskId, Client: e.TaskId is null ? e.ClientId : null))
             .Sum(g => (int)Math.Round(g.Sum(e => e.Duration.TotalMinutes)));
         return new DayRegistrations(day, entries, summary, registeredMinutes, timesheetMinutes, corrected);

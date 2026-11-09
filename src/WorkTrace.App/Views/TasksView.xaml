@@ -292,12 +292,14 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="{Binding Position}" Style="{StaticResource CaptionText}" VerticalAlignment="Center" />
                     <StackPanel Grid.Column="1" Margin="0,0,10,0" VerticalAlignment="Center">
-                      <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" />
+                      <TextBlock x:Name="QueueTitle" Text="{Binding Title}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" />
                       <StackPanel Orientation="Horizontal">
                         <Ellipse Width="8" Height="8" Margin="0,1,6,0" VerticalAlignment="Center" Fill="{Binding StakeholderColor, Converter={StaticResource HexBrush}}" />
                         <TextBlock Text="{Binding Context}" Style="{StaticResource CaptionText}" TextTrimming="CharacterEllipsis" />
                         <TextBlock Text="{Binding PlannedText, StringFormat=' · {0}'}" Style="{StaticResource CaptionText}"
                                    Visibility="{Binding PlannedText, Converter={StaticResource NullToCollapsed}}" />
+                        <TextBlock x:Name="QueueDeadline" Text="{Binding DeadlineText, StringFormat=' · {0}'}" Style="{StaticResource CaptionText}"
+                                   Visibility="{Binding DeadlineText, Converter={StaticResource NullToCollapsed}}" />
                       </StackPanel>
                     </StackPanel>
                     <Grid Grid.Column="2" VerticalAlignment="Center">
@@ -373,6 +375,14 @@
                     </Grid>
                   </Grid>
                   <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding HasDeadline}" Value="True">
+                      <Setter TargetName="QueueTitle" Property="FontWeight" Value="Bold" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                      <Setter TargetName="QueueTitle" Property="Foreground" Value="#A8463A" />
+                      <Setter TargetName="QueueDeadline" Property="Foreground" Value="#A8463A" />
+                      <Setter TargetName="QueueDeadline" Property="FontWeight" Value="SemiBold" />
+                    </DataTrigger>
                     <DataTrigger Binding="{Binding IsProvisional}" Value="True">
                       <Setter TargetName="Bar" Property="Fill" Value="#33C0504D" />
                       <Setter TargetName="Bar" Property="Stroke" Value="#C0504D" />

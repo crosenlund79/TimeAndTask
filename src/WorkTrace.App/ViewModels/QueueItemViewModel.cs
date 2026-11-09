@@ -53,6 +53,15 @@ public sealed class QueueItemViewModel(QueueEntry entry, IReadOnlyList<DayCellVi
 
     public bool IsWaiting => Entry.Task.IsWaiting;
 
+    /// <summary>A concrete deadline: the title is bold (the deadline never moves the bar).</summary>
+    public bool HasDeadline => Entry.Task.Deadline is not null;
+
+    public bool IsOverdue => Entry.Task.DeadlineState == DeadlineState.Overdue;
+
+    public string? DeadlineText => Entry.Task.Deadline is { } d
+        ? (IsOverdue ? "overdue since " : "due ") + d.ToString("d MMM", CultureInfo.CurrentCulture)
+        : null;
+
     /// <summary>The axis' working days (shared by all rows), drawn behind the bar.</summary>
     public IReadOnlyList<DayCellViewModel> Days { get; } = days;
 

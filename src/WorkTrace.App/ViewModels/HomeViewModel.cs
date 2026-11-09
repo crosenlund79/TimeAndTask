@@ -20,6 +20,9 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
     private readonly TimeProvider _timeProvider;
     private readonly ITaskService _tasks;
     private readonly WorkTrace.Core.Reporting.ITimesheetService _timesheets;
+    private readonly WorkTrace.Core.Reporting.IRegistrationService _registrations;
+    private readonly IRegistrationEditor _editor;
+    private readonly IDialogService _dialogs;
     private bool _loadingCurrent;
     private int? _recordedTaskId;
 
@@ -28,6 +31,9 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
         ICheckInService checkIns,
         ITaskService tasks,
         WorkTrace.Core.Reporting.ITimesheetService timesheets,
+        WorkTrace.Core.Reporting.IRegistrationService registrations,
+        IRegistrationEditor editor,
+        IDialogService dialogs,
         TrackingController tracking,
         INavigationService navigation,
         INotificationService notifications,
@@ -41,6 +47,9 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
         _timeProvider = timeProvider;
         _tasks = tasks;
         _timesheets = timesheets;
+        _registrations = registrations;
+        _editor = editor;
+        _dialogs = dialogs;
         Tracking = tracking;
 
         // Keep "Today" current while the page is open.
@@ -87,6 +96,11 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
 
     public async Task ActivateAsync(object? parameter)
     {
+        if (parameter is DateOnly day && day != SelectedDay)
+        {
+            SelectedDate = day.ToDateTime(TimeOnly.MinValue); // opened from the Timesheet: show that day's registrations
+        }
+
         await RunAsync(async () => Status = await _statusService.GetStatusAsync(), "Could not read the database status.");
         await LoadTimelineAsync();
         await LoadCurrentTaskAsync();
@@ -139,6 +153,42 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
 
     [RelayCommand(CanExecute = nameof(CanGoForward))]
     private void GoToToday() => SelectedDate = CurrentDay.ToDateTime(TimeOnly.MinValue);
+
+    /// <summary>Edit a registration, or classify an unclassified interval (assign it to a task or stakeholder).</summary>
+    [RelayCommand]
+    private async Task EditRegistrationAsync(RegistrationItemViewModel? item)
+    {
+        if (item is null || item.IsPaused)
+        {
+            return;
+        }
+
+        if (await _editor.EditAsync(item.Entry))
+        {
+            await LoadTimelineAsync();
+        }
+    }
+
+    /// <summary>Deletes a registration: its time becomes unclassified again (visible, classifiable later).</summary>
+    [RelayCommand]
+    private async Task DeleteRegistrationAsync(RegistrationItemViewModel? item)
+    {
+        if (item is null || !item.CanDelete
+            || !_dialogs.Confirm(
+                "Delete registration",
+                $"Delete the registration {item.Time} ({item.Duration})? The time becomes unclassified; you can classify it again later.",
+                "Delete",
+                destructive: true))
+        {
+            return;
+        }
+
+        var entry = item.Entry;
+        if (await RunAsync(() => _registrations.DeleteAsync(entry.StartUtc, entry.EndUtc), "Could not delete the registration."))
+        {
+            await LoadTimelineAsync();
+        }
+    }
 
     private async Task LoadTimelineAsync()
     {
@@ -303,7 +353,21 @@ public sealed class RegistrationItemViewModel(WorkTrace.Core.Reporting.Registrat
 
     public string StakeholderColor => Entry.StakeholderColor ?? "#7A7F87";
 
-    public string KindText => Entry.IsBreak ? "Break" : Entry.IsConfirmed ? "Confirmed" : "From check-in (estimated)";
+    public bool IsUnclassified => Entry.Kind == WorkTrace.Core.Reporting.RegistrationKind.Unclassified;
+
+    public bool IsPaused => Entry.Kind == WorkTrace.Core.Reporting.RegistrationKind.Paused;
+
+    /// <summary>Work and break rows can be edited and deleted; unclassified rows can be classified.</summary>
+    public bool CanDelete => !IsUnclassified && !IsPaused;
+
+    public bool CanEdit => CanDelete;
+
+    public string KindText => Entry.Kind switch
+    {
+        WorkTrace.Core.Reporting.RegistrationKind.Unclassified => "Unclassified: not yet assigned to a task (Classify to assign it)",
+        WorkTrace.Core.Reporting.RegistrationKind.Paused => "Registration paused: not working time",
+        _ => Entry.IsBreak ? "Break" : Entry.IsConfirmed ? "Confirmed" : "From check-in (estimated)",
+    };
 }
 
 public sealed record SummaryRow(string Label, string Value, string? Hint = null, bool IsDetail = false);

@@ -62,6 +62,7 @@ internal sealed class ManualAllocationConfiguration : IEntityTypeConfiguration<M
         builder.Property(a => a.Note).HasMaxLength(ManualAllocation.NoteMaxLength);
         builder.HasOne(a => a.Task).WithMany().HasForeignKey(a => a.TaskId);
         builder.HasOne(a => a.Channel).WithMany().HasForeignKey(a => a.ChannelId);
+        builder.HasOne(a => a.Client).WithMany().HasForeignKey(a => a.ClientId);
         builder.HasIndex(a => new { a.StartUtc, a.EndUtc });
         builder.ToTable(t =>
         {

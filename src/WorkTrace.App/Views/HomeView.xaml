@@ -110,23 +110,53 @@
               <ItemsControl ItemsSource="{Binding Registrations}" Focusable="False" AutomationProperties.Name="Registrations">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate DataType="{x:Type vm:RegistrationItemViewModel}">
-                    <Grid Margin="0,4" ToolTip="{Binding KindText}">
+                    <Grid x:Name="Row" Margin="0,4" ToolTip="{Binding KindText}">
                       <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="92" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                       </Grid.ColumnDefinitions>
                       <TextBlock Text="{Binding Time}" FontFamily="{StaticResource MonoFont}" FontSize="12" VerticalAlignment="Top" Margin="0,1,0,0" />
                       <StackPanel Grid.Column="1" Margin="0,0,8,0">
-                        <TextBlock Text="{Binding Task}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                        <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="RowTask" Text="{Binding Task}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <StackPanel x:Name="RowStakeholder" Orientation="Horizontal">
                           <Ellipse Width="8" Height="8" Margin="0,1,6,0" VerticalAlignment="Center"
                                    Fill="{Binding StakeholderColor, Converter={StaticResource HexBrush}}" />
                           <TextBlock Text="{Binding Stakeholder}" Style="{StaticResource CaptionText}" />
                         </StackPanel>
                       </StackPanel>
                       <TextBlock Grid.Column="2" Text="{Binding Duration}" FontFamily="{StaticResource MonoFont}" VerticalAlignment="Top" />
+                      <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="8,-2,0,0" VerticalAlignment="Top">
+                        <Button Style="{StaticResource IconButton}" Width="26" Height="26" FontSize="12" Content="&#xE70F;"
+                                ToolTip="Edit this registration" AutomationProperties.Name="Edit registration"
+                                Command="{Binding DataContext.EditRegistrationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
+                                Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibility}}" />
+                        <Button Style="{StaticResource IconButton}" Width="26" Height="26" FontSize="11" Content="&#xE74D;" Opacity="0.7"
+                                ToolTip="Delete this registration (the time becomes unclassified)" AutomationProperties.Name="Delete registration"
+                                Command="{Binding DataContext.DeleteRegistrationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
+                                Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisibility}}" />
+                        <Button Content="Classify" Padding="10,2" FontSize="12"
+                                ToolTip="Assign this time to a task or stakeholder" AutomationProperties.Name="Classify time"
+                                Command="{Binding DataContext.EditRegistrationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
+                                Visibility="{Binding IsUnclassified, Converter={StaticResource BoolToVisibility}}" />
+                      </StackPanel>
                     </Grid>
+                    <DataTemplate.Triggers>
+                      <DataTrigger Binding="{Binding IsUnclassified}" Value="True">
+                        <Setter TargetName="RowTask" Property="FontStyle" Value="Italic" />
+                        <Setter TargetName="RowTask" Property="FontWeight" Value="Normal" />
+                        <Setter TargetName="RowStakeholder" Property="Visibility" Value="Collapsed" />
+                      </DataTrigger>
+                      <DataTrigger Binding="{Binding IsPaused}" Value="True">
+                        <Setter TargetName="Row" Property="Opacity" Value="0.6" />
+                        <Setter TargetName="RowTask" Property="FontWeight" Value="Normal" />
+                        <Setter TargetName="RowStakeholder" Property="Visibility" Value="Collapsed" />
+                      </DataTrigger>
+                    </DataTemplate.Triggers>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>

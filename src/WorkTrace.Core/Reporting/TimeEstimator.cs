@@ -28,7 +28,10 @@ public sealed record EstimationSegment(DateTime StartUtc, DateTime EndUtc);
 
 public sealed record EstimationObservation(int Id, DateTime AtUtc, DateTime CreatedAtUtc, int? TaskId, int? ClientId = null);
 
-public sealed record EstimationAllocation(int Id, DateTime StartUtc, DateTime EndUtc, DateTime CreatedAtUtc, int? TaskId, bool IsNonWork);
+/// <param name="ClientId">Stakeholder of time registered without a task.</param>
+/// <param name="IsCleared">A deleted registration: the range becomes unclassified.</param>
+public sealed record EstimationAllocation(int Id, DateTime StartUtc, DateTime EndUtc, DateTime CreatedAtUtc, int? TaskId, bool IsNonWork,
+    int? ClientId = null, bool IsCleared = false);
 
 public sealed record EstimationInput(
     IReadOnlyList<EstimationSegment> Segments,
@@ -59,7 +62,10 @@ public static class TimeEstimator
         // Manual allocations overlay everything (latest created wins), also outside tracking.
         foreach (var allocation in input.Allocations.Where(a => a.EndUtc > a.StartUtc).OrderBy(a => a.CreatedAtUtc).ThenBy(a => a.Id))
         {
-            periods = Paint(periods, new TimelinePeriod(allocation.StartUtc, allocation.EndUtc, PeriodKind.Manual, allocation.TaskId, allocation.IsNonWork));
+            periods = Paint(periods, allocation.IsCleared
+                ? new TimelinePeriod(allocation.StartUtc, allocation.EndUtc, PeriodKind.Unclassified, null)
+                : new TimelinePeriod(allocation.StartUtc, allocation.EndUtc, PeriodKind.Manual, allocation.TaskId, allocation.IsNonWork,
+                    allocation.TaskId is null ? allocation.ClientId : null));
         }
 
         return Flatten(periods, fromUtc, toUtc);

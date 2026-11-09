@@ -47,6 +47,7 @@ public sealed partial class CheckInViewModel(
     ILookupService lookups,
     ICheckInService checkIns,
     ISettingsStore settings,
+    WorkTrace.Core.Reporting.IRegistrationService registrations,
     TimeProvider timeProvider,
     ILogger<CheckInViewModel> logger) : ObservableObject, IDisposable
 {
@@ -66,6 +67,46 @@ public sealed partial class CheckInViewModel(
 
     /// <summary>Raised after an observation was stored.</summary>
     public event EventHandler<ObservationSummary>? Recorded;
+
+    /// <summary>"Pause registration": the popup closes and tracking pauses for this long (then resumes by itself).</summary>
+    public event EventHandler<TimeSpan>? PauseRequested;
+
+    // ---- Continuous accounting: the unclassified time since start-up / the last registration ----
+
+    private WorkTrace.Core.Reporting.OpenInterval? _openInterval;
+
+    /// <summary>Unclassified time just before now (e.g. since WorkTrace started), offered for the chosen task.</summary>
+    public bool HasOpenInterval => _openInterval is not null;
+
+    public string? OpenIntervalText => _openInterval is { } open
+        ? $"Also count {ToLocal(open.StartUtc):HH:mm}–now ({WorkTrace.Core.Management.TaskPipeline.FormatDuration((int)Math.Max(1, open.Duration.TotalMinutes))}, unclassified) for this task"
+        : null;
+
+    /// <summary>The user's confirmation to register the outstanding interval on the chosen task or stakeholder.</summary>
+    [ObservableProperty]
+    public partial bool AssignOpenInterval { get; set; } = true;
+
+    // ---- Pause ----
+
+    public IReadOnlyList<string> PauseChoices { get; } = ["0:15", "0:30", "1:00", "1:30", "2:00", "3:00"];
+
+    [ObservableProperty]
+    public partial string? PauseText { get; set; } = "0:30";
+
+    /// <summary>Pauses registration for the chosen hours:minutes; time while paused is never counted as work.</summary>
+    [RelayCommand]
+    private void PauseRegistration()
+    {
+        var minutes = WorkTrace.Core.Reporting.Hours.ParseMinutes(PauseText);
+        if (minutes is not > 0)
+        {
+            ErrorMessage = "Enter a pause such as 0:30 or 1:00.";
+            return;
+        }
+
+        CloseRequested?.Invoke(this, PromptOutcome.Dismissed);
+        PauseRequested?.Invoke(this, TimeSpan.FromMinutes(minutes.Value));
+    }
 
     public string Heading { get; private set; } = "What are you working on?";
 
@@ -230,6 +271,10 @@ public sealed partial class CheckInViewModel(
     {
         try
         {
+            _openInterval = await registrations.GetOpenIntervalAsync(UtcTime.Now(timeProvider));
+            OnPropertyChanged(nameof(HasOpenInterval));
+            OnPropertyChanged(nameof(OpenIntervalText));
+
             _clients = await clients.GetClientsForPickerAsync();
             ClientOptions.Clear();
             ClientOptions.Add(new PickerOption(PickerOption.NoneKey, "Any stakeholder"));
@@ -454,6 +499,13 @@ public sealed partial class CheckInViewModel(
 
             var channelId = PickerOption.FromKey(ChannelKey ?? 0) ?? task?.DefaultChannelId;
             var observation = await checkIns.RecordAsync(new CheckInRequest(_promptId, task?.Id, Note, channelId, observedAtUtc, task is null ? stakeholderOnly : null));
+
+            // Close the outstanding unclassified interval on this registration, when the user kept the box ticked.
+            if (AssignOpenInterval && _openInterval is { } open && (task is not null || stakeholderOnly is not null)
+                && observation.ObservedAtUtc > open.StartUtc)
+            {
+                await registrations.AssignAsync(open.StartUtc, observation.ObservedAtUtc, task?.Id, task is null ? stakeholderOnly : null);
+            }
             Recorded?.Invoke(this, observation);
             CloseRequested?.Invoke(this, PromptOutcome.Answered);
         }

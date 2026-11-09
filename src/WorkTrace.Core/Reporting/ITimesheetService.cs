@@ -72,9 +72,23 @@ public sealed record RegistrationEntry(
     string? Reference,
     int? ClientId,
     string? Stakeholder,
-    string? StakeholderColor)
+    string? StakeholderColor,
+    RegistrationKind Kind = RegistrationKind.Work)
 {
     public TimeSpan Duration => EndUtc - StartUtc;
+}
+
+/// <summary>What a row of the day view is: registered work, a break, tracked-but-unclassified time, or a pause.</summary>
+public enum RegistrationKind
+{
+    Work = 0,
+    Break = 1,
+
+    /// <summary>Tracked time nobody has assigned yet (never counted; can be classified).</summary>
+    Unclassified = 2,
+
+    /// <summary>Tracking paused: not working time.</summary>
+    Paused = 3,
 }
 
 /// <summary>A day's registrations with the totals the Timesheet uses for the same day.</summary>

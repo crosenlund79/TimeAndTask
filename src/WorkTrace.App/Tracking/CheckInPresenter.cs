@@ -65,6 +65,9 @@ public sealed class CheckInPresenter(IServiceProvider services, ISettingsStore s
         var viewModel = ActivatorUtilities.CreateInstance<CheckInViewModel>(services);
         viewModel.Configure(promptId, scheduledAtUtc, reason, autoDismissSeconds);
         viewModel.Recorded += (_, observation) => Recorded?.Invoke(this, observation);
+        viewModel.PauseRequested += (_, duration) => Dispatcher.BeginInvoke(() =>
+            _ = services.GetRequiredService<TrackingController>().PauseCommand.ExecuteAsync(
+                ((int)duration.TotalMinutes).ToString(System.Globalization.CultureInfo.InvariantCulture)));
 
         var window = new CheckInWindow(viewModel, settings.Current.Tracking.PopupPosition, takeFocus, logger);
         _window = window;

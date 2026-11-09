@@ -131,6 +131,12 @@ internal sealed class ClientService(
             throw new OperationNotAllowedException("This stakeholder has tasks and is kept for history. Deactivate it instead.");
         }
 
+        if (await db.ManualAllocations.AnyAsync(a => a.ClientId == id, cancellationToken)
+            || await db.Observations.AnyAsync(o => o.ClientId == id, cancellationToken))
+        {
+            throw new OperationNotAllowedException("Time is registered on this stakeholder, so it is kept for history. Deactivate it instead.");
+        }
+
         if (client.IsInternal && await db.Clients.CountAsync(c => c.IsInternal && c.IsActive, cancellationToken) == 1 && client.IsActive)
         {
             throw new OperationNotAllowedException("Keep at least one active internal stakeholder for internal work.");

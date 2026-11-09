@@ -57,13 +57,50 @@ public class CheckInTests
             await WpfTestHost.SettleAsync();
 
             // Every picker shows a selection ("Any client", "None", "Not specified" by default).
-            var combos = FindAll<System.Windows.Controls.ComboBox>(window);
+            var combos = FindAll<System.Windows.Controls.ComboBox>(window)
+                .Where(c => System.Windows.Automation.AutomationProperties.GetName(c) != "Pause length (h:mm)").ToList();
             Assert.Equal(3, combos.Count);
             Assert.All(combos, c => Assert.NotNull(c.SelectedItem));
 
             var area = SystemParameters.WorkArea;
             Assert.InRange(window.Left + window.ActualWidth, area.Left, area.Right + 1);
             Assert.InRange(window.Top + window.ActualHeight, area.Top, area.Bottom + 1);
+        }
+        finally
+        {
+            window.Close();
+        }
+
+        Assert.Empty(WpfTestHost.UnhandledExceptions);
+        var errors = WpfTestHost.BindingErrors.Take();
+        Assert.True(errors.Count == 0, "Binding errors:\n" + string.Join("\n", errors));
+    });
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public Task RegistrationEditor_RendersWithoutBindingErrors(bool unclassified) => WpfTestHost.RunAsync(async () =>
+    {
+        var (ctx, invoice, meeting) = await SeedAsync();
+        await using var _ = ctx;
+        WpfTestHost.BindingErrors.Take();
+        WpfTestHost.UnhandledExceptions.Clear();
+
+        var end = ctx.Time.GetUtcNow().UtcDateTime;
+        var start = end.AddMinutes(-45);
+        var entry = new WorkTrace.Core.Reporting.RegistrationEntry(
+            start, end, false, false, unclassified ? null : invoice.Id, unclassified ? "Unclassified" : invoice.Title, null,
+            unclassified ? null : invoice.ClientId, null, null, unclassified ? WorkTrace.Core.Reporting.RegistrationKind.Unclassified : WorkTrace.Core.Reporting.RegistrationKind.Work);
+        var vm = Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance<RegistrationEditorViewModel>(ctx.Services);
+        await vm.LoadAsync(entry);
+        var window = new RegistrationEditorWindow(vm);
+        window.Show();
+        try
+        {
+            await WpfTestHost.SettleAsync();
+            vm.ClientKey = meeting.ClientId;
+            vm.TaskKey = meeting.Id;
+            await WpfTestHost.SettleAsync();
         }
         finally
         {
