@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 30 | 5 | 0 |
+| 0 | 2 | 8 | 1 | 30 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,7 +13,13 @@ _Empty._
 
 ## In progress
 
-_None._
+### WT-065 · Timeline export to Excel and PDF
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Timeline Excel…/PDF… export the timeline as shown (filters, order); Excel has a visual timeline, Task Data and Working Days sheets with colours, deadlines, holidays, filters; PDF is landscape, paginated with repeated date headers; both show the same planning; nothing changes in task data.
 
 ## Review / Test
 

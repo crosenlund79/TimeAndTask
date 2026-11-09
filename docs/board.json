@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 65,
+  "nextId": 66,
   "cards": [
     {
       "id": "WT-001",
@@ -1653,6 +1653,38 @@
       "createdAt": "2026-11-09T08:50:30Z",
       "updatedAt": "2026-11-09T08:56:46Z",
       "rev": 3
+    },
+    {
+      "id": "WT-065",
+      "uid": "dfb959d0-3968-4345-9e1b-a8bf510748a0",
+      "title": "Timeline export to Excel and PDF",
+      "category": "feature",
+      "priority": "normal",
+      "status": "doing",
+      "rank": "i",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Timeline Excel…/PDF… export the timeline as shown (filters, order); Excel has a visual timeline, Task Data and Working Days sheets with colours, deadlines, holidays, filters; PDF is landscape, paginated with repeated date headers; both show the same planning; nothing changes in task data."
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "2b74241f-7b3e-42f5-80f4-afc766b5cd9d",
+          "type": "created",
+          "at": "2026-11-09T10:20:28Z",
+          "by": "claude",
+          "to": "doing"
+        }
+      ],
+      "createdAt": "2026-11-09T10:20:28Z",
+      "updatedAt": "2026-11-09T10:20:28Z",
+      "rev": 1
     }
   ]
 }
