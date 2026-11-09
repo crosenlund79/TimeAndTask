@@ -1700,8 +1700,8 @@
       "title": "Continuous time registration (one active interval) + daily task history",
       "category": "bug",
       "priority": "high",
-      "status": "doing",
-      "rank": "i",
+      "status": "review",
+      "rank": "zzzzzzr",
       "archived": false,
       "archivedAt": null,
       "description": "",
@@ -1720,11 +1720,19 @@
           "at": "2026-11-09T15:51:24Z",
           "by": "claude",
           "to": "doing"
+        },
+        {
+          "id": "afa96445-958a-441a-bd73-21f54a8f354e",
+          "type": "status",
+          "at": "2026-11-09T15:58:20Z",
+          "by": "claude",
+          "from": "doing",
+          "to": "review"
         }
       ],
       "createdAt": "2026-11-09T15:51:24Z",
-      "updatedAt": "2026-11-09T15:58:18Z",
-      "rev": 2
+      "updatedAt": "2026-11-09T15:58:20Z",
+      "rev": 3
     }
   ]
 }
