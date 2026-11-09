@@ -268,7 +268,20 @@
           <!-- Planning timeline (replaces the list while on; the editor on the right stays) -->
           <DockPanel Grid.Row="1" Visibility="{Binding ShowTimeline, Converter={StaticResource BoolToVisibility}}" Margin="6,4,6,0">
             <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-              <TextBlock Text="{Binding TimelineSummary}" Style="{StaticResource CaptionText}" />
+              <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="8,0,0,0">
+                  <Button Padding="10,4" Margin="0,0,6,0" Command="{Binding ExportTimelineExcelCommand}" AutomationProperties.Name="Export timeline to Excel"
+                          ToolTip="Excel workbook: the timeline with task bars and working days, plus a Task Data sheet (the tasks shown, in this order)">
+                    <StackPanel Orientation="Horizontal">
+                      <TextBlock Text="&#xEDE1;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,6,0" />
+                      <TextBlock Text="Excel…" />
+                    </StackPanel>
+                  </Button>
+                  <Button Padding="10,4" Content="PDF…" Command="{Binding ExportTimelinePdfCommand}" AutomationProperties.Name="Export timeline to PDF"
+                          ToolTip="Printable PDF (landscape) of the timeline as shown" />
+                </StackPanel>
+                <TextBlock Text="{Binding TimelineSummary}" Style="{StaticResource CaptionText}" VerticalAlignment="Center" TextWrapping="Wrap" />
+              </DockPanel>
               <WrapPanel Margin="0,4,0,0">
                 <Border Width="18" Height="9" CornerRadius="2" Background="{DynamicResource AccentFillColorDefaultBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
                 <TextBlock Text="Estimated effort" Style="{StaticResource CaptionText}" Margin="0,0,14,0" />

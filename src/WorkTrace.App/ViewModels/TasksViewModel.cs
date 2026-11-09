@@ -26,6 +26,8 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
     private readonly IDialogService _dialogs;
     private readonly TimeProvider _timeProvider;
     private readonly ISettingsStore _settings;
+    private readonly ITimelineExporter _timelineExporter;
+    private readonly IFileDialogService _files;
 
     private IReadOnlyList<PickerOption> _clientOptions = [];
     private IReadOnlyList<PickerOption> _systemOptions = [];
@@ -42,6 +44,8 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         INotificationService notifications,
         TimeProvider timeProvider,
         ISettingsStore settings,
+        ITimelineExporter timelineExporter,
+        IFileDialogService files,
         MinorTasksViewModel minor,
         QuoteViewModel quote,
         ILogger<TasksViewModel> logger)
@@ -55,6 +59,8 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         };
         MinorTasksViewModel.Changed += (_, _) => System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => _ = Minor.LoadAsync());
         _settings = settings;
+        _timelineExporter = timelineExporter;
+        _files = files;
         _tasks = tasks;
         _clients = clients;
         _lookups = lookups;
@@ -233,13 +239,52 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
         }
     }
 
-    private void BuildTimeline()
+    /// <summary>The timeline as shown: the task list's current results (search, stakeholder, archived) and the timeline's group filter.</summary>
+    private PipelinePlan PlanTimeline(int maxShownDays = 60)
     {
         // "All active" = Regular and Waiting; Recurring and Closed only under their own filter.
         var group = TimelineGroupKey switch { 2 => TaskGroup.Regular, 3 => TaskGroup.Recurring, 4 => TaskGroup.Waiting, 5 => TaskGroup.Closed, _ => (TaskGroup?)null };
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(UtcTime.Now(_timeProvider), TimeZoneInfo.Local));
-        var plan = TaskPipeline.Plan(_lastResults.Where(t => group is null || t.Group == group), today,
-            includeClosed: group == TaskGroup.Closed, includeRecurring: group == TaskGroup.Recurring);
+        return TaskPipeline.Plan(_lastResults.Where(t => group is null || t.Group == group), today,
+            includeClosed: group == TaskGroup.Closed, includeRecurring: group == TaskGroup.Recurring, maxShownDays: maxShownDays);
+    }
+
+    [RelayCommand]
+    private Task ExportTimelineExcelAsync() => ExportTimelineAsync("Excel workbook (*.xlsx)|*.xlsx", "xlsx", _timelineExporter.ExportExcelAsync);
+
+    [RelayCommand]
+    private Task ExportTimelinePdfAsync() => ExportTimelineAsync("PDF document (*.pdf)|*.pdf", "pdf", _timelineExporter.ExportPdfAsync);
+
+    /// <summary>Exports the timeline as filtered and ordered on screen (all its planned days); task data is only read.</summary>
+    private async Task ExportTimelineAsync(string filter, string extension, Func<TimelineExportRequest, string, CancellationToken, Task> export)
+    {
+        var now = TimeZoneInfo.ConvertTimeFromUtc(UtcTime.Now(_timeProvider), TimeZoneInfo.Local);
+        var filterName = TimelineGroupOptions.FirstOrDefault(o => o.Id == TimelineGroupKey)?.Name ?? "All active tasks";
+        if (ClientFilterId is not null && ClientFilterOptions.FirstOrDefault(o => o.Id == ClientFilterKey) is { } stakeholder)
+        {
+            filterName += $" · {stakeholder.Name}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            filterName += $" · search \"{SearchText.Trim()}\"";
+        }
+
+        var request = new TimelineExportRequest(PlanTimeline(maxShownDays: 1000), filterName, now);
+        var path = _files.SaveFile("Export timeline", filter, $"WorkTrace-timeline-{now:yyyy-MM-dd}.{extension}");
+        if (path is not null && await RunAsync(() => export(request, path, CancellationToken.None), "Could not export the timeline."))
+        {
+            Notifications.Show($"Exported to {System.IO.Path.GetFileName(path)}.", NotificationKind.Success, "Open", () =>
+            {
+                _files.OpenFile(path);
+                return Task.CompletedTask;
+            });
+        }
+    }
+
+    private void BuildTimeline()
+    {
+        var plan = PlanTimeline();
         var queue = plan.Entries;
         var total = queue.Sum(e => e.DurationMinutes);
         var days = plan.Days.Select(d => new DayCellViewModel(d)).ToList();

@@ -217,3 +217,11 @@ same card's fields merge into one step. Comments, new cards and attachment remov
 first).
 **Reason:** the same guarantees as the browser board's Undo, without a command framework: changes are saved at once
 and Undo never overwrites a later edit.
+
+## ADR-037 — Timeline export without third-party libraries
+**Decision:** the planning timeline exports to Excel (`StyledXlsx`, an extension of the hand-written timesheet writer with
+styles, widths, frozen panes and filters) and to PDF (`SimplePdf`: vector shapes and the standard Helvetica/Times fonts,
+A4 landscape). Both read one `PipelinePlan` built exactly like the screen (task-list results + timeline filter, same order)
+and share `TimelineLayout` for per-day hours, status and deadline facts. Wide plans are split into date ranges and long
+lists into row pages, each page repeating the date header; nothing is clipped. Exports only read task data.
+**Reason:** no new dependencies or licences, files stay local, and Excel and PDF cannot disagree.

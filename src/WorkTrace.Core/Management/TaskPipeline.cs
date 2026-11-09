@@ -42,7 +42,8 @@ public static class TaskPipeline
     public static IReadOnlyList<QueueEntry> Build(IEnumerable<TaskSummary> tasks, DateOnly from, bool includeClosed = false, bool includeRecurring = false) =>
         Plan(tasks, from, includeClosed, includeRecurring).Entries;
 
-    public static PipelinePlan Plan(IEnumerable<TaskSummary> tasks, DateOnly from, bool includeClosed = false, bool includeRecurring = false)
+    /// <param name="maxShownDays">Days returned in <see cref="PipelinePlan.Days"/> at most (the screen shows 60; exports show all planned work).</param>
+    public static PipelinePlan Plan(IEnumerable<TaskSummary> tasks, DateOnly from, bool includeClosed = false, bool includeRecurring = false, int maxShownDays = MaxDays)
     {
         ArgumentNullException.ThrowIfNull(tasks);
         var active = tasks
@@ -116,7 +117,7 @@ public static class TaskPipeline
             start += duration;
         }
 
-        var shown = Math.Clamp((int)Math.Ceiling(result.Count == 0 ? 0 : result.Max(e => e.EndDay)), 5, MaxDays);
+        var shown = Math.Clamp((int)Math.Ceiling(result.Count == 0 ? 0 : result.Max(e => e.EndDay)), 5, Math.Max(5, maxShownDays));
         Day(shown - 1);
         return new PipelinePlan(result, days.Take(shown).ToList());
     }

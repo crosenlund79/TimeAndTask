@@ -42,6 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAutomaticBackupService, AutomaticBackupService>();
         services.AddSingleton<WorkTrace.Core.Screenshots.IScreenshotService, Screenshots.ScreenshotService>();
         services.AddSingleton<WorkTrace.Core.Reporting.ITimesheetService, Reporting.TimesheetService>();
+        services.AddSingleton<WorkTrace.Core.Management.ITimelineExporter, Reporting.TimelineExporter>();
         services.AddSingleton<WorkTrace.Core.Guides.IGuideService, GuideService>();
         services.AddSingleton<IMinorTaskService, MinorTaskService>();
         services.AddSingleton<WorkTrace.Core.Reporting.IRegistrationService, Reporting.RegistrationService>();
