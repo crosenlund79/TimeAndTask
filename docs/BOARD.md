@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 1 | 30 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 31 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,17 +13,7 @@ _Empty._
 
 ## In progress
 
-### WT-065 · Timeline export to Excel and PDF
-
-`feature` · priority Normal
-
-**Acceptance criteria**
-
-- Timeline Excel…/PDF… export the timeline as shown (filters, order); Excel has a visual timeline, Task Data and Working Days sheets with colours, deadlines, holidays, filters; PDF is landscape, paginated with repeated date headers; both show the same planning; nothing changes in task data.
-
-**Evidence**
-
-Commit f75ebe1; Windows CI run 54 green (TimelineExportTests: per-day hours, workbook structure/order, PDF pagination + xref); sample xlsx/pdf rendered and checked; installer WorkTrace-Setup-0.2.54
+_None._
 
 ## Review / Test
 
@@ -492,6 +482,18 @@ Commit 4082442; Windows CI run 52 green (incl. WPF smoke: quote refresh); instal
 **Evidence**
 
 Commit 6ea6b88; Windows CI run 53 green (all tests incl. new RegistrationIntegrity, editor and popup smoke tests); installer WorkTrace-Setup-0.2.53
+
+### WT-065 · Timeline export to Excel and PDF
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Timeline Excel…/PDF… export the timeline as shown (filters, order); Excel has a visual timeline, Task Data and Working Days sheets with colours, deadlines, holidays, filters; PDF is landscape, paginated with repeated date headers; both show the same planning; nothing changes in task data.
+
+**Evidence**
+
+Commit f75ebe1; Windows CI run 54 green (TimelineExportTests: per-day hours, workbook structure/order, PDF pagination + xref); sample xlsx/pdf rendered and checked; installer WorkTrace-Setup-0.2.54
 
 ## To do
 

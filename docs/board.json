@@ -1660,8 +1660,8 @@
       "title": "Timeline export to Excel and PDF",
       "category": "feature",
       "priority": "normal",
-      "status": "doing",
-      "rank": "i",
+      "status": "review",
+      "rank": "zzzzzzi",
       "archived": false,
       "archivedAt": null,
       "description": "",
@@ -1680,11 +1680,19 @@
           "at": "2026-11-09T10:20:28Z",
           "by": "claude",
           "to": "doing"
+        },
+        {
+          "id": "e3d1d8f2-d6ab-427c-bac6-7fd9d919243f",
+          "type": "status",
+          "at": "2026-11-09T10:28:56Z",
+          "by": "claude",
+          "from": "doing",
+          "to": "review"
         }
       ],
       "createdAt": "2026-11-09T10:20:28Z",
-      "updatedAt": "2026-11-09T10:28:54Z",
-      "rev": 2
+      "updatedAt": "2026-11-09T10:28:56Z",
+      "rev": 3
     }
   ]
 }
