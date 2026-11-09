@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 66,
+  "nextId": 67,
   "cards": [
     {
       "id": "WT-001",
@@ -1693,6 +1693,38 @@
       "createdAt": "2026-11-09T10:20:28Z",
       "updatedAt": "2026-11-09T10:28:56Z",
       "rev": 3
+    },
+    {
+      "id": "WT-066",
+      "uid": "04e3ec67-36a7-473d-ab43-410836b18f0c",
+      "title": "Continuous time registration (one active interval) + daily task history",
+      "category": "bug",
+      "priority": "high",
+      "status": "doing",
+      "rank": "i",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Start-up time goes to the first chosen task; switching splits at the selection time; same task continues; dismiss/miss changes nothing; Waiting tasks selectable; pause/restart/exit/crash never overlap or invent time; Overview = Timesheet; Overview 'Tasks this day' and Timesheet 'Tasks worked on this week' list each task once per day."
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "aaa5b276-e3b4-4226-a159-a68c7a847546",
+          "type": "created",
+          "at": "2026-11-09T15:51:24Z",
+          "by": "claude",
+          "to": "doing"
+        }
+      ],
+      "createdAt": "2026-11-09T15:51:24Z",
+      "updatedAt": "2026-11-09T15:51:24Z",
+      "rev": 1
     }
   ]
 }

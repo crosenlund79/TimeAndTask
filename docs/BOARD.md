@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 31 | 5 | 0 |
+| 0 | 2 | 8 | 1 | 31 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,7 +13,13 @@ _Empty._
 
 ## In progress
 
-_None._
+### WT-066 · Continuous time registration (one active interval) + daily task history
+
+`bug` · priority High
+
+**Acceptance criteria**
+
+- Start-up time goes to the first chosen task; switching splits at the selection time; same task continues; dismiss/miss changes nothing; Waiting tasks selectable; pause/restart/exit/crash never overlap or invent time; Overview = Timesheet; Overview 'Tasks this day' and Timesheet 'Tasks worked on this week' list each task once per day.
 
 ## Review / Test
 
