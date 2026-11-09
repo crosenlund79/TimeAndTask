@@ -15,6 +15,9 @@ public enum PeriodKind
 
     /// <summary>Paused, asleep, shut down (or locked with "locked time is not work"). Never filled.</summary>
     NotTracking = 3,
+
+    /// <summary>Screen locked while tracking (default handling): not work, shown as locked, classifiable; the active task continues afterwards.</summary>
+    Locked = 4,
 }
 
 /// <summary>A half-open interval [Start, End). <see cref="TaskId"/> is null for non-task time (note-only check-ins, non-work allocations).</summary>
@@ -24,7 +27,11 @@ public sealed record TimelinePeriod(DateTime StartUtc, DateTime EndUtc, PeriodKi
     public TimeSpan Duration => EndUtc - StartUtc;
 }
 
-public sealed record EstimationSegment(DateTime StartUtc, DateTime EndUtc);
+/// <param name="ContinuesActive">
+/// The segment follows one that ended without an explicit stop (sleep, clock change) in the same application run: the
+/// task active at that end is still the active task. After a pause, exit or crash a segment starts unclassified.
+/// </param>
+public sealed record EstimationSegment(DateTime StartUtc, DateTime EndUtc, bool ContinuesActive = false);
 
 public sealed record EstimationObservation(int Id, DateTime AtUtc, DateTime CreatedAtUtc, int? TaskId, int? ClientId = null);
 
@@ -52,9 +59,12 @@ public static class TimeEstimator
     {
         ArgumentNullException.ThrowIfNull(input);
         var periods = new List<TimelinePeriod>();
+        EstimationObservation? carried = null;
         foreach (var segment in input.Segments.Where(s => s.EndUtc > s.StartUtc).OrderBy(s => s.StartUtc))
         {
-            periods.AddRange(EstimateSegment(input, segment));
+            var (segmentPeriods, activeAtEnd) = EstimateSegment(input, segment, segment.ContinuesActive ? carried : null);
+            periods.AddRange(segmentPeriods);
+            carried = activeAtEnd;
         }
 
         // Manual allocations overlay everything (latest created wins), also outside tracking.
@@ -77,11 +87,14 @@ public static class TimeEstimator
     /// <item>Selecting a different task ends the active one at that moment and starts the new one there; selecting the same
     /// task again just continues it (one merged interval).</item>
     /// <item>Nothing else changes the active task: dismissed, missed or note-only check-ins and elapsed time do not end it.
-    /// A lock is shown per <see cref="LockedTimeHandling"/> and the active task continues after it.</item>
-    /// <item>The segment end (pause, sleep, exit, crash heartbeat) ends the active interval.</item>
+    /// A lock is shown per <see cref="LockedTimeHandling"/> and the active task continues after it; a check-in during a
+    /// lock ends it there (the user is evidently back).</item>
+    /// <item>The segment end (pause, sleep, exit, crash heartbeat) ends the active interval. After a sleep or clock change
+    /// (<see cref="EstimationSegment.ContinuesActive"/>) the same task continues in the next segment; the gap is never work.</item>
     /// </list>
     /// </summary>
-    private static List<TimelinePeriod> EstimateSegment(EstimationInput input, EstimationSegment segment)
+    private static (List<TimelinePeriod> Periods, EstimationObservation? ActiveAtEnd) EstimateSegment(
+        EstimationInput input, EstimationSegment segment, EstimationObservation? carried)
     {
         var (s, e) = (segment.StartUtc, segment.EndUtc);
         var result = new List<TimelinePeriod>();
@@ -102,9 +115,22 @@ public static class TimeEstimator
             items.Add((o.AtUtc, 1, o, null));
         }
 
-        foreach (var l in input.Locks.Where(l => l.EndUtc > s && l.StartUtc < e && l.EndUtc - l.StartUtc > input.LockGrace))
+        foreach (var l in input.Locks.Where(l => l.EndUtc > s && l.StartUtc < e))
         {
-            items.Add((l.StartUtc < s ? s : l.StartUtc, 0, null, l.EndUtc > e ? e : l.EndUtc));
+            var lockStart = l.StartUtc < s ? s : l.StartUtc;
+            var lockEnd = l.EndUtc > e ? e : l.EndUtc;
+
+            // Any check-in while "locked" proves the user is at the computer (e.g. a missed unlock notification).
+            var presence = input.Observations.Where(o => o.AtUtc > lockStart && o.AtUtc < lockEnd).Select(o => (DateTime?)o.AtUtc).Min();
+            if (presence is { } back)
+            {
+                lockEnd = back;
+            }
+
+            if (lockEnd - lockStart > input.LockGrace)
+            {
+                items.Add((lockStart, 0, null, lockEnd));
+            }
         }
 
         items.Sort((a, b) =>
@@ -126,7 +152,7 @@ public static class TimeEstimator
         });
 
         // The active interval: what it is (null = unclassified) and where it started.
-        EstimationObservation? active = null;
+        var active = carried;
         var activeStart = s;
         foreach (var item in items)
         {
@@ -146,7 +172,7 @@ public static class TimeEstimator
                 Emit(activeStart, at, active);
                 if (lockEnd > at)
                 {
-                    result.Add(new TimelinePeriod(at, lockEnd, input.LockHandling == LockedTimeHandling.NotWorking ? PeriodKind.NotTracking : PeriodKind.Unclassified, null));
+                    result.Add(new TimelinePeriod(at, lockEnd, input.LockHandling == LockedTimeHandling.NotWorking ? PeriodKind.NotTracking : PeriodKind.Locked, null));
                 }
 
                 activeStart = lockEnd > at ? lockEnd : at;
@@ -154,7 +180,7 @@ public static class TimeEstimator
         }
 
         Emit(activeStart, e, active);
-        return result;
+        return (result, active);
     }
 
     /// <summary>Puts <paramref name="top"/> over the periods, cutting whatever it overlaps.</summary>

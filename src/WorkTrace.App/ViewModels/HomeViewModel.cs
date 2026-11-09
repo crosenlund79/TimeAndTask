@@ -23,6 +23,7 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
     private readonly WorkTrace.Core.Reporting.IRegistrationService _registrations;
     private readonly IRegistrationEditor _editor;
     private readonly IDialogService _dialogs;
+    private readonly ITimer _refreshTimer;
     private bool _loadingCurrent;
     private int? _recordedTaskId;
 
@@ -52,12 +53,25 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
         _dialogs = dialogs;
         Tracking = tracking;
 
-        // Keep "Today" current while the page is open.
-        tracking.CheckInRecorded += (_, _) =>
+        // Keep "Today" current: after every check-in from any UI (popup, shortcut, this page) …
+        checkIns.Recorded += (_, _) => System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
         {
             _ = LoadTimelineAsync();
             _ = LoadCurrentTaskAsync();
-        };
+        });
+
+        // … and once a minute, so the active interval's running time stays current.
+        _refreshTimer = timeProvider.CreateTimer(
+            _ => System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
+            {
+                if (IsToday && !IsBusy)
+                {
+                    _ = LoadTimelineAsync();
+                }
+            }),
+            null,
+            TimeSpan.FromMinutes(1),
+            TimeSpan.FromMinutes(1));
         tracking.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(TrackingController.Status))
@@ -164,7 +178,7 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
     [RelayCommand]
     private async Task EditRegistrationAsync(RegistrationItemViewModel? item)
     {
-        if (item is null || item.IsPaused)
+        if (item is null || item.IsPaused || item.IsActive && item.CanClassify)
         {
             return;
         }
@@ -357,8 +371,27 @@ public sealed class RegistrationItemViewModel(WorkTrace.Core.Reporting.Registrat
 {
     public WorkTrace.Core.Reporting.RegistrationEntry Entry { get; } = entry;
 
-    public string Time { get; } =
-        $"{TimeZoneInfo.ConvertTimeFromUtc(entry.StartUtc, TimeZoneInfo.Local):HH:mm}–{TimeZoneInfo.ConvertTimeFromUtc(entry.EndUtc, TimeZoneInfo.Local):HH:mm}";
+    /// <summary>"09:14–10:29"; the running interval has no end yet: "09:14–now".</summary>
+    public string Time { get; } = entry.IsActive
+        ? $"{TimeZoneInfo.ConvertTimeFromUtc(entry.StartUtc, TimeZoneInfo.Local):HH:mm}–now"
+        : $"{TimeZoneInfo.ConvertTimeFromUtc(entry.StartUtc, TimeZoneInfo.Local):HH:mm}–{TimeZoneInfo.ConvertTimeFromUtc(entry.EndUtc, TimeZoneInfo.Local):HH:mm}";
+
+    /// <summary>The interval running now (shown with an "Active" badge, never as a completed registration).</summary>
+    public bool IsActive => Entry.IsActive;
+
+    public bool IsLocked => Entry.Kind == WorkTrace.Core.Reporting.RegistrationKind.Locked;
+
+    /// <summary>Unclassified or locked time: shown muted, with Classify.</summary>
+    public bool CanClassify => IsUnclassified || IsLocked;
+
+    /// <summary>
+    /// The check-ins behind the row: "chosen 09:14 (counted from 08:14)", "chosen 09:14 · again 11:02". Explains a row that
+    /// starts before its selection (the unclassified time since start-up or a resume was classified by it) and selections
+    /// of the same task that continued it instead of starting a new row.
+    /// </summary>
+    public string? SelectionText { get; } = entry.Selections.Count == 0 ? null : string.Join(" · ", entry.Selections.Select((s, i) =>
+        (i == 0 ? "chosen " : "again ") + TimeZoneInfo.ConvertTimeFromUtc(s, TimeZoneInfo.Local).ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture)
+        + (i == 0 && s - entry.StartUtc >= TimeSpan.FromMinutes(1) ? $" (counted from {TimeZoneInfo.ConvertTimeFromUtc(entry.StartUtc, TimeZoneInfo.Local):HH:mm})" : "")));
 
     public string Duration { get; } = $"{(entry.IsConfirmed ? "" : "≈ ")}{(int)entry.Duration.TotalHours}:{entry.Duration.Minutes:00}";
 
@@ -372,8 +405,8 @@ public sealed class RegistrationItemViewModel(WorkTrace.Core.Reporting.Registrat
 
     public bool IsPaused => Entry.Kind == WorkTrace.Core.Reporting.RegistrationKind.Paused;
 
-    /// <summary>Work and break rows can be edited and deleted; unclassified rows can be classified.</summary>
-    public bool CanDelete => !IsUnclassified && !IsPaused;
+    /// <summary>Work and break rows can be edited and deleted; unclassified and locked rows can be classified.</summary>
+    public bool CanDelete => !CanClassify && !IsPaused;
 
     public bool CanEdit => CanDelete;
 
@@ -381,6 +414,7 @@ public sealed class RegistrationItemViewModel(WorkTrace.Core.Reporting.Registrat
     {
         WorkTrace.Core.Reporting.RegistrationKind.Unclassified => "Unclassified: not yet assigned to a task (Classify to assign it)",
         WorkTrace.Core.Reporting.RegistrationKind.Paused => "Registration paused: not working time",
+        WorkTrace.Core.Reporting.RegistrationKind.Locked => "Screen locked: not counted (Classify if it was work); the task continues after it",
         _ => Entry.IsBreak ? "Break" : Entry.IsConfirmed ? "Confirmed" : "From check-in (estimated)",
     };
 }

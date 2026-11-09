@@ -55,7 +55,7 @@ public sealed partial class RegistrationEditorViewModel(ITaskService tasks, ICli
     public async Task LoadAsync(RegistrationEntry entry)
     {
         _original = entry;
-        Heading = entry.Kind == RegistrationKind.Unclassified ? "Classify time" : "Edit registration";
+        Heading = entry.Kind == RegistrationKind.Work ? "Edit registration" : "Classify time";
         OnPropertyChanged(nameof(Heading));
         _allTasks = await tasks.SearchAsync(new TaskQuery(Limit: 500));
         ClientOptions.Clear();
@@ -163,6 +163,18 @@ public sealed partial class RegistrationEditorViewModel(ITaskService tasks, ICli
         var endLocal = (endTime > startTime ? day : day.AddDays(1)).ToDateTime(endTime); // an end before the start is the next morning
         var startUtc = DateTime.SpecifyKind(TimeZoneInfo.ConvertTimeToUtc(startLocal, TimeZoneInfo.Local), DateTimeKind.Utc);
         var endUtc = DateTime.SpecifyKind(TimeZoneInfo.ConvertTimeToUtc(endLocal, TimeZoneInfo.Local), DateTimeKind.Utc);
+
+        // The form shows minutes; an unchanged time keeps its exact stored value (seconds included), so saving never
+        // shifts a boundary and never leaves slivers of unclassified time.
+        if (startUtc == Truncate(original.StartUtc))
+        {
+            startUtc = original.StartUtc;
+        }
+
+        if (endUtc == Truncate(original.EndUtc))
+        {
+            endUtc = original.EndUtc;
+        }
         var taskId = PickerOption.FromKey(TaskKey ?? 0);
         var clientId = PickerOption.FromKey(ClientKey ?? 0);
         try
@@ -189,6 +201,8 @@ public sealed partial class RegistrationEditorViewModel(ITaskService tasks, ICli
 
     private static bool TryTime(string? text, out TimeOnly time) =>
         TimeOnly.TryParseExact(text?.Trim(), ["H:mm", "HH:mm", "H.mm", "HHmm"], CultureInfo.InvariantCulture, DateTimeStyles.None, out time);
+
+    private static DateTime Truncate(DateTime utc) => new(utc.Ticks - (utc.Ticks % TimeSpan.TicksPerMinute), DateTimeKind.Utc);
 
     private static string Format(TimeSpan span) => $"{(int)span.TotalHours}:{span.Minutes:00}";
 }

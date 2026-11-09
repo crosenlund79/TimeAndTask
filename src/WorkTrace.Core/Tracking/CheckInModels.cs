@@ -52,6 +52,9 @@ public interface ICheckInService
     /// <exception cref="Validation.DomainValidationException">Invalid input; nothing stored.</exception>
     Task<ObservationSummary> RecordAsync(CheckInRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>Raised after every stored check-in, whichever UI recorded it (the tracking engine listens).</summary>
+    event EventHandler<ObservationSummary>? Recorded;
+
     /// <summary>The most recent (by observed time) non-deleted observation, if any.</summary>
     Task<ObservationSummary?> GetLastObservationAsync(CancellationToken cancellationToken = default);
 

@@ -67,11 +67,22 @@ internal sealed class RegistrationService(
         // A second past now, so a selection made this instant already counts (periods are half-open [start, end)).
         var probe = nowUtc.AddSeconds(1);
         var (periods, _, _, _, _) = await TimesheetService.EstimateAsync(db, segment.StartUtc, probe, probe, settings.Current, cancellationToken);
-        return periods.Count > 0 && periods[^1] is { } last && last.EndUtc >= nowUtc.AddSeconds(-1)
-            ? last.Kind is PeriodKind.Estimated or PeriodKind.Manual && (last.TaskId is not null || last.ClientId is not null)
-                ? new ActiveInterval(last.StartUtc, last.TaskId, last.TaskId is null ? last.ClientId : null)
-                : new ActiveInterval(last.StartUtc, null, null)
-            : new ActiveInterval(segment.StartUtc < nowUtc ? nowUtc : segment.StartUtc, null, null);
+        if (periods.Count == 0 || periods[^1].EndUtc < nowUtc.AddSeconds(-1))
+        {
+            return new ActiveInterval(segment.StartUtc < nowUtc ? nowUtc : segment.StartUtc, null, null);
+        }
+
+        // While the screen is locked the active task is the one before the lock: it continues after the unlock.
+        var i = periods.Count - 1;
+        while (i > 0 && periods[i].Kind == PeriodKind.Locked)
+        {
+            i--;
+        }
+
+        var last = periods[i];
+        return last.Kind is PeriodKind.Estimated or PeriodKind.Manual && (last.TaskId is not null || last.ClientId is not null)
+            ? new ActiveInterval(last.StartUtc, last.TaskId, last.TaskId is null ? last.ClientId : null)
+            : new ActiveInterval(periods[^1].StartUtc, null, null);
     }
 
     private ManualAllocation Allocation(DateTime startUtc, DateTime endUtc, int? taskId, int? clientId)

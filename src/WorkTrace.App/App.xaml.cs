@@ -30,6 +30,13 @@ public partial class App : Application, IAppLifetime
     {
         base.OnStartup(e);
 
+        // Developer diagnostics: read-only report, never a second tracking instance.
+        if (Diagnostics.RegistrationReportCommand.TryRun(e.Args))
+        {
+            Shutdown(0);
+            return;
+        }
+
         _singleInstance = SingleInstanceGuard.TryAcquire();
         if (_singleInstance is null)
         {

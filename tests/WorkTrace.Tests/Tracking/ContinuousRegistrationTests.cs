@@ -158,4 +158,153 @@ public class ContinuousRegistrationTests : TrackingTestBase
         Assert.Equal(day1.Tasks, week.DayTasks[week.Days.ToList().IndexOf(before)]);
         Assert.Equal(day1.RegisteredMinutes, week.DayTotals[week.Days.ToList().IndexOf(before)]); // informational only
     }
+
+    /// <summary>All rows of the day as (start, end, label, active), for the Overview checks below.</summary>
+    private async Task<List<(DateTime Start, DateTime End, string Label, bool Active)>> RowsAsync()
+    {
+        var day = await Timesheets.GetDayAsync(Day(Now), Ct);
+        return [.. day.Entries.Select(e => (e.StartUtc, e.EndUtc, e.Task!, e.IsActive))];
+    }
+
+    [Fact]
+    public async Task SleepLockAndAMissedUnlock_KeepTheActiveTask_AndNeverCountTheGap()
+    {
+        await ConfigureAsync(t => { t.PeriodicPromptsEnabled = false; t.PromptOnStart = false; });
+        var (a, b, _) = await SeedAsync();
+        await StartEngineAsync();
+        await AdvanceToAsync(9, 20);
+        await Select(a);                                   // 09:07 onwards: A
+
+        await AdvanceToAsync(9, 40);
+        await Engine.NotifySuspendAsync();                 // laptop sleeps 09:40–10:10
+        Sleep(TimeSpan.FromMinutes(30));
+        await Engine.NotifyResumeAsync();
+        await AdvanceToAsync(10, 30);
+        Assert.Equal(a.Id, (await Registrations.GetActiveAsync(Now, Ct))!.TaskId); // still A: waking is not a task change
+
+        await Engine.NotifySessionLockedAsync();           // locked 10:30–10:45
+        await AdvanceToAsync(10, 45);
+        await Engine.NotifySessionUnlockedAsync();
+        await AdvanceToAsync(11, 0);
+
+        await Engine.NotifySessionLockedAsync();           // locked 11:00, the unlock notification never arrives …
+        await AdvanceToAsync(11, 20);
+        await Select(b);                                   // … but choosing B at 11:20 proves the user is back
+        await AdvanceToAsync(11, 30);
+
+        Assert.Equal(
+            [(At(9, 7), At(9, 40), "Task A", false), (At(10, 10), At(10, 30), "Task A", false), (At(10, 30), At(10, 45), "Screen locked", false),
+             (At(10, 45), At(11, 0), "Task A", false), (At(11, 0), At(11, 20), "Screen locked", false), (At(11, 20), At(11, 30), "Task B", true)],
+            await RowsAsync());
+        Assert.DoesNotContain(await LocksAsync(), l => l.EndUtc is null); // the stale lock was closed at the check-in
+        Assert.Equal(
+            [(At(9, 7), At(9, 40), "Task A"), (At(10, 10), At(10, 30), "Task A"), (At(10, 45), At(11, 0), "Task A"), (At(11, 20), At(11, 30), "Task B")],
+            await WorkAsync(Day(Now)));
+    }
+
+    [Fact]
+    public async Task AFrozenProcessWithoutSleepNotification_IsNotCounted_AndTheTaskContinuesAfterwards()
+    {
+        await ConfigureAsync(t => { t.PeriodicPromptsEnabled = false; t.PromptOnStart = false; });
+        var (a, _, _) = await SeedAsync();
+        await StartEngineAsync();
+        await Select(a);
+        await AdvanceToAsync(10, 0);
+        Sleep(TimeSpan.FromMinutes(45));                   // Modern Standby: no notification, both clocks moved on, no timer ran
+        await AdvanceToAsync(11, 0);
+
+        var segments = await SegmentsAsync();
+        Assert.Equal(TrackingEndReason.Sleep, segments[0].EndReason);
+        Assert.True(segments[0].EndUtc <= At(10, 0), "ended where the engine last ran");
+        var work = await WorkAsync(Day(Now));
+        Assert.Equal(2, work.Count);
+        Assert.All(work, w => Assert.Equal("Task A", w.Task));
+        Assert.InRange(work[1].Start, At(10, 45), At(10, 50)); // the frozen 45 minutes are not work (detected within a heartbeat)
+    }
+
+    [Fact]
+    public async Task APopupLeftOpenForHours_ThenMissed_DoesNotTouchTheActiveTask_AndRepeatedSelectionsShowOnOneRow()
+    {
+        await ConfigureAsync(t => { t.CheckInIntervalMinutes = 30; t.PromptOnStart = false; });
+        var (a, b, _) = await SeedAsync();
+        await StartEngineAsync();
+        await AdvanceToAsync(9, 15);
+        await Select(a);
+        await AdvanceToAsync(9, 30, 5);                    // the 09:30 popup opens and stays open …
+        await AdvanceToAsync(12, 0);
+        Presenter.Complete(PromptOutcome.Closed);          // … until 12:00, closed without an answer
+        await AdvanceToAsync(12, 10);
+        await Select(a);                                   // A again: continues
+        await AdvanceToAsync(12, 20);
+        await Select(a);
+        await AdvanceToAsync(12, 40);
+        await Select(b);
+        await AdvanceToAsync(13, 0);
+
+        var day = await Timesheets.GetDayAsync(Day(Now), Ct);
+        var rows = day.Entries.Where(e => e.Kind == RegistrationKind.Work).ToList();
+        Assert.Equal([(At(9, 7), At(12, 40), "Task A", false), (At(12, 40), At(13, 0), "Task B", true)], rows.Select(e => (e.StartUtc, e.EndUtc, e.Task!, e.IsActive)));
+        Assert.Equal([At(9, 15), At(12, 10), At(12, 20)], rows[0].Selections); // every selection of A is visible on its one row
+        Assert.Equal([At(12, 40)], rows[1].Selections);
+        Assert.DoesNotContain(day.Entries, e => e.Kind == RegistrationKind.Unclassified);
+    }
+
+    [Fact]
+    public async Task AnActiveTaskAcrossMidnight_IsSplitBetweenTheDays_AndTotalsAgree()
+    {
+        await ConfigureAsync(t => { t.PeriodicPromptsEnabled = false; t.PromptOnStart = false; });
+        var (a, _, _) = await SeedAsync();
+        await StartEngineAsync();
+        await Select(a);
+        var midnight = TimeZoneInfo.ConvertTimeToUtc(new DateTime(2026, 10, 29, 0, 0, 0, DateTimeKind.Unspecified), TimeZoneInfo.Local);
+        await AdvanceAsync(midnight - Now + TimeSpan.FromMinutes(30));
+        await Engine.StopAsync();
+
+        var before = await WorkAsync(Day(midnight.AddMinutes(-1)));
+        var after = await WorkAsync(Day(midnight));
+        Assert.Equal((At(9, 7), midnight), (before.Single().Start, before.Single().End));
+        Assert.Equal((midnight, midnight.AddMinutes(30)), (after.Single().Start, after.Single().End));
+    }
+
+    [Fact]
+    public async Task DiagnosticReport_ExplainsEveryBoundary_RedactsNames_AndNeverChangesTheDatabase()
+    {
+        await ConfigureAsync(t => { t.CheckInIntervalMinutes = 30; t.PromptOnStart = false; });
+        var (a, b, _) = await SeedAsync();
+        await StartEngineAsync();                          // 09:07
+        await AdvanceToAsync(9, 20);
+        await Select(a);
+        await AdvanceToAsync(9, 30, 5);
+        Presenter.Complete(PromptOutcome.TimedOut);        // a missed check-in
+        await AdvanceToAsync(9, 50);
+        await Engine.NotifySuspendAsync();                 // sleep 09:50–10:20
+        Sleep(TimeSpan.FromMinutes(30));
+        await Engine.NotifyResumeAsync();
+        await AdvanceToAsync(10, 25);
+        await Engine.PauseAsync(TimeSpan.FromMinutes(10));
+        await CheckIns.RecordAsync(new CheckInRequest(null, b.Id, "private note"), Ct); // while paused: registers nothing
+        await AdvanceToAsync(11, 0);
+        await Engine.StopAsync();
+
+        var database = Paths.DatabasePath;
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools(); // the app's own connections settle (WAL checkpoint) first
+        var before = await File.ReadAllBytesAsync(database, Ct);
+        var path = await WorkTrace.Infrastructure.Reporting.RegistrationDiagnostics.WriteAsync(Paths, Day(Now), includeNames: false, Clock, Ct);
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        Assert.Equal(before, await File.ReadAllBytesAsync(database, Ct)); // opened read-only: not a byte changed
+
+        var report = await File.ReadAllTextAsync(path, Ct);
+        Assert.DoesNotContain("Task A", report, StringComparison.Ordinal);       // names redacted …
+        Assert.DoesNotContain("private note", report, StringComparison.Ordinal); // … and notes never included
+        Assert.Contains($"T{a.Id}", report, StringComparison.Ordinal);
+        Assert.Contains("first choice: classifies the unclassified time from 09:07:00", report, StringComparison.Ordinal);
+        Assert.Contains("after Sleep at 09:50:00: the active task continues", report, StringComparison.Ordinal);
+        Assert.Contains("OUTSIDE TRACKING", report, StringComparison.Ordinal);
+        Assert.Contains("→ Missed", report, StringComparison.Ordinal);
+        Assert.Contains("tracking ended (Shutdown)", report, StringComparison.Ordinal);
+        Assert.DoesNotContain("ACTIVE", report, StringComparison.Ordinal); // WorkTrace was closed: nothing is running
+        Assert.DoesNotContain("GAP between", report, StringComparison.Ordinal);
+        Assert.DoesNotContain("OVERLAPPING", report, StringComparison.Ordinal);
+        TestContext.Current.AddAttachment("registration-report", report);
+    }
 }

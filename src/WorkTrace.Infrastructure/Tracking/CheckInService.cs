@@ -92,8 +92,12 @@ internal sealed class CheckInService(
         await tx.CommitAsync(cancellationToken);
         logger.LogInformation("Observation {ObservationId} recorded ({Origin})", observation.Id, observation.Origin);
 
-        return await Summaries(db.Observations.Where(o => o.Id == observation.Id)).SingleAsync(cancellationToken);
+        var summary = await Summaries(db.Observations.Where(o => o.Id == observation.Id)).SingleAsync(cancellationToken);
+        Recorded?.Invoke(this, summary);
+        return summary;
     }
+
+    public event EventHandler<ObservationSummary>? Recorded;
 
     public async Task<ObservationSummary?> GetLastObservationAsync(CancellationToken cancellationToken = default)
     {

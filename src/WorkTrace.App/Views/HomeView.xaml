@@ -138,12 +138,21 @@
                       </Grid.ColumnDefinitions>
                       <TextBlock Text="{Binding Time}" FontFamily="{StaticResource MonoFont}" FontSize="12" VerticalAlignment="Top" Margin="0,1,0,0" />
                       <StackPanel Grid.Column="1" Margin="0,0,8,0">
-                        <TextBlock x:Name="RowTask" Text="{Binding Task}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <DockPanel>
+                          <Border DockPanel.Dock="Right" Margin="6,0,0,0" Padding="6,0" CornerRadius="3" VerticalAlignment="Center"
+                                  Background="{DynamicResource AccentFillColorDefaultBrush}" AutomationProperties.Name="Active"
+                                  Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="Active" FontSize="11" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+                          </Border>
+                          <TextBlock x:Name="RowTask" Text="{Binding Task}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
                         <StackPanel x:Name="RowStakeholder" Orientation="Horizontal">
                           <Ellipse Width="8" Height="8" Margin="0,1,6,0" VerticalAlignment="Center"
                                    Fill="{Binding StakeholderColor, Converter={StaticResource HexBrush}}" />
                           <TextBlock Text="{Binding Stakeholder}" Style="{StaticResource CaptionText}" />
                         </StackPanel>
+                        <TextBlock Text="{Binding SelectionText}" Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap"
+                                   Visibility="{Binding SelectionText, Converter={StaticResource NullToCollapsed}}" />
                       </StackPanel>
                       <TextBlock Grid.Column="2" Text="{Binding Duration}" FontFamily="{StaticResource MonoFont}" VerticalAlignment="Top" />
                       <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="8,-2,0,0" VerticalAlignment="Top">
@@ -161,12 +170,17 @@
                                 ToolTip="Assign this time to a task or stakeholder" AutomationProperties.Name="Classify time"
                                 Command="{Binding DataContext.EditRegistrationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                 CommandParameter="{Binding}"
-                                Visibility="{Binding IsUnclassified, Converter={StaticResource BoolToVisibility}}" />
+                                Visibility="{Binding CanClassify, Converter={StaticResource BoolToVisibility}}" />
                       </StackPanel>
                     </Grid>
                     <DataTemplate.Triggers>
                       <DataTrigger Binding="{Binding IsUnclassified}" Value="True">
                         <Setter TargetName="RowTask" Property="FontStyle" Value="Italic" />
+                        <Setter TargetName="RowTask" Property="FontWeight" Value="Normal" />
+                        <Setter TargetName="RowStakeholder" Property="Visibility" Value="Collapsed" />
+                      </DataTrigger>
+                      <DataTrigger Binding="{Binding IsLocked}" Value="True">
+                        <Setter TargetName="Row" Property="Opacity" Value="0.7" />
                         <Setter TargetName="RowTask" Property="FontWeight" Value="Normal" />
                         <Setter TargetName="RowStakeholder" Property="Visibility" Value="Collapsed" />
                       </DataTrigger>

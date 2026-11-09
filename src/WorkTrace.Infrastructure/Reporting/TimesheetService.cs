@@ -179,8 +179,24 @@ internal sealed class TimesheetService(
             lookBack = start;
         }
 
-        var segments = (await db.TrackingSegments.AsNoTracking().Where(x => x.StartUtc < to && (x.EndUtc == null || x.EndUtc > lookBack)).ToListAsync(cancellationToken))
-            .Select(x => new EstimationSegment(x.StartUtc, x.EndUtc ?? (now < to ? now : to))).ToList();
+        // A segment after a sleep or clock change continues the task active at the end of the one before (same run).
+        // Follow such chains back to where they began (at most 30 days), so every view sees the same active task.
+        var recent = await db.TrackingSegments.AsNoTracking().Where(x => x.StartUtc < to && (x.EndUtc == null || x.EndUtc > from.AddDays(-30)))
+            .OrderBy(x => x.StartUtc).ToListAsync(cancellationToken);
+        var first = recent.FindIndex(x => x.EndUtc == null || x.EndUtc > lookBack);
+        while (first > 0 && ContinuesFrom(recent[first - 1]))
+        {
+            first--;
+        }
+
+        if (first >= 0 && recent[first].StartUtc < lookBack)
+        {
+            lookBack = recent[first].StartUtc;
+        }
+
+        var segments = recent.Select((x, i) => (Segment: x, Index: i)).Where(x => x.Index >= first && first >= 0)
+            .Select(x => new EstimationSegment(x.Segment.StartUtc, x.Segment.EndUtc ?? (now < to ? now : to), x.Index > first && ContinuesFrom(recent[x.Index - 1])))
+            .ToList();
         var locks = (await db.LockPeriods.AsNoTracking().Where(x => x.StartUtc < to && (x.EndUtc == null || x.EndUtc > lookBack)).ToListAsync(cancellationToken))
             .Select(x => new EstimationSegment(x.StartUtc, x.EndUtc ?? now)).ToList();
         var observations = await db.Observations.AsNoTracking().Where(x => !x.IsDeleted && x.ObservedAtUtc >= lookBack && x.ObservedAtUtc < to)
@@ -203,6 +219,10 @@ internal sealed class TimesheetService(
         return (periods, segments, locks, observations, prompts);
     }
 
+    /// <summary>Ended without an explicit stop (sleep, clock change): the next segment of the same run keeps the active task.</summary>
+    internal static bool ContinuesFrom(TrackingSegment previous) =>
+        previous.EndReason is TrackingEndReason.Sleep or TrackingEndReason.ClockChange;
+
     public async Task<DayRegistrations> GetDayAsync(DateOnly day, CancellationToken cancellationToken = default)
     {
         var zone = TimeZoneInfo.Local;
@@ -221,9 +241,11 @@ internal sealed class TimesheetService(
         }
 
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
-        var (periods, _, _, _, _) = await EstimateAsync(db, from, until, now, settings.Current, cancellationToken);
+        var (periods, _, _, observations, _) = await EstimateAsync(db, from, until, now, settings.Current, cancellationToken);
         var registered = periods.Where(p => p.Kind is PeriodKind.Estimated or PeriodKind.Manual).ToList();
         var unclassified = periods.Where(p => p.Kind == PeriodKind.Unclassified && p.Duration >= TimeSpan.FromMinutes(1)).ToList();
+        var lockedTime = periods.Where(p => p.Kind == PeriodKind.Locked && p.Duration >= TimeSpan.FromMinutes(1)).ToList();
+        var tracking = until == now && await db.TrackingSegments.AnyAsync(x => x.EndUtc == null, cancellationToken);
 
         // Pauses: from a segment that ended because tracking was paused to the next segment (or now).
         var pausedEnds = await db.TrackingSegments.AsNoTracking()
@@ -258,10 +280,43 @@ internal sealed class TimesheetService(
                 c?.Id, c?.Name, c is null ? null : StakeholderColors.For(c.Id, c.Color), p.IsNonWork ? RegistrationKind.Break : RegistrationKind.Work);
         }).ToList();
         var registeredOnly = entries.ToList();
+
+        // One row per uninterrupted interval: touching pieces of the same task (e.g. an edited part next to an estimated
+        // part) are shown once, never as repeated registrations.
+        entries = [];
+        foreach (var e in registeredOnly)
+        {
+            if (entries.Count > 0 && entries[^1] is { } last && last.EndUtc == e.StartUtc && last.TaskId == e.TaskId
+                && last.ClientId == e.ClientId && last.IsBreak == e.IsBreak && last.Kind == e.Kind)
+            {
+                entries[^1] = last with { EndUtc = e.EndUtc, IsConfirmed = last.IsConfirmed && e.IsConfirmed };
+            }
+            else
+            {
+                entries.Add(e);
+            }
+        }
+
+        // The selections each interval contains, so a check-in that continued or classified it is visible on its row.
+        entries = [.. entries.Select(e => e with
+        {
+            Selections = [.. observations
+                .Where(o => !o.IsDeleted && o.ObservedAtUtc >= e.StartUtc && o.ObservedAtUtc < (e.EndUtc == until ? e.EndUtc.AddSeconds(1) : e.EndUtc)
+                    && (e.TaskId is { } t ? o.TaskId == t : o.TaskId is null && o.ClientId == e.ClientId && e.ClientId is not null))
+                .Select(o => o.ObservedAtUtc).Order()],
+        })];
         entries.AddRange(unclassified.Select(p => new RegistrationEntry(p.StartUtc, p.EndUtc, false, false, null, "Unclassified", null, null, null, null,
             RegistrationKind.Unclassified)));
+        entries.AddRange(lockedTime.Select(p => new RegistrationEntry(p.StartUtc, p.EndUtc, false, false, null, "Screen locked", null, null, null, null,
+            RegistrationKind.Locked)));
         entries.AddRange(pauses.Select(p => new RegistrationEntry(p.Start, p.End, true, false, null, "Paused", null, null, null, null, RegistrationKind.Paused)));
         entries = [.. entries.OrderBy(e => e.StartUtc)];
+
+        // The interval running now is marked Active (shown once, ending "now"), not as a completed registration.
+        if (tracking && entries.Count > 0 && entries[^1].EndUtc >= until.AddSeconds(-1) && entries[^1].Kind != RegistrationKind.Paused)
+        {
+            entries[^1] = entries[^1] with { IsActive = true };
+        }
 
         // Same per-line rounding as the Timesheet, so both show the same total for the day.
         var registeredMinutes = registeredOnly.Where(e => !e.IsBreak)

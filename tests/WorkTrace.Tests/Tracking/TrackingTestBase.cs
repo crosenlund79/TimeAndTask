@@ -22,6 +22,9 @@ public abstract class TrackingTestBase : IAsyncLifetime
 
     protected FakeTimeProvider Clock => _data.Time;
 
+    /// <summary>The temporary data folder of this test (never a real WorkTrace folder).</summary>
+    protected WorkTrace.Infrastructure.Storage.AppPaths Paths => _data.Paths;
+
     /// <summary>Elapsed-time source; normally advanced together with <see cref="Clock"/>.</summary>
     protected FakeTimeProvider Monotonic { get; } = new(new DateTimeOffset(2000, 1, 1, 0, 0, 0, TimeSpan.Zero));
 
@@ -68,7 +71,7 @@ public abstract class TrackingTestBase : IAsyncLifetime
 
     protected async Task StartEngineAsync()
     {
-        Engine = new TrackingEngine(Store, Settings, Presenter, Clock, NullLogger<TrackingEngine>.Instance, TimeZoneInfo.Utc, Monotonic);
+        Engine = new TrackingEngine(Store, Settings, Presenter, Clock, NullLogger<TrackingEngine>.Instance, TimeZoneInfo.Utc, Monotonic, checkIns: CheckIns);
         await Engine.StartAsync(Ct);
     }
 

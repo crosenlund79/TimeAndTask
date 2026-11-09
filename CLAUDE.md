@@ -90,11 +90,16 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
    selection time; the same task again continues (one merged interval). All UIs select via `ICheckInService.RecordAsync`.
 4. Dismissed/missed/note-only check-ins and elapsed time never change the active task (no horizon;
    `MaxEstimationHorizonMinutes` is kept in settings but unused).
-5. Pause, sleep, exit and crash (last heartbeat) end the segment; the next segment starts unclassified again.
+5. Pause, sleep, exit and crash (last heartbeat) end the segment; the gap is never work. After a **sleep or clock change**
+   (`ContinuesActive`, same run) the active task continues; after a **pause, exit or crash** the next segment starts
+   unclassified. A timer running >8 min late while tracking = frozen process: treated as sleep (ADR-039).
+   Every check-in (`ICheckInService.Recorded`) heals stale engine state: marked asleep → resume, marked locked → unlock.
 6. Labelled Estimated, never Confirmed. The Timesheet keeps exact minutes; rounding is applied only to exports. Overview
    day view, Timesheet, "current task" (`IRegistrationService.GetActiveAsync`) and the daily task history all derive
    from `TimesheetService.EstimateAsync`, so they cannot disagree.
-7. Locked periods are uncertain by default (`LockedTimeHandling.Unclassified`, grace 0 min).
+7. Locked periods are `PeriodKind.Locked` by default (not work, not "unclassified", classifiable; grace 0 min) or
+   NotTracking with "locked time is not work"; the active task continues after the unlock. A check-in during a recorded
+   lock ends the lock there. Diagnostics: `WorkTrace.exe --registration-report [yyyy-MM-dd] [--names]` (docs/diagnostics.md).
 8. Manual allocations overlay the estimate (latest created wins) and are never discarded by recalculation.
 9. Deterministic: ties broken by CreatedAtUtc, then Id. Durations from UTC differences (DST-safe).
 

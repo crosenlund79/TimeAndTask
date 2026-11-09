@@ -235,3 +235,14 @@ per `LockedTimeHandling` and the task continues afterwards. Every UI selects by 
 Overview, Timesheet and the daily task history are all derived from the same estimate, so nothing is stored twice.
 **Reason:** the earlier rules (horizon cap, missed prompts, start-up only via an opt-in checkbox, "current task" taken from
 the last check-in) left time unclassified or showed a task that was no longer active, so re-selecting it did nothing.
+
+## ADR-039 — Registrations survive sleep, locks and missed notifications
+**Decision (owner report 2026-11-09):** a sleep or clock change ends the tracking segment (the gap is never work), but the
+next segment of the same run continues the active task; only a pause, exit or crash makes the next segment start
+unclassified. Locked time is its own kind ("Screen locked": not work, classifiable) instead of "Unclassified", and the task
+continues after it. A check-in proves the user is present: it ends a recorded lock and resumes tracking marked as asleep.
+A tracking timer that runs far too late means the process was frozen (Modern Standby without notification): treated as
+sleep so that time is not counted. The Overview marks the running interval Active, merges touching pieces of one task and
+shows the check-ins behind each row. `--registration-report` writes a read-only, redacted diagnostic of one day.
+**Reason:** every non-explicit tracking break restarted the day as "Unclassified" until the next answered check-in, which
+split one task into repeated rows with unclassified gaps, and check-ins during a stale lock or sleep state registered nothing.

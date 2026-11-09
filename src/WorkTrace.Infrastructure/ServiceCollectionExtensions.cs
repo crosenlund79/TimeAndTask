@@ -56,7 +56,8 @@ public static class ServiceCollectionExtensions
             sp.GetRequiredService<ICheckInPresenter>(),
             sp.GetRequiredService<TimeProvider>(),
             sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<TrackingEngine>>(),
-            sessionProbe: sp.GetService<ISessionStateProbe>()));
+            sessionProbe: sp.GetService<ISessionStateProbe>(),
+            checkIns: sp.GetRequiredService<ICheckInService>()));
 
         return services;
     }

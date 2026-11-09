@@ -33,6 +33,12 @@ public sealed class TrackingEngine : IAsyncDisposable
     /// </summary>
     internal static readonly TimeSpan MissedResumeCheck = TimeSpan.FromMinutes(1);
 
+    /// <summary>The timer runs at least every heartbeat while tracking; this much later means the process was frozen.</summary>
+    internal static readonly TimeSpan FreezeTolerance = TimeSpan.FromMinutes(3);
+
+    /// <summary>A check-in this recent while marked asleep starts the resumed segment at the check-in.</summary>
+    internal static readonly TimeSpan PresenceWindow = TimeSpan.FromMinutes(2);
+
     private readonly ITrackingStore _store;
     private readonly ISettingsStore _settings;
     private readonly ICheckInPresenter _presenter;
@@ -61,6 +67,13 @@ public sealed class TrackingEngine : IAsyncDisposable
     private (DateTime DueUtc, PromptReason Reason)? _extraPrompt;
     private DateTime? _lastPromptUtc;
     private DateTime _baselineWallUtc;
+
+    /// <summary>The last moment the engine is known to have run while tracking (timer runs, segment starts).</summary>
+    private DateTime _lastAliveUtc;
+
+    private DateTime? _suspendedAtUtc;
+
+    private readonly ICheckInService? _checkIns;
     private long _baselineTimestamp;
     private CheckInAttempt? _lastAttempt;
     private string? _lastError;
@@ -78,9 +91,11 @@ public sealed class TrackingEngine : IAsyncDisposable
         ILogger<TrackingEngine> logger,
         TimeZoneInfo? timeZone = null,
         TimeProvider? monotonicClock = null,
-        ISessionStateProbe? sessionProbe = null)
+        ISessionStateProbe? sessionProbe = null,
+        ICheckInService? checkIns = null)
     {
         _sessionProbe = sessionProbe;
+        _checkIns = checkIns;
         _store = store;
         _settings = settings;
         _presenter = presenter;
@@ -113,6 +128,10 @@ public sealed class TrackingEngine : IAsyncDisposable
             _started = true;
             _timer = _time.CreateTimer(_ => _lastTimerRun = OnTimerAsync(), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
             _settings.Changed += OnSettingsChanged;
+            if (_checkIns is not null)
+            {
+                _checkIns.Recorded += OnCheckInRecorded;
+            }
 
             var now = Now;
             _paused = IsPausedBySettings(now);
@@ -143,6 +162,10 @@ public sealed class TrackingEngine : IAsyncDisposable
 
             _stopped = true;
             _settings.Changed -= OnSettingsChanged;
+            if (_checkIns is not null)
+            {
+                _checkIns.Recorded -= OnCheckInRecorded;
+            }
             _timer?.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
             await _shutdown.CancelAsync();
 
@@ -185,6 +208,7 @@ public sealed class TrackingEngine : IAsyncDisposable
     public Task NotifySuspendAsync() => WithGateAsync(async ct =>
     {
         _suspended = true;
+        _suspendedAtUtc = Now;
         await EndSegmentAsync(Now, TrackingEndReason.Sleep, ct);
     });
 
@@ -245,6 +269,45 @@ public sealed class TrackingEngine : IAsyncDisposable
         return result;
     }
 
+    private void OnCheckInRecorded(object? sender, ObservationSummary observation) => _ = NotifyUserActivityAsync(observation.ObservedAtUtc);
+
+    /// <summary>
+    /// A task was chosen (any check-in UI): the user is at the computer. Heals states that depend on Windows notifications
+    /// that did not arrive, so the selection always lands in tracked time: marked asleep → tracking resumes (from the
+    /// check-in when it is recent), marked locked → the lock ends now. An explicit pause is never resumed.
+    /// </summary>
+    public async Task NotifyUserActivityAsync(DateTime observedAtUtc)
+    {
+        try
+        {
+            await WithGateAsync(async ct =>
+            {
+                var now = Now;
+                if (_suspended)
+                {
+                    _logger.LogWarning("Check-in while marked asleep; resuming tracking");
+                    var start = now - observedAtUtc <= PresenceWindow && observedAtUtc <= now && observedAtUtc >= (_suspendedAtUtc ?? DateTime.MinValue)
+                        ? observedAtUtc
+                        : now;
+                    await ResumeFromSleepAsync(now, ct, start);
+                    _extraPrompt = null; // the user just answered
+                }
+
+                if (_locked)
+                {
+                    _logger.LogWarning("Check-in while marked locked; ending the lock");
+                    _locked = false;
+                    _suppressedWhileLocked = false;
+                    await EndLockAsync(now, ct);
+                }
+            });
+        }
+        catch (Exception ex) when (ex is not ObjectDisposedException)
+        {
+            _logger.LogError(ex, "Could not apply the check-in to the tracking state");
+        }
+    }
+
     /// <summary>The system clock was changed; split the segment if the wall clock jumped.</summary>
     public Task NotifyTimeChangedAsync() => WithGateAsync(ct => DetectClockJumpAsync(Now, ct));
 
@@ -294,6 +357,7 @@ public sealed class TrackingEngine : IAsyncDisposable
                 }
 
                 await DetectClockJumpAsync(now, ct);
+                await DetectFreezeAsync(now, ct);
 
                 if (_paused && Tracking.PausedUntilUtc is { } until && until <= now && Tracking.Enabled)
                 {
@@ -436,9 +500,9 @@ public sealed class TrackingEngine : IAsyncDisposable
 
     // ---------------------------------------------------------------- segments
 
-    private async Task BeginSegmentAsync(DateTime now, PromptReason reason, CancellationToken ct)
+    private async Task BeginSegmentAsync(DateTime now, PromptReason reason, CancellationToken ct, DateTime? startUtc = null)
     {
-        _segmentId = await _store.OpenSegmentAsync(now, ct);
+        _segmentId = await _store.OpenSegmentAsync(startUtc ?? now, ct);
         SetBaseline(now);
         _nextPromptUtc = ComputeNextPrompt(now);
         // Every tracking session starts unclassified: ask for the current task (also with periodic check-ins off).
@@ -472,12 +536,13 @@ public sealed class TrackingEngine : IAsyncDisposable
         }
     }
 
-    private async Task ResumeFromSleepAsync(DateTime now, CancellationToken ct)
+    private async Task ResumeFromSleepAsync(DateTime now, CancellationToken ct, DateTime? startUtc = null)
     {
         _suspended = false;
+        _suspendedAtUtc = null;
         if (!_paused && _segmentId is null)
         {
-            await BeginSegmentAsync(now, PromptReason.Resumed, ct);
+            await BeginSegmentAsync(now, PromptReason.Resumed, ct, startUtc);
             _logger.LogInformation("Tracking resumed after sleep");
         }
     }
@@ -540,6 +605,39 @@ public sealed class TrackingEngine : IAsyncDisposable
     {
         _baselineWallUtc = now;
         _baselineTimestamp = _monotonic.GetTimestamp();
+        _lastAliveUtc = now;
+    }
+
+    /// <summary>
+    /// The timer wakes at least every heartbeat while tracking. Running much later means the process did not run (e.g.
+    /// Modern Standby without a suspend notification, where the monotonic clock keeps counting, so no clock jump shows):
+    /// the segment ends at the last moment the engine ran and a new one starts now, so the frozen time is never counted.
+    /// </summary>
+    private async Task DetectFreezeAsync(DateTime now, CancellationToken ct)
+    {
+        if (_segmentId is { } id && now - _lastAliveUtc > HeartbeatInterval + FreezeTolerance)
+        {
+            var lastAlive = _lastAliveUtc;
+            _logger.LogWarning("Tracking did not run for {Gap}; treating it as sleep", now - lastAlive);
+            await _store.CloseSegmentAsync(id, lastAlive, TrackingEndReason.Sleep, ct);
+            if (_lockId is { } lockId)
+            {
+                await _store.EndLockAsync(lockId, lastAlive, ct);
+                _lockId = null;
+            }
+
+            _segmentId = await _store.OpenSegmentAsync(now, ct);
+            if (_locked)
+            {
+                _lockId = await _store.StartLockAsync(now, ct);
+            }
+
+            SetBaseline(now);
+            _lastPromptUtc = null;
+            _nextPromptUtc = ComputeNextPrompt(now);
+        }
+
+        _lastAliveUtc = now;
     }
 
     // ---------------------------------------------------------------- scheduling

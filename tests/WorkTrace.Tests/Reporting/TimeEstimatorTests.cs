@@ -79,7 +79,28 @@ public class TimeEstimatorTests
 
         var result = TimeEstimator.Estimate(input, At(0), At(120));
 
-        Assert.Equal("0-20 Estimated 1 | 20-40 Unclassified | 40-70 Estimated 1 | 70-80 Manual 7 | 80-120 Estimated 1", Describe(result));
+        Assert.Equal("0-20 Estimated 1 | 20-40 Locked | 40-70 Estimated 1 | 70-80 Manual 7 | 80-120 Estimated 1", Describe(result));
         Assert.Equal(TimeSpan.FromMinutes(120), result.Aggregate(TimeSpan.Zero, (sum, p) => sum + p.Duration));
+    }
+
+    [Fact]
+    public void ACheckInDuringALock_EndsTheLockThere()
+    {
+        // The unlock notification never came; the check-in at 50 proves the user was back.
+        var input = Input([new(At(0), At(120))], [Obs(1, 0, 1), Obs(2, 50, 2)], locks: [new(At(20), At(120))]);
+
+        Assert.Equal("0-20 Estimated 1 | 20-50 Locked | 50-120 Estimated 2", Describe(TimeEstimator.Estimate(input, At(0), At(120))));
+    }
+
+    [Fact]
+    public void AfterSleepOrClockChange_TheActiveTaskContinues_ButNotAfterAPauseOrRestart()
+    {
+        EstimationSegment[] Segments(bool continues) => [new(At(0), At(60)), new(At(70), At(120), continues)];
+
+        var afterSleep = TimeEstimator.Estimate(Input(Segments(continues: true), [Obs(1, 10, 1)]), At(0), At(120));
+        Assert.Equal("0-60 Estimated 1 | 60-70 NotTracking | 70-120 Estimated 1", Describe(afterSleep)); // the gap is never work
+
+        var afterPause = TimeEstimator.Estimate(Input(Segments(continues: false), [Obs(1, 10, 1)]), At(0), At(120));
+        Assert.Equal("0-60 Estimated 1 | 60-70 NotTracking | 70-120 Unclassified", Describe(afterPause));
     }
 }

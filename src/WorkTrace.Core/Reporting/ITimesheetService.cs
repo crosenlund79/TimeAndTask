@@ -85,6 +85,12 @@ public sealed record RegistrationEntry(
     RegistrationKind Kind = RegistrationKind.Work)
 {
     public TimeSpan Duration => EndUtc - StartUtc;
+
+    /// <summary>The interval running now (it has no end yet; <see cref="EndUtc"/> is "now").</summary>
+    public bool IsActive { get; init; }
+
+    /// <summary>Check-ins that chose this task (or stakeholder) inside the interval, in time order.</summary>
+    public IReadOnlyList<DateTime> Selections { get; init; } = [];
 }
 
 /// <summary>What a row of the day view is: registered work, a break, tracked-but-unclassified time, or a pause.</summary>
@@ -98,6 +104,9 @@ public enum RegistrationKind
 
     /// <summary>Tracking paused: not working time.</summary>
     Paused = 3,
+
+    /// <summary>Screen locked while tracking: not counted; can be classified if it was work.</summary>
+    Locked = 4,
 }
 
 /// <summary>A day's registrations with the totals the Timesheet uses for the same day.</summary>
