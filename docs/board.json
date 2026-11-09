@@ -1620,8 +1620,8 @@
       "title": "Time registration corrections: edit/delete/classify registrations, pause from check-in, continuous time accounting, sequential timeline",
       "category": "feature",
       "priority": "high",
-      "status": "doing",
-      "rank": "i",
+      "status": "review",
+      "rank": "zzzzzz",
       "archived": false,
       "archivedAt": null,
       "description": "",
@@ -1640,11 +1640,19 @@
           "at": "2026-11-09T08:50:30Z",
           "by": "claude",
           "to": "doing"
+        },
+        {
+          "id": "9c205c49-e6d1-494f-ab2f-ba24a0125fff",
+          "type": "status",
+          "at": "2026-11-09T08:56:46Z",
+          "by": "claude",
+          "from": "doing",
+          "to": "review"
         }
       ],
       "createdAt": "2026-11-09T08:50:30Z",
-      "updatedAt": "2026-11-09T08:56:43Z",
-      "rev": 2
+      "updatedAt": "2026-11-09T08:56:46Z",
+      "rev": 3
     }
   ]
 }

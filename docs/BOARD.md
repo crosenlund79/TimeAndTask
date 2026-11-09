@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 1 | 29 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 30 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,17 +13,7 @@ _Empty._
 
 ## In progress
 
-### WT-064 · Time registration corrections: edit/delete/classify registrations, pause from check-in, continuous time accounting, sequential timeline
-
-`feature` · priority High
-
-**Acceptance criteria**
-
-- Registrations can be edited (stakeholder, task, date, start, end, duration) and deleted from Overview (Timesheet day headers open the day); totals update at once; pause from the popup stops work time and resumes by itself; time since start-up is unclassified until assigned; timeline tasks follow each other with no gaps and deadlines only change the title emphasis.
-
-**Evidence**
-
-Commit 6ea6b88; Windows CI run 53 green (all tests incl. new RegistrationIntegrity, editor and popup smoke tests); installer WorkTrace-Setup-0.2.53
+_None._
 
 ## Review / Test
 
@@ -480,6 +470,18 @@ Commit fc44d57; Windows CI run 51 green (incl. WPF smoke: Lists tabs, collapsed 
 **Evidence**
 
 Commit 4082442; Windows CI run 52 green (incl. WPF smoke: quote refresh); installer WorkTrace-Setup-0.2.52
+
+### WT-064 · Time registration corrections: edit/delete/classify registrations, pause from check-in, continuous time accounting, sequential timeline
+
+`feature` · priority High
+
+**Acceptance criteria**
+
+- Registrations can be edited (stakeholder, task, date, start, end, duration) and deleted from Overview (Timesheet day headers open the day); totals update at once; pause from the popup stops work time and resumes by itself; time since start-up is unclassified until assigned; timeline tasks follow each other with no gaps and deadlines only change the title emphasis.
+
+**Evidence**
+
+Commit 6ea6b88; Windows CI run 53 green (all tests incl. new RegistrationIntegrity, editor and popup smoke tests); installer WorkTrace-Setup-0.2.53
 
 ## To do
 
