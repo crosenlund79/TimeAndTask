@@ -1,9 +1,12 @@
 namespace WorkTrace.Core.Reporting;
 
-/// <summary>An outstanding stretch of unclassified tracked time ending now (since start-up, a missed check-in, ...).</summary>
-public sealed record OpenInterval(DateTime StartUtc, DateTime EndUtc)
+/// <summary>
+/// The one active interval while tracking: a task, a stakeholder without a task, or unclassified (both null; the next
+/// selection registers it from <see cref="StartUtc"/>).
+/// </summary>
+public sealed record ActiveInterval(DateTime StartUtc, int? TaskId, int? ClientId)
 {
-    public TimeSpan Duration => EndUtc - StartUtc;
+    public bool IsUnclassified => TaskId is null && ClientId is null;
 }
 
 /// <summary>
@@ -26,6 +29,6 @@ public interface IRegistrationService
     /// <summary>Deletes a registration: its range becomes unclassified (shown, never counted, classifiable later).</summary>
     Task DeleteAsync(DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default);
 
-    /// <summary>The unclassified time just before <paramref name="nowUtc"/> in the current tracking session, if any (at least a minute).</summary>
-    Task<OpenInterval?> GetOpenIntervalAsync(DateTime nowUtc, CancellationToken cancellationToken = default);
+    /// <summary>The active interval at <paramref name="nowUtc"/>; null when not tracking (paused, asleep, closed).</summary>
+    Task<ActiveInterval?> GetActiveAsync(DateTime nowUtc, CancellationToken cancellationToken = default);
 }

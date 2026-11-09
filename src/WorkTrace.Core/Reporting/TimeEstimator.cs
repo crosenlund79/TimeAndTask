@@ -37,9 +37,7 @@ public sealed record EstimationInput(
     IReadOnlyList<EstimationSegment> Segments,
     IReadOnlyList<EstimationSegment> Locks,
     IReadOnlyList<EstimationObservation> Observations,
-    IReadOnlyList<DateTime> UncertainPrompts,
     IReadOnlyList<EstimationAllocation> Allocations,
-    TimeSpan Horizon,
     LockedTimeHandling LockHandling,
     TimeSpan LockGrace);
 
@@ -71,36 +69,37 @@ public static class TimeEstimator
         return Flatten(periods, fromUtc, toUtc);
     }
 
+    /// <summary>
+    /// One continuous active interval per tracking segment (owner rules 2026-11-09):
+    /// <list type="bullet">
+    /// <item>The segment starts unclassified. The first selection (a task, or a stakeholder without a task) classifies the
+    /// whole unclassified interval from its start; nothing is invented before the segment or across a pause.</item>
+    /// <item>Selecting a different task ends the active one at that moment and starts the new one there; selecting the same
+    /// task again just continues it (one merged interval).</item>
+    /// <item>Nothing else changes the active task: dismissed, missed or note-only check-ins and elapsed time do not end it.
+    /// A lock is shown per <see cref="LockedTimeHandling"/> and the active task continues after it.</item>
+    /// <item>The segment end (pause, sleep, exit, crash heartbeat) ends the active interval.</item>
+    /// </list>
+    /// </summary>
     private static List<TimelinePeriod> EstimateSegment(EstimationInput input, EstimationSegment segment)
     {
         var (s, e) = (segment.StartUtc, segment.EndUtc);
         var result = new List<TimelinePeriod>();
-        void Emit(DateTime from, DateTime to, PeriodKind kind, EstimationObservation? of = null)
+        void Emit(DateTime from, DateTime to, EstimationObservation? of)
         {
             if (to > from)
             {
-                result.Add(new TimelinePeriod(from, to, kind, of?.TaskId, false, of?.TaskId is null ? of?.ClientId : null));
+                result.Add(of is null
+                    ? new TimelinePeriod(from, to, PeriodKind.Unclassified, null)
+                    : new TimelinePeriod(from, to, PeriodKind.Estimated, of.TaskId, false, of.TaskId is null ? of.ClientId : null));
             }
         }
 
-        // The active task runs from its check-in until `to`, but never past the horizon (then unclassified).
-        void EmitActive(EstimationObservation of, DateTime to)
-        {
-            var end = input.Horizon >= to - of.AtUtc ? to : of.AtUtc + input.Horizon;
-            Emit(of.AtUtc, end, PeriodKind.Estimated, of);
-            Emit(end, to, PeriodKind.Unclassified);
-        }
-
-        // Evidence inside the segment, in time order (ties: observations by CreatedAt, then Id).
+        // Selections and locks inside the segment, in time order (ties: locks first, then observations by CreatedAt, then Id).
         var items = new List<(DateTime At, int Order, EstimationObservation? Obs, DateTime? LockEnd)>();
-        foreach (var o in input.Observations.Where(o => o.AtUtc >= s && o.AtUtc < e))
+        foreach (var o in input.Observations.Where(o => o.AtUtc >= s && o.AtUtc < e && (o.TaskId is not null || o.ClientId is not null)))
         {
             items.Add((o.AtUtc, 1, o, null));
-        }
-
-        foreach (var m in input.UncertainPrompts.Where(m => m >= s && m < e))
-        {
-            items.Add((m, 0, null, null));
         }
 
         foreach (var l in input.Locks.Where(l => l.EndUtc > s && l.StartUtc < e && l.EndUtc - l.StartUtc > input.LockGrace))
@@ -126,60 +125,35 @@ public static class TimeEstimator
             return c != 0 ? c : a.Obs.Id.CompareTo(b.Obs.Id);
         });
 
-        var cursor = s;
-        EstimationObservation? previous = null;
+        // The active interval: what it is (null = unclassified) and where it started.
+        EstimationObservation? active = null;
+        var activeStart = s;
         foreach (var item in items)
         {
-            var at = item.At < cursor ? cursor : item.At;
+            var at = item.At < activeStart ? activeStart : item.At;
             if (item.Obs is { } obs)
             {
-                if (previous is null)
+                if (active is not null)
                 {
-                    Emit(cursor, at, PeriodKind.Unclassified); // no backward extrapolation
-                }
-                else
-                {
-                    // A check-in switches the active task: the previous one runs until this moment, the new one
-                    // starts here. The same task again just continues (merged into one interval by Flatten).
-                    EmitActive(previous.AtUtc < cursor ? previous with { AtUtc = cursor } : previous, at);
+                    Emit(activeStart, at, active); // the previous task ends here; the same task again merges in Flatten
+                    activeStart = at;
                 }
 
-                previous = obs with { AtUtc = at };
-                cursor = at;
+                active = obs; // an unclassified interval keeps its start: the selection classifies it retroactively
             }
             else if (item.LockEnd is { } lockEnd)
             {
-                if (previous is not null)
+                Emit(activeStart, at, active);
+                if (lockEnd > at)
                 {
-                    EmitActive(previous, at);
-                }
-                else
-                {
-                    Emit(cursor, at, PeriodKind.Unclassified);
+                    result.Add(new TimelinePeriod(at, lockEnd, input.LockHandling == LockedTimeHandling.NotWorking ? PeriodKind.NotTracking : PeriodKind.Unclassified, null));
                 }
 
-                Emit(at, lockEnd, input.LockHandling == LockedTimeHandling.NotWorking ? PeriodKind.NotTracking : PeriodKind.Unclassified);
-                previous = null;
-                cursor = lockEnd > cursor ? lockEnd : cursor;
-            }
-            else if (previous is not null)
-            {
-                // Missed/dismissed/suppressed prompt: estimated until it, uncertain after it.
-                EmitActive(previous, at);
-                previous = null;
-                cursor = at;
+                activeStart = lockEnd > at ? lockEnd : at;
             }
         }
 
-        if (previous is not null)
-        {
-            EmitActive(previous, e);
-        }
-        else
-        {
-            Emit(cursor, e, PeriodKind.Unclassified);
-        }
-
+        Emit(activeStart, e, active);
         return result;
     }
 

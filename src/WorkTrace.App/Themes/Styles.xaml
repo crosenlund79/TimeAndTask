@@ -407,4 +407,18 @@
     <Setter Property="Margin" Value="0,8" />
     <Setter Property="Background" Value="{DynamicResource DividerStrokeColorDefaultBrush}" />
   </Style>
+
+  <!-- Daily task history item (Overview, Timesheet): stakeholder in bold, the task underneath, tinted in the stakeholder colour. -->
+  <DataTemplate x:Key="DayTaskTemplate">
+    <Border Margin="0,0,6,6" CornerRadius="3" Background="{Binding StakeholderColor, Converter={StaticResource HexBrush}, ConverterParameter=0.10}"
+            ToolTip="{Binding Task}">
+      <Grid>
+        <Border Width="3" HorizontalAlignment="Left" CornerRadius="3,0,0,3" Background="{Binding StakeholderColor, Converter={StaticResource HexBrush}}" />
+        <StackPanel Margin="10,3,8,4">
+          <TextBlock Text="{Binding Stakeholder}" FontWeight="Bold" FontSize="11" TextTrimming="CharacterEllipsis" />
+          <TextBlock Text="{Binding Task}" FontSize="12" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </Grid>
+    </Border>
+  </DataTemplate>
 </ResourceDictionary>

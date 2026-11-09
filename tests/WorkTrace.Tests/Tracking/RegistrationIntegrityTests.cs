@@ -63,13 +63,13 @@ public class RegistrationIntegrityTests : TrackingTestBase
         await Engine.StopAsync(); // application exit ends the active registration
 
         var day = Day(Now);
-        var expected = new Dictionary<string, int> { ["Task A"] = 30, ["Task B"] = 120, ["(no task)"] = 20 };
-        Assert.Equal(expected, await TotalsAsync(day)); // B is not cut at the 60-min horizon when prompts are off
+        var expected = new Dictionary<string, int> { ["Task A"] = 33, ["Task B"] = 120, ["(no task)"] = 20 };
+        Assert.Equal(expected, await TotalsAsync(day)); // B is never cut by elapsed time
 
         var entries = (await Timesheets.GetDayAsync(day, Ct)).Entries;
         Assert.Equal(
-            [(At(9, 7), At(9, 10), "Unclassified"), (At(9, 10), At(9, 40), "Task A"), (At(9, 40), At(11, 40), "Task B"), (At(11, 40), At(12, 0), "(no task)")],
-            entries.Select(e => (e.StartUtc, e.EndUtc, e.Task!))); // tracked from start-up; nothing silently dropped
+            [(At(9, 7), At(9, 40), "Task A"), (At(9, 40), At(11, 40), "Task B"), (At(11, 40), At(12, 0), "(no task)")],
+            entries.Select(e => (e.StartUtc, e.EndUtc, e.Task!))); // the first choice classifies the time since start-up
 
         await AdvanceAsync(TimeSpan.FromHours(1)); // nothing runs after exit
         Assert.Equal(expected, await TotalsAsync(day));
@@ -142,19 +142,17 @@ public class RegistrationIntegrityTests : TrackingTestBase
     private IRegistrationService Registrations => Services.GetRequiredService<IRegistrationService>();
 
     [Fact]
-    public async Task TimeSinceStartUp_IsUnclassified_UntilAssignedToTheFirstRegisteredTask()
+    public async Task TimeSinceStartUp_IsUnclassified_UntilTheFirstTaskIsChosen_WhichGetsItFromStartUp()
     {
         await ConfigureAsync(t => { t.PeriodicPromptsEnabled = false; t.PromptOnStart = false; });
         var admin = await Tasks.CreateAsync(new TaskInput(await ClientIdAsync(), null, null, "Administrative tasks", null, null), Ct);
         await StartEngineAsync(); // WorkTrace starts at 09:07
         await AdvanceToAsync(10, 15);
 
-        var open = await Registrations.GetOpenIntervalAsync(Now, Ct);
-        Assert.Equal((At(9, 7), At(10, 15)), (open!.StartUtc, open.EndUtc)); // accounted from start-up, not from the first task
+        Assert.Equal(new ActiveInterval(At(9, 7), null, null), await Registrations.GetActiveAsync(Now, Ct)); // accounted from start-up
 
         await CheckIns.RecordAsync(new CheckInRequest(null, admin.Id, null), Ct);
-        await Registrations.AssignAsync(open.StartUtc, open.EndUtc, admin.Id, null, Ct); // the user's confirmation
-        Assert.Null(await Registrations.GetOpenIntervalAsync(Now, Ct));
+        Assert.Equal(new ActiveInterval(At(9, 7), admin.Id, null), await Registrations.GetActiveAsync(Now, Ct)); // start time kept
         await AdvanceToAsync(11, 0);
         await CheckIns.RecordAsync(new CheckInRequest(null, admin.Id, null), Ct); // same task again: one interval
         await AdvanceToAsync(11, 30);
@@ -185,15 +183,16 @@ public class RegistrationIntegrityTests : TrackingTestBase
         await Engine.StopAsync();
 
         var day = Day(Now);
-        Assert.Equal(new Dictionary<string, int> { ["Task A"] = 120 }, await TotalsAsync(day)); // the pause never counts
+        Assert.Equal(new Dictionary<string, int> { ["Task A"] = 133 }, await TotalsAsync(day)); // 09:07-10:10 + 10:40-11:50; the pause never counts
         var entries = (await Timesheets.GetDayAsync(day, Ct)).Entries;
-        Assert.Contains(entries, e => e.Kind == RegistrationKind.Paused && e.StartUtc == At(10, 10) && e.EndUtc == At(10, 40));
-        Assert.Contains(entries, e => e.Kind == RegistrationKind.Unclassified && e.StartUtc == At(10, 40) && e.EndUtc == At(10, 50));
+        Assert.Equal(
+            [(At(9, 7), At(10, 10), RegistrationKind.Work), (At(10, 10), At(10, 40), RegistrationKind.Paused), (At(10, 40), At(11, 50), RegistrationKind.Work)],
+            entries.Select(e => (e.StartUtc, e.EndUtc, e.Kind))); // after the resume the choice at 10:50 got the time from 10:40
 
-        await Registrations.EditAsync(At(10, 50), At(11, 50), At(10, 50), At(11, 20), b.Id, null, Ct); // shorter, other task
-        Assert.Equal(new Dictionary<string, int> { ["Task A"] = 60, ["Task B"] = 30 }, await TotalsAsync(day));
+        await Registrations.EditAsync(At(10, 40), At(11, 50), At(10, 40), At(11, 10), b.Id, null, Ct); // shorter, other task
+        Assert.Equal(new Dictionary<string, int> { ["Task A"] = 63, ["Task B"] = 30 }, await TotalsAsync(day));
 
-        await Registrations.DeleteAsync(At(9, 10), At(10, 10), Ct);
+        await Registrations.DeleteAsync(At(9, 7), At(10, 10), Ct);
         Assert.Equal(new Dictionary<string, int> { ["Task B"] = 30 }, await TotalsAsync(day));
         Assert.Contains((await Timesheets.GetDayAsync(day, Ct)).Entries,
             e => e.Kind == RegistrationKind.Unclassified && e.StartUtc == At(9, 7) && e.EndUtc == At(10, 10)); // kept visible, classifiable

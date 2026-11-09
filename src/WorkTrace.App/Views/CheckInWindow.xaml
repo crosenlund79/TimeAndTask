@@ -229,12 +229,9 @@
               Visibility="{Binding StakeholderOnlyWarning, Converter={StaticResource NullToCollapsed}}">
         <TextBlock Text="{Binding StakeholderOnlyWarning}" TextWrapping="Wrap" FontSize="12" />
       </Border>
-      <!-- Continuous accounting: offer the unclassified time since start-up / the last registration -->
-      <CheckBox Margin="0,8,0,0" IsChecked="{Binding AssignOpenInterval}" IsTabStop="False" AutomationProperties.Name="Count the unclassified time"
-                Visibility="{Binding HasOpenInterval, Converter={StaticResource BoolToVisibility}}"
-                ToolTip="Untick to leave that time unclassified (you can classify it later in Overview)">
-        <TextBlock Text="{Binding OpenIntervalText}" TextWrapping="Wrap" FontSize="12" />
-      </CheckBox>
+      <!-- Continuous accounting: what is registered right now -->
+      <TextBlock Margin="0,8,0,0" Text="{Binding ActiveText}" TextWrapping="Wrap" Style="{StaticResource CaptionText}" AutomationProperties.Name="Active registration"
+                 Visibility="{Binding ActiveText, Converter={StaticResource NullToCollapsed}}" />
       <TextBlock Text="{Binding ErrorMessage}" Style="{StaticResource ErrorText}" Margin="0,8,0,0" />
 
       <!-- Pause registration: closes the popup; time while paused never counts as work; resumes by itself -->

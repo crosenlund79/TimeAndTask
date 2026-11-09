@@ -51,7 +51,7 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
   the EF converter enforces it on write and restores Kind on read. Convert to local only for display/day bucketing.
 - An **Observation** is a point-in-time statement, never a period. `Original*` columns are immutable;
   corrections change the current columns only. Deletion is soft.
-- Missed/dismissed/suppressed check-ins are stored (`CheckInPrompts`) and create **uncertainty**.
+- Missed/dismissed/suppressed check-ins are stored (`CheckInPrompts`) as history; they never change the active task.
 - No cascading deletes (all FKs Restrict). Clients/tasks are deactivated/archived, not deleted, once referenced.
 - External task IDs are free-form strings and not unique.
 - Settings live in `settings.json` (not the DB) so DB restore never rolls back settings.
@@ -85,14 +85,15 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
 ## Time-estimation invariants (Phase 4 engine; see docs/architecture.md)
 1. Output is a flat, ordered, non-overlapping list of periods: Manual / Estimated / Unclassified / NotTracking.
 2. Estimation never crosses tracking-segment boundaries (pause, sleep, shutdown, crash, clock jump).
-3. Each check-in switches the active task at its own time (owner request 2026-11-04, replaces the midpoint rule):
-   the previous task ends there, the new one starts; the same task again just continues (one merged interval).
-4. After a missed/dismissed prompt: unclassified from the prompt's scheduled time until the next observation.
-5. Segment start → first observation: unclassified (no backward extrapolation).
-6. With periodic check-ins on, an active task is capped at `MaxEstimationHorizonMinutes` after its check-in (also before
-   a lock or missed prompt); with them off it runs until the next check-in, lock or stop. Labelled Estimated, never Confirmed.
-   The Timesheet keeps exact minutes; rounding is applied only to exports. Overview day view and Timesheet use
-   `ITimesheetService` (same estimate), so their day totals are equal.
+3. One continuous active interval per segment (owner rules 2026-11-09, ADR-038): a segment starts unclassified; the first
+   selection (task, or stakeholder without a task) classifies it **from the segment start**; a different task splits at the
+   selection time; the same task again continues (one merged interval). All UIs select via `ICheckInService.RecordAsync`.
+4. Dismissed/missed/note-only check-ins and elapsed time never change the active task (no horizon;
+   `MaxEstimationHorizonMinutes` is kept in settings but unused).
+5. Pause, sleep, exit and crash (last heartbeat) end the segment; the next segment starts unclassified again.
+6. Labelled Estimated, never Confirmed. The Timesheet keeps exact minutes; rounding is applied only to exports. Overview
+   day view, Timesheet, "current task" (`IRegistrationService.GetActiveAsync`) and the daily task history all derive
+   from `TimesheetService.EstimateAsync`, so they cannot disagree.
 7. Locked periods are uncertain by default (`LockedTimeHandling.Unclassified`, grace 0 min).
 8. Manual allocations overlay the estimate (latest created wins) and are never discarded by recalculation.
 9. Deterministic: ties broken by CreatedAtUtc, then Id. Durations from UTC differences (DST-safe).

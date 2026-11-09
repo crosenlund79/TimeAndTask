@@ -301,7 +301,7 @@ public class TrackingEngineTests : TrackingTestBase
     }
 
     [Fact]
-    public async Task DisabledPeriodicPrompts_KeepTracking_WithoutPrompts()
+    public async Task DisabledPeriodicPrompts_KeepTracking_OnlyAskingAtStartUp()
     {
         await ConfigureAsync(t => t.PeriodicPromptsEnabled = false);
         await StartEngineAsync();
@@ -310,7 +310,7 @@ public class TrackingEngineTests : TrackingTestBase
 
         Assert.Equal(TrackingState.Tracking, Engine.Status.State);
         Assert.Null(Engine.Status.NextCheckInUtc);
-        Assert.Empty(Presenter.Shown);
+        Assert.Equal(PromptReason.TrackingStarted, Assert.Single(Presenter.Shown).Reason); // the start-up time needs a task
         Assert.Null(Assert.Single(await SegmentsAsync()).EndUtc);
     }
 

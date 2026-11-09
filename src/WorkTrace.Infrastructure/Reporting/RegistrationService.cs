@@ -53,7 +53,7 @@ internal sealed class RegistrationService(
         logger.LogInformation("Registration deleted (now unclassified)");
     }
 
-    public async Task<OpenInterval?> GetOpenIntervalAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
+    public async Task<ActiveInterval?> GetActiveAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
     {
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
         var segment = await db.TrackingSegments.AsNoTracking().Where(s => s.EndUtc == null && s.StartUtc < nowUtc)
@@ -63,12 +63,15 @@ internal sealed class RegistrationService(
             return null; // not tracking (paused, asleep, closed): nothing is outstanding
         }
 
-        var from = segment.StartUtc > nowUtc.AddDays(-1) ? segment.StartUtc : nowUtc.AddDays(-1);
-        var (periods, _, _, _, _) = await TimesheetService.EstimateAsync(db, from, nowUtc, nowUtc, settings.Current, cancellationToken);
-        return periods.Count > 0 && periods[^1] is { Kind: PeriodKind.Unclassified } last && last.EndUtc >= nowUtc.AddSeconds(-1)
-            && last.Duration >= TimeSpan.FromMinutes(1)
-                ? new OpenInterval(last.StartUtc, nowUtc)
-                : null;
+        // The same estimate as the Overview and Timesheet, so "current task" can never disagree with the registrations.
+        // A second past now, so a selection made this instant already counts (periods are half-open [start, end)).
+        var probe = nowUtc.AddSeconds(1);
+        var (periods, _, _, _, _) = await TimesheetService.EstimateAsync(db, segment.StartUtc, probe, probe, settings.Current, cancellationToken);
+        return periods.Count > 0 && periods[^1] is { } last && last.EndUtc >= nowUtc.AddSeconds(-1)
+            ? last.Kind is PeriodKind.Estimated or PeriodKind.Manual && (last.TaskId is not null || last.ClientId is not null)
+                ? new ActiveInterval(last.StartUtc, last.TaskId, last.TaskId is null ? last.ClientId : null)
+                : new ActiveInterval(last.StartUtc, null, null)
+            : new ActiveInterval(segment.StartUtc < nowUtc ? nowUtc : segment.StartUtc, null, null);
     }
 
     private ManualAllocation Allocation(DateTime startUtc, DateTime endUtc, int? taskId, int? clientId)

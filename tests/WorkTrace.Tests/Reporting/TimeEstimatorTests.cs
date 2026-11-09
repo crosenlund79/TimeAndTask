@@ -3,6 +3,7 @@ using WorkTrace.Core.Settings;
 
 namespace WorkTrace.Tests.Reporting;
 
+/// <summary>One continuous active interval per tracking segment (owner rules 2026-11-09).</summary>
 public class TimeEstimatorTests
 {
     private static readonly DateTime T0 = new(2026, 10, 26, 8, 0, 0, DateTimeKind.Utc);
@@ -12,51 +13,73 @@ public class TimeEstimatorTests
     private static EstimationInput Input(
         EstimationSegment[] segments,
         EstimationObservation[] observations,
-        DateTime[]? prompts = null,
         EstimationSegment[]? locks = null,
         EstimationAllocation[]? allocations = null) =>
-        new(segments, locks ?? [], observations, prompts ?? [], allocations ?? [], TimeSpan.FromMinutes(60), LockedTimeHandling.Unclassified, TimeSpan.Zero);
+        new(segments, locks ?? [], observations, allocations ?? [], LockedTimeHandling.Unclassified, TimeSpan.Zero);
 
-    private static EstimationObservation Obs(int id, int minutes, int? task) => new(id, At(minutes), At(minutes), task);
+    private static EstimationObservation Obs(int id, int minutes, int? task, int? client = null) => new(id, At(minutes), At(minutes), task, client);
 
     private static string Describe(IEnumerable<TimelinePeriod> periods) =>
         string.Join(" | ", periods.Select(p => $"{(p.StartUtc - T0).TotalMinutes}-{(p.EndUtc - T0).TotalMinutes} {p.Kind}{(p.TaskId is { } t ? $" {t}" : "")}"));
 
     [Fact]
-    public void SameTaskIsContinuous_ACheckInSwitchesTheTask_StartIsUnclassified_TrailingIsCapped()
+    public void OwnerExample_FirstSelectionClassifiesTheStartUp_SwitchesSplit_ExitCloses()
     {
-        var input = Input([new(At(0), At(300))], [Obs(1, 10, 1), Obs(2, 40, 1), Obs(3, 100, 2)]);
+        // 08:14 start · 09:14 A · 10:29 B · 11:05 A again · 16:00 exit (minutes after 08:00).
+        var input = Input([new(At(14), At(480))], [Obs(1, 74, 1), Obs(2, 149, 2), Obs(3, 185, 1)]);
 
-        var result = TimeEstimator.Estimate(input, At(0), At(300));
+        var result = TimeEstimator.Estimate(input, At(14), At(480));
 
-        Assert.Equal("0-10 Unclassified | 10-100 Estimated 1 | 100-160 Estimated 2 | 160-300 Unclassified", Describe(result));
+        Assert.Equal("14-149 Estimated 1 | 149-185 Estimated 2 | 185-480 Estimated 1", Describe(result));
     }
 
     [Fact]
-    public void MissedPrompt_MakesTheTimeAfterItUnclassified_AndSegmentsAreNeverCrossed()
+    public void SameTaskAgain_Continues_AndElapsedTimeNeverEndsTheActiveTask()
     {
-        var input = Input(
-            [new(At(0), At(60)), new(At(90), At(150))],
-            [Obs(1, 0, 1), Obs(2, 30, 1), Obs(3, 100, 1)],
-            prompts: [At(45)]);
+        var input = Input([new(At(0), At(600))], [Obs(1, 10, 1), Obs(2, 40, 1), Obs(3, 100, 2)]);
 
-        var result = TimeEstimator.Estimate(input, At(0), At(150));
+        var result = TimeEstimator.Estimate(input, At(0), At(600));
 
-        Assert.Equal("0-45 Estimated 1 | 45-60 Unclassified | 60-90 NotTracking | 90-100 Unclassified | 100-150 Estimated 1", Describe(result));
+        Assert.Equal("0-100 Estimated 1 | 100-600 Estimated 2", Describe(result));
     }
 
     [Fact]
-    public void LockedTime_IsUncertain_AndManualAllocationsWin()
+    public void NoteOnlyCheckIns_DoNotChangeTheActiveInterval_AndStakeholderSelectionsClassify()
     {
-        var input = Input(
-            [new(At(0), At(120))],
-            [Obs(1, 0, 1), Obs(2, 60, 1)],
-            locks: [new(At(20), At(40))],
-            allocations: [new(1, At(30), At(50), At(500), 7, false)]);
+        var input = Input([new(At(0), At(120))], [Obs(1, 10, null), Obs(2, 30, null, client: 5), Obs(3, 60, null), Obs(4, 90, 1)]);
 
         var result = TimeEstimator.Estimate(input, At(0), At(120));
 
-        Assert.Equal("0-20 Estimated 1 | 20-30 Unclassified | 30-50 Manual 7 | 50-60 Unclassified | 60-120 Estimated 1", Describe(result));
+        Assert.Equal("0-90 Estimated | 90-120 Estimated 1", Describe(result));
+        Assert.Equal(5, result[0].ClientId);
+    }
+
+    [Fact]
+    public void Pauses_EndTheInterval_AndANewSegmentStartsUnclassified_UntilTheNextSelection()
+    {
+        // Paused 60–90: no time there; after the resume the time is unclassified until a task is chosen, then that task.
+        var input = Input([new(At(0), At(60)), new(At(90), At(150))], [Obs(1, 0, 1), Obs(2, 100, 1)]);
+
+        var result = TimeEstimator.Estimate(input, At(0), At(150));
+
+        Assert.Equal("0-60 Estimated 1 | 60-90 NotTracking | 90-150 Estimated 1", Describe(result));
+
+        var unanswered = TimeEstimator.Estimate(Input([new(At(0), At(60)), new(At(90), At(150))], [Obs(1, 0, 1)]), At(0), At(150));
+        Assert.Equal("0-60 Estimated 1 | 60-90 NotTracking | 90-150 Unclassified", Describe(unanswered));
+    }
+
+    [Fact]
+    public void LockedTime_FollowsTheSetting_TheTaskContinuesAfterwards_AndManualAllocationsWin()
+    {
+        var input = Input(
+            [new(At(0), At(120))],
+            [Obs(1, 0, 1)],
+            locks: [new(At(20), At(40))],
+            allocations: [new(1, At(70), At(80), At(500), 7, false)]);
+
+        var result = TimeEstimator.Estimate(input, At(0), At(120));
+
+        Assert.Equal("0-20 Estimated 1 | 20-40 Unclassified | 40-70 Estimated 1 | 70-80 Manual 7 | 80-120 Estimated 1", Describe(result));
         Assert.Equal(TimeSpan.FromMinutes(120), result.Aggregate(TimeSpan.Zero, (sum, p) => sum + p.Duration));
     }
 }

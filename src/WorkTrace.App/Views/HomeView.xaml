@@ -97,11 +97,30 @@
               <Button Content="Today" Padding="10,4" Margin="6,0,0,0" Command="{Binding GoToTodayCommand}" />
             </StackPanel>
           </Grid>
+          <!-- Daily task history: every distinct task used on this day (informational; no times) -->
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8" Visibility="{Binding HasDayTasks, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Text="Tasks this day" Style="{StaticResource CaptionText}" Margin="0,0,0,4" />
+            <ScrollViewer MaxHeight="120" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+              <ItemsControl ItemsSource="{Binding DayTasks}" ItemTemplate="{StaticResource DayTaskTemplate}" Focusable="False"
+                            AutomationProperties.Name="Tasks this day">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemContainerStyle>
+                  <Style TargetType="ContentPresenter">
+                    <Setter Property="MaxWidth" Value="240" />
+                  </Style>
+                </ItemsControl.ItemContainerStyle>
+              </ItemsControl>
+            </ScrollViewer>
+          </StackPanel>
           <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
             <TextBlock Text="{Binding TimesheetNote}" Style="{StaticResource CaptionText}" TextWrapping="Wrap"
                        Visibility="{Binding TimesheetNote, Converter={StaticResource NullToCollapsed}}" />
             <TextBlock Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap"
-                       Text="Each check-in starts its task and ends the previous one; stopping or closing WorkTrace ends it. ≈ = estimated from check-ins. The Timesheet uses the same registrations." />
+                       Text="The chosen task runs until you choose another, pause or close WorkTrace. Time before the first choice (start-up, after a pause) is unclassified until you choose a task, which then gets it. ≈ = from check-ins. The Timesheet uses the same registrations." />
           </StackPanel>
           <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel>

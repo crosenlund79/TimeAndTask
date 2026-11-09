@@ -109,7 +109,60 @@ internal sealed class TimesheetService(
             monday,
             [.. lines.OrderBy(l => l.TaskId is null && l.ClientId is null).ThenBy(l => l.Stakeholder, StringComparer.CurrentCultureIgnoreCase).ThenBy(l => l.Task, StringComparer.CurrentCultureIgnoreCase)],
             [.. unclassified.Select(u => (int)Math.Round(u.TotalMinutes))],
-            missed);
+            missed)
+        {
+            DayTasks = await DayTasksAsync(db, bounds, periods, observations, cancellationToken),
+        };
+    }
+
+    /// <summary>
+    /// Daily task history: per local day, every task that was active (any registered time that day, also the part of an
+    /// interval after midnight) or chosen (a check-in that day, however briefly it ran), once, by first use.
+    /// Unclassified time and stakeholder-only time are not tasks.
+    /// </summary>
+    private static async Task<IReadOnlyList<IReadOnlyList<DayTask>>> DayTasksAsync(
+        WorkTraceDbContext db, DateTime[] bounds, IReadOnlyList<TimelinePeriod> periods, List<Observation> observations, CancellationToken cancellationToken)
+    {
+        var days = bounds.Length - 1;
+        var firstUse = new Dictionary<(int Day, int Task), (DateTime At, int Order)>();
+        void Use(int day, int task, DateTime at, int order)
+        {
+            if (!firstUse.TryGetValue((day, task), out var seen) || (at, order).CompareTo(seen) < 0)
+            {
+                firstUse[(day, task)] = (at, order);
+            }
+        }
+
+        foreach (var p in periods.Where(p => p.Kind is PeriodKind.Estimated or PeriodKind.Manual && p.TaskId is not null))
+        {
+            for (var d = 0; d < days; d++)
+            {
+                var start = p.StartUtc > bounds[d] ? p.StartUtc : bounds[d];
+                var end = p.EndUtc < bounds[d + 1] ? p.EndUtc : bounds[d + 1];
+                if (end > start)
+                {
+                    Use(d, p.TaskId!.Value, start, int.MaxValue);
+                }
+            }
+        }
+
+        // Selections in the order they were made (same instant: as saved), so a task replaced at once still shows.
+        var selections = observations.Where(o => o.TaskId is not null && o.ObservedAtUtc >= bounds[0] && o.ObservedAtUtc < bounds[days])
+            .OrderBy(o => o.ObservedAtUtc).ThenBy(o => o.CreatedAtUtc).ThenBy(o => o.Id).ToList();
+        for (var i = 0; i < selections.Count; i++)
+        {
+            Use(Array.FindLastIndex(bounds, b => b <= selections[i].ObservedAtUtc), selections[i].TaskId!.Value, selections[i].ObservedAtUtc, i);
+        }
+
+        var ids = firstUse.Keys.Select(k => k.Task).Distinct().ToList();
+        var tasks = await db.Tasks.AsNoTracking().Where(t => ids.Contains(t.Id))
+            .Select(t => new { t.Id, t.Title, t.ExternalId, t.ClientId, Stakeholder = t.Client!.Name, t.Client.Color })
+            .ToDictionaryAsync(t => t.Id, cancellationToken);
+        return [.. Enumerable.Range(0, days).Select(d => (IReadOnlyList<DayTask>)[.. firstUse
+            .Where(kv => kv.Key.Day == d && tasks.ContainsKey(kv.Key.Task))
+            .OrderBy(kv => kv.Value).ThenBy(kv => kv.Key.Task)
+            .Select(kv => tasks[kv.Key.Task])
+            .Select(t => new DayTask(t.Id, t.Stakeholder, t.Title, t.ExternalId, StakeholderColors.For(t.ClientId, t.Color)))])];
     }
 
     /// <summary>The estimated timeline for [from, to), with the segments and lock periods it was built from.</summary>
@@ -142,12 +195,8 @@ internal sealed class TimesheetService(
             segments,
             locks,
             [.. observations.Select(o => new EstimationObservation(o.Id, o.ObservedAtUtc, o.CreatedAtUtc, o.TaskId, o.ClientId))],
-            prompts,
             [.. allocations.Select(a => new EstimationAllocation(a.Id, a.StartUtc, a.EndUtc, a.CreatedAtUtc, a.TaskId, a.Kind == AllocationKind.NonWork,
                 a.ClientId, a.Kind == AllocationKind.Cleared))],
-            // Without periodic check-ins nothing would ever end the active task before the horizon, so a task started
-            // with a manual check-in runs until the next check-in, a lock or the end of tracking (the "timer" model).
-            s.Tracking.PeriodicPromptsEnabled ? TimeSpan.FromMinutes(s.Tracking.MaxEstimationHorizonMinutes) : TimeSpan.MaxValue,
             s.Tracking.LockedTimeHandling,
             TimeSpan.FromMinutes(s.Tracking.LockGraceMinutes));
         var periods = TimeEstimator.Estimate(input, from, to);
@@ -168,7 +217,7 @@ internal sealed class TimesheetService(
         var corrected = week.Lines.Any(l => l.Days[index].IsAdjusted);
         if (until <= from)
         {
-            return new DayRegistrations(day, [], summary, 0, timesheetMinutes, corrected);
+            return new DayRegistrations(day, [], summary, 0, timesheetMinutes, corrected) { Tasks = week.DayTasks[index] };
         }
 
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
@@ -218,7 +267,7 @@ internal sealed class TimesheetService(
         var registeredMinutes = registeredOnly.Where(e => !e.IsBreak)
             .GroupBy(e => (e.TaskId, Client: e.TaskId is null ? e.ClientId : null))
             .Sum(g => (int)Math.Round(g.Sum(e => e.Duration.TotalMinutes)));
-        return new DayRegistrations(day, entries, summary, registeredMinutes, timesheetMinutes, corrected);
+        return new DayRegistrations(day, entries, summary, registeredMinutes, timesheetMinutes, corrected) { Tasks = week.DayTasks[index] };
     }
 
     public async Task<DaySummary> GetDaySummaryAsync(DateOnly day, CancellationToken cancellationToken = default)

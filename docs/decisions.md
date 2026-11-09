@@ -225,3 +225,13 @@ A4 landscape). Both read one `PipelinePlan` built exactly like the screen (task-
 and share `TimelineLayout` for per-day hours, status and deadline facts. Wide plans are split into date ranges and long
 lists into row pages, each page repeating the date header; nothing is clipped. Exports only read task data.
 **Reason:** no new dependencies or licences, files stay local, and Excel and PDF cannot disagree.
+
+## ADR-038 — One continuous active registration
+**Decision (owner, 2026-11-09):** within a tracking segment there is exactly one active interval. It starts unclassified;
+the first selection classifies it from its start; another task splits at the selection time; the same task continues.
+Dismissed, missed and note-only check-ins and elapsed time change nothing (the estimation horizon and "uncertainty after
+a missed prompt" are gone). Pause, sleep, exit and crash end it; the next segment starts unclassified. Locks are shown
+per `LockedTimeHandling` and the task continues afterwards. Every UI selects by recording a check-in, and "current task",
+Overview, Timesheet and the daily task history are all derived from the same estimate, so nothing is stored twice.
+**Reason:** the earlier rules (horizon cap, missed prompts, start-up only via an opt-in checkbox, "current task" taken from
+the last check-in) left time unclassified or showed a task that was no longer active, so re-selecting it did nothing.

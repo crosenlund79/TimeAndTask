@@ -11,6 +11,7 @@
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
@@ -39,7 +40,34 @@
       </StackPanel>
     </DockPanel>
 
-    <Border Grid.Row="2" Margin="0,0,0,10" Padding="10,6" CornerRadius="4" Background="{DynamicResource SystemFillColorCautionBackgroundBrush}"
+    <!-- Tasks worked on this week: Monday–Friday, each distinct task used that day (no times) -->
+    <Border Grid.Row="2" Style="{StaticResource Card}" Padding="10,8" Margin="0,0,0,10">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Text="Tasks worked on this week" FontWeight="SemiBold" Margin="0,0,0,6" />
+        <ScrollViewer MaxHeight="170" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <ItemsControl ItemsSource="{Binding WeekTasks}" Focusable="False" AutomationProperties.Name="Tasks worked on this week">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Rows="1" Columns="5" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:WeekdayTasks}">
+                <StackPanel Margin="0,0,8,0" MinWidth="0">
+                  <TextBlock Margin="0,0,0,4" TextTrimming="CharacterEllipsis">
+                    <Run Text="{Binding Day, Mode=OneWay}" FontWeight="SemiBold" /><Run Text="{Binding Date, StringFormat=' {0}', Mode=OneWay}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" />
+                  </TextBlock>
+                  <TextBlock Text="—" Style="{StaticResource CaptionText}" Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+                  <ItemsControl ItemsSource="{Binding Tasks}" ItemTemplate="{StaticResource DayTaskTemplate}" Focusable="False" />
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </DockPanel>
+    </Border>
+
+    <Border Grid.Row="3" Margin="0,0,0,10" Padding="10,6" CornerRadius="4" Background="{DynamicResource SystemFillColorCautionBackgroundBrush}"
             Visibility="{Binding Warning, Converter={StaticResource NullToCollapsed}}">
       <DockPanel>
         <TextBlock DockPanel.Dock="Left" Text="&#xE7BA;" Style="{StaticResource IconText}" Margin="0,0,8,0" />
@@ -47,7 +75,7 @@
       </DockPanel>
     </Border>
 
-    <Border Grid.Row="3" Style="{StaticResource Card}" Padding="8">
+    <Border Grid.Row="4" Style="{StaticResource Card}" Padding="8">
       <DockPanel>
         <Grid DockPanel.Dock="Top" Margin="6,0,6,6" TextElement.FontWeight="SemiBold">
           <Grid.ColumnDefinitions>

@@ -28,14 +28,14 @@ public class TimesheetServiceTests : ManagementTestBase
         var line = Assert.Single(week.Lines);
         var wednesday = week.Days.ToList().IndexOf(DateOnly.FromDateTime(start.ToLocalTime()));
         Assert.Equal(new DateOnly(2026, 10, 26), week.Monday);
-        Assert.Equal(90, line.Days[wednesday].Minutes); // 30 min between check-ins + 60 min trailing horizon
-        Assert.Equal(30, week.UnclassifiedMinutes.Sum());
+        Assert.Equal(120, line.Days[wednesday].Minutes); // the chosen task runs until tracking ends (no horizon)
+        Assert.Equal(0, week.UnclassifiedMinutes.Sum());
         Assert.Equal(("PRJ-7", "export fix"), (line.Reference, line.Comments));
 
-        await Timesheets.SetMinutesAsync(week.Days[wednesday], task.Id, null, 120, 90, Ct);
+        await Timesheets.SetMinutesAsync(week.Days[wednesday], task.Id, null, 100, 120, Ct);
         week = await Timesheets.GetWeekAsync(week.Monday, Ct);
-        Assert.Equal((120, true), (week.Lines[0].Days[wednesday].Minutes, week.Lines[0].Days[wednesday].IsAdjusted));
-        Assert.Equal(120, week.WeekTotal);
+        Assert.Equal((100, true), (week.Lines[0].Days[wednesday].Minutes, week.Lines[0].Days[wednesday].IsAdjusted));
+        Assert.Equal(100, week.WeekTotal);
 
         var dir = Path.Combine(Path.GetTempPath(), "worktrace-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
@@ -45,8 +45,8 @@ public class TimesheetServiceTests : ManagementTestBase
         using var xlsx = ZipFile.OpenRead(Path.Combine(dir, "w.xlsx"));
         Assert.NotNull(xlsx.GetEntry("xl/worksheets/sheet2.xml"));
 
-        await Timesheets.SetMinutesAsync(week.Days[wednesday], task.Id, null, null, 90, Ct);
-        Assert.Equal(90, (await Timesheets.GetWeekAsync(week.Monday, Ct)).WeekTotal);
+        await Timesheets.SetMinutesAsync(week.Days[wednesday], task.Id, null, null, 120, Ct);
+        Assert.Equal(120, (await Timesheets.GetWeekAsync(week.Monday, Ct)).WeekTotal);
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public class TimesheetServiceTests : ManagementTestBase
     }
 
     [Fact]
-    public async Task DaySummary_ACheckInSwitchesTheTask_AndLockedAndUnaccountedTimeAreSeparated()
+    public async Task DaySummary_ACheckInSwitchesTheTask_LockedTimeIsSeparate_AndTheTaskContinuesAfterTheLock()
     {
         var clientId = await InternalClientIdAsync();
         var a = await Tasks.CreateAsync(new TaskInput(clientId, null, null, "A", null, null), Ct);
@@ -140,10 +140,10 @@ public class TimesheetServiceTests : ManagementTestBase
 
         Time.Advance(TimeSpan.FromHours(3));
         var week = await Timesheets.GetWeekAsync(DateOnly.FromDateTime(start.ToLocalTime()), Ct);
-        Assert.Equal([30, 10], week.Lines.OrderBy(l => l.Task).Select(l => l.TotalMinutes)); // A until B's check-in, B until the lock
+        Assert.Equal([30, 80], week.Lines.OrderBy(l => l.Task).Select(l => l.TotalMinutes)); // A until B's check-in; B except the lock
 
         var day = await Timesheets.GetDaySummaryAsync(DateOnly.FromDateTime(start.ToLocalTime()), Ct);
-        Assert.Equal(new DaySummary(120, 0, 40, 0, 0, 10, 70), day);
+        Assert.Equal(new DaySummary(120, 0, 110, 0, 0, 10, 0), day);
     }
 
     [Theory]

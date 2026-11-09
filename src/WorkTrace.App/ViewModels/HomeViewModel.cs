@@ -123,6 +123,12 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
 
     public string DayTitle => IsToday ? "Today" : SelectedDay.ToString("dddd d MMMM yyyy", System.Globalization.CultureInfo.CurrentCulture);
 
+    /// <summary>Daily task history: every distinct task chosen or active on the selected day (informational).</summary>
+    public ObservableCollection<WorkTrace.Core.Reporting.DayTask> DayTasks { get; } = [];
+
+    [ObservableProperty]
+    public partial bool HasDayTasks { get; private set; }
+
     /// <summary>Registrations of the selected day (the part inside the day for intervals spanning midnight).</summary>
     public ObservableCollection<RegistrationItemViewModel> Registrations { get; } = [];
 
@@ -219,6 +225,13 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
         }
 
         HasNoRegistrations = Registrations.Count == 0;
+        DayTasks.Clear();
+        foreach (var task in registrations.Tasks)
+        {
+            DayTasks.Add(task);
+        }
+
+        HasDayTasks = DayTasks.Count > 0;
         RegistrationTotal = $"{Registrations.Count} registration{(Registrations.Count == 1 ? "" : "s")} · {F(registrations.RegisteredMinutes)} work";
         TimesheetNote = registrations.HasCorrections
             ? $"Timesheet total for this day: {F(registrations.TimesheetMinutes)} (includes your corrections there)"
@@ -249,22 +262,22 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
             DailySummary.Add(new("confirmed", F(sum.ConfirmedTaskMinutes), "Entered manually", IsDetail: true));
         }
 
-        DailySummary.Add(new("from check-ins", "≈ " + F(sum.EstimatedTaskMinutes), "Each check-in starts its task; it runs until the next check-in or stop", IsDetail: true));
-        DailySummary.Add(new("Other activity", "≈ " + F(sum.OtherMinutes), "Stakeholder-only or note-only check-ins"));
+        DailySummary.Add(new("from check-ins", "≈ " + F(sum.EstimatedTaskMinutes), "The chosen task runs until another task is chosen, a pause or exit", IsDetail: true));
+        DailySummary.Add(new("Other activity", "≈ " + F(sum.OtherMinutes), "Time on a stakeholder without a task"));
         DailySummary.Add(new("Breaks", F(sum.BreakMinutes), "Time registered as not work"));
         DailySummary.Add(new("Locked", F(sum.LockedMinutes), "Screen locked while tracking (idle time is not recorded separately)"));
-        DailySummary.Add(new("Unaccounted", F(sum.UnaccountedMinutes), "Tracking on, but no check-in says what it was (e.g. after a missed check-in)"));
+        DailySummary.Add(new("Unaccounted", F(sum.UnaccountedMinutes), "Tracking on, no task chosen yet (e.g. since start-up or a resume); the next task chosen gets it"));
     }
 
     private async Task LoadCurrentTaskAsync()
     {
         IReadOnlyList<TaskSummary> tasks = [];
-        ObservationSummary? last = null;
+        WorkTrace.Core.Reporting.ActiveInterval? active = null;
         if (!await RunAsync(
             async () =>
             {
                 tasks = await _tasks.SearchAsync(new TaskQuery(Limit: 500));
-                last = await _checkIns.GetLastObservationAsync();
+                active = await _registrations.GetActiveAsync(_timeProvider.GetUtcNow().UtcDateTime);
             },
             "Could not load tasks."))
         {
@@ -280,7 +293,9 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
                 CurrentTasks.Add(new CurrentTaskOption(t.Id, CurrentTaskOption.Format(t), t.ClientName, t.DeadlineState != DeadlineState.None));
             }
 
-            var current = CurrentTasks.FirstOrDefault(o => o.Id == last?.TaskId);
+            // The task of the active interval (the same estimate as the registrations), not merely the last check-in:
+            // after a restart or a pause the time is unclassified, and choosing that task again must register it.
+            var current = CurrentTasks.FirstOrDefault(o => o.Id == active?.TaskId);
             CurrentTaskId = current?.Id ?? PickerOption.NoneKey;
             _recordedTaskId = current?.Id;
             CurrentTaskText = current?.Display ?? string.Empty;

@@ -441,7 +441,8 @@ public sealed class TrackingEngine : IAsyncDisposable
         _segmentId = await _store.OpenSegmentAsync(now, ct);
         SetBaseline(now);
         _nextPromptUtc = ComputeNextPrompt(now);
-        _extraPrompt = Tracking.PromptOnStart && Tracking.PeriodicPromptsEnabled ? (now + StartPromptDelay, reason) : null;
+        // Every tracking session starts unclassified: ask for the current task (also with periodic check-ins off).
+        _extraPrompt = Tracking.PromptOnStart ? (now + StartPromptDelay, reason) : null;
 
         if (_locked && _lockId is null)
         {
@@ -625,7 +626,7 @@ public sealed class TrackingEngine : IAsyncDisposable
 
             // Interval or prompt settings may have changed.
             _nextPromptUtc = ComputeNextPrompt(now);
-            if (!Tracking.PeriodicPromptsEnabled)
+            if (_extraPrompt is { } pending && (pending.Reason == PromptReason.WelcomeBack ? !Tracking.PeriodicPromptsEnabled : !Tracking.PromptOnStart))
             {
                 _extraPrompt = null;
             }

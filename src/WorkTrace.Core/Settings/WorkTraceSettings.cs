@@ -174,6 +174,7 @@ public sealed class TrackingSettings
     public bool RememberLastTask { get; set; } = true;
 
     /// <summary>Estimated continuation after the last observation never exceeds this horizon.</summary>
+    /// <summary>No longer used: the chosen task runs until another task, a pause or exit (owner rules 2026-11-09). Kept so settings files stay valid.</summary>
     public int MaxEstimationHorizonMinutes { get; set; } = 60;
 
     public LockedTimeHandling LockedTimeHandling { get; set; } = LockedTimeHandling.Unclassified;

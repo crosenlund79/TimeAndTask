@@ -71,20 +71,14 @@ public sealed partial class CheckInViewModel(
     /// <summary>"Pause registration": the popup closes and tracking pauses for this long (then resumes by itself).</summary>
     public event EventHandler<TimeSpan>? PauseRequested;
 
-    // ---- Continuous accounting: the unclassified time since start-up / the last registration ----
+    // ---- Continuous accounting: the one active interval ----
 
-    private WorkTrace.Core.Reporting.OpenInterval? _openInterval;
-
-    /// <summary>Unclassified time just before now (e.g. since WorkTrace started), offered for the chosen task.</summary>
-    public bool HasOpenInterval => _openInterval is not null;
-
-    public string? OpenIntervalText => _openInterval is { } open
-        ? $"Also count {ToLocal(open.StartUtc):HH:mm}–now ({WorkTrace.Core.Management.TaskPipeline.FormatDuration((int)Math.Max(1, open.Duration.TotalMinutes))}, unclassified) for this task"
-        : null;
-
-    /// <summary>The user's confirmation to register the outstanding interval on the chosen task or stakeholder.</summary>
+    /// <summary>
+    /// What is being registered right now, in plain words: the active task and since when, or the unclassified time the
+    /// next selection will register. Null when not tracking.
+    /// </summary>
     [ObservableProperty]
-    public partial bool AssignOpenInterval { get; set; } = true;
+    public partial string? ActiveText { get; private set; }
 
     // ---- Pause ----
 
@@ -271,9 +265,7 @@ public sealed partial class CheckInViewModel(
     {
         try
         {
-            _openInterval = await registrations.GetOpenIntervalAsync(UtcTime.Now(timeProvider));
-            OnPropertyChanged(nameof(HasOpenInterval));
-            OnPropertyChanged(nameof(OpenIntervalText));
+            var active = await registrations.GetActiveAsync(UtcTime.Now(timeProvider));
 
             _clients = await clients.GetClientsForPickerAsync();
             ClientOptions.Clear();
@@ -301,12 +293,24 @@ public sealed partial class CheckInViewModel(
             // ComboBoxes display them (a selection set before its items exist may stay blank).
             ReassertSelections();
 
-            if (settings.Current.Tracking.RememberLastTask
-                && await checkIns.GetLastObservationAsync() is { TaskId: { } lastTaskId })
+            // "Same as before" is the task that is actually active now (Enter keeps it: no split, no duplicate). When the
+            // time is unclassified (start-up, after a pause) there is none, so Enter never quietly re-registers an old task.
+            // Not tracking (paused): the last check-in's task, as before.
+            var activeTask = active?.TaskId is { } activeTaskId ? await tasks.GetAsync(activeTaskId)
+                : active is null && await checkIns.GetLastObservationAsync() is { TaskId: { } lastTaskId } ? await tasks.GetAsync(lastTaskId)
+                : null;
+            if (settings.Current.Tracking.RememberLastTask && activeTask is not null)
             {
-                var last = await tasks.GetAsync(lastTaskId);
-                PreviousTask = last.IsArchived || !last.ClientIsActive ? null : last;
+                PreviousTask = activeTask.IsArchived || !activeTask.ClientIsActive ? null : activeTask;
             }
+
+            ActiveText = active switch
+            {
+                null => null,
+                { IsUnclassified: true } a => $"Unclassified since {ToLocal(a.StartUtc):HH:mm} — the task you choose is registered from {ToLocal(a.StartUtc):HH:mm}.",
+                { TaskId: not null } a => $"Now: {activeTask?.Title} since {ToLocal(a.StartUtc):HH:mm}. Another task starts at the time you save.",
+                { } a => $"Now: {_clients.FirstOrDefault(c => c.Id == a.ClientId)?.Name ?? "a stakeholder"} (no task) since {ToLocal(a.StartUtc):HH:mm}.",
+            };
 
             var recent = await tasks.SearchAsync(new TaskQuery(Limit: MaxRecent + 1));
             Recent.Clear();
@@ -402,7 +406,19 @@ public sealed partial class CheckInViewModel(
     partial void OnNoteChanged(string? value) => ErrorMessage = null;
 
     [RelayCommand(CanExecute = nameof(CanRecord))]
-    private Task SaveAsync()
+    private async Task SaveAsync()
+    {
+        // Enter right after typing: wait for the search of the current text, so the stale first suggestion of the previous
+        // text is never recorded instead of the task the user is typing (this saved time on the wrong task).
+        if (IsSearching)
+        {
+            await _searchTask;
+        }
+
+        await SaveSelectionAsync();
+    }
+
+    private Task SaveSelectionAsync()
     {
         if (SelectedSuggestion is { IsCreateNew: true })
         {
@@ -498,14 +514,9 @@ public sealed partial class CheckInViewModel(
             }
 
             var channelId = PickerOption.FromKey(ChannelKey ?? 0) ?? task?.DefaultChannelId;
+            // One rule for every way of choosing a task (popup, shortcut, Overview): the check-in is the selection;
+            // the registrations follow from it (an unclassified interval is classified from its start, another task splits).
             var observation = await checkIns.RecordAsync(new CheckInRequest(_promptId, task?.Id, Note, channelId, observedAtUtc, task is null ? stakeholderOnly : null));
-
-            // Close the outstanding unclassified interval on this registration, when the user kept the box ticked.
-            if (AssignOpenInterval && _openInterval is { } open && (task is not null || stakeholderOnly is not null)
-                && observation.ObservedAtUtc > open.StartUtc)
-            {
-                await registrations.AssignAsync(open.StartUtc, observation.ObservedAtUtc, task?.Id, task is null ? stakeholderOnly : null);
-            }
             Recorded?.Invoke(this, observation);
             CloseRequested?.Invoke(this, PromptOutcome.Answered);
         }

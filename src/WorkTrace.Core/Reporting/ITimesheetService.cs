@@ -17,6 +17,12 @@ public sealed record TimesheetLine(
     public int TotalMinutes => Days.Sum(d => d.Minutes);
 }
 
+/// <summary>
+/// A task chosen or active on a day (daily task history). Informational only: derived from the check-ins and the
+/// registrations, never stored separately and never counted.
+/// </summary>
+public sealed record DayTask(int TaskId, string Stakeholder, string Task, string? Reference, string StakeholderColor);
+
 public sealed record TimesheetWeek(
     DateOnly Monday,
     IReadOnlyList<TimesheetLine> Lines,
@@ -24,6 +30,9 @@ public sealed record TimesheetWeek(
     int MissedCheckIns)
 {
     public IReadOnlyList<DateOnly> Days { get; } = [.. Enumerable.Range(0, 7).Select(Monday.AddDays)];
+
+    /// <summary>Monday..Sunday: each distinct task chosen or active that day, in the order it was first used.</summary>
+    public IReadOnlyList<IReadOnlyList<DayTask>> DayTasks { get; init; } = [.. Enumerable.Range(0, 7).Select(_ => (IReadOnlyList<DayTask>)[])];
 
     public IReadOnlyList<int> DayTotals => [.. Enumerable.Range(0, 7).Select(i => Lines.Sum(l => l.Days[i].Minutes))];
 
@@ -100,7 +109,11 @@ public sealed record DayRegistrations(
     DaySummary Summary,
     int RegisteredMinutes,
     int TimesheetMinutes,
-    bool HasCorrections);
+    bool HasCorrections)
+{
+    /// <summary>Each distinct task chosen or active on the day, in the order it was first used (daily task history).</summary>
+    public IReadOnlyList<DayTask> Tasks { get; init; } = [];
+}
 
 /// <summary>Weekly timesheet built from the estimated timeline, with per-day corrections and exports.</summary>
 public interface ITimesheetService

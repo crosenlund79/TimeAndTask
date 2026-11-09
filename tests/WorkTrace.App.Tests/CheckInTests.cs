@@ -148,6 +148,22 @@ public class CheckInTests
     });
 
     [Fact]
+    public Task EnterRightAfterTyping_RecordsTheTypedTask_NotTheStaleSuggestion() => WpfTestHost.RunAsync(async () =>
+    {
+        var (ctx, invoice, meeting) = await SeedAsync();
+        await using var _ = ctx;
+        var vm = await OpenAsync(ctx);
+        vm.SearchText = "meet";
+        await vm.WhenSearchSettledAsync();
+        Assert.Equal(meeting.Id, vm.SelectedSuggestion?.Task?.Id);
+
+        vm.SearchText = "42";                       // typed on and Enter at once: the search is still running
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        Assert.Equal(invoice.Id, (await ctx.Get<ICheckInService>().GetLastObservationAsync())!.TaskId); // not the meeting
+    });
+
+    [Fact]
     public Task ArrowKeys_MoveThroughSuggestions() => WpfTestHost.RunAsync(async () =>
     {
         var (ctx, _, _) = await SeedAsync();

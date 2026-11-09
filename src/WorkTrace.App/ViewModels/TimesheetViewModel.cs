@@ -126,6 +126,10 @@ public sealed partial class TimesheetViewModel(
     [ObservableProperty]
     public partial bool IsEmpty { get; private set; }
 
+    /// <summary>"Tasks worked on this week": Monday to Friday, each distinct task chosen or active that day.</summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<WeekdayTasks> WeekTasks { get; private set; } = [];
+
     private DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(UtcTime.Now(timeProvider), TimeZoneInfo.Local));
 
     public async Task ActivateAsync(object? parameter)
@@ -184,6 +188,8 @@ public sealed partial class TimesheetViewModel(
         var weekNumber = ISOWeek.GetWeekOfYear(week.Monday.ToDateTime(TimeOnly.MinValue));
         WeekTitle = $"Week {weekNumber} · {week.Monday.ToString("d MMM", culture)} – {week.Days[6].ToString("d MMM yyyy", culture)}";
         DayHeaders = [.. week.Days.Select(d => d.ToString("ddd d/M", culture))];
+        WeekTasks = [.. Enumerable.Range(0, 5).Select(i => new WeekdayTasks(
+            culture.TextInfo.ToTitleCase(week.Days[i].ToString("dddd", culture)), week.Days[i].ToString("d MMM", culture), week.DayTasks[i]))];
 
         Rows.Clear();
         foreach (var line in week.Lines)
@@ -250,4 +256,10 @@ public sealed partial class TimesheetViewModel(
             });
         }
     }
+}
+
+/// <summary>One weekday column of "Tasks worked on this week".</summary>
+public sealed record WeekdayTasks(string Day, string Date, IReadOnlyList<DayTask> Tasks)
+{
+    public bool IsEmpty => Tasks.Count == 0;
 }
