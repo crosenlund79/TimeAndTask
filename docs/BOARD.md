@@ -21,6 +21,10 @@ _Empty._
 
 - Timeline Excel…/PDF… export the timeline as shown (filters, order); Excel has a visual timeline, Task Data and Working Days sheets with colours, deadlines, holidays, filters; PDF is landscape, paginated with repeated date headers; both show the same planning; nothing changes in task data.
 
+**Evidence**
+
+Commit f75ebe1; Windows CI run 54 green (TimelineExportTests: per-day hours, workbook structure/order, PDF pagination + xref); sample xlsx/pdf rendered and checked; installer WorkTrace-Setup-0.2.54
+
 ## Review / Test
 
 ### WT-010 · Scheduled check-ins appear reliably
