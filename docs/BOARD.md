@@ -24,6 +24,7 @@ _Empty._
 **Evidence**
 
 Commit 9903c7f; Windows CI run 55 green (ContinuousRegistrationTests, RegistrationIntegrityTests, TimeEstimatorTests, popup stale-search test); installer WorkTrace-Setup-0.2.55; code backup branch backup/pre-continuous-registration-2026-11-09
+Commit 1321524; Windows CI run 56 green (lifecycle tests: sleep/lock/missed unlock/frozen process/popup open for hours/midnight/diagnostic report read-only); installer WorkTrace-Setup-0.2.56; backup branch backup/pre-registration-debugging-2026-11-09
 
 **Comments (1)**
 

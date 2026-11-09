@@ -1709,7 +1709,7 @@
         "Start-up time goes to the first chosen task; switching splits at the selection time; same task continues; dismiss/miss changes nothing; Waiting tasks selectable; pause/restart/exit/crash never overlap or invent time; Overview = Timesheet; Overview 'Tasks this day' and Timesheet 'Tasks worked on this week' list each task once per day."
       ],
       "notes": "",
-      "evidence": "Commit 9903c7f; Windows CI run 55 green (ContinuousRegistrationTests, RegistrationIntegrityTests, TimeEstimatorTests, popup stale-search test); installer WorkTrace-Setup-0.2.55; code backup branch backup/pre-continuous-registration-2026-11-09",
+      "evidence": "Commit 9903c7f; Windows CI run 55 green (ContinuousRegistrationTests, RegistrationIntegrityTests, TimeEstimatorTests, popup stale-search test); installer WorkTrace-Setup-0.2.55; code backup branch backup/pre-continuous-registration-2026-11-09\nCommit 1321524; Windows CI run 56 green (lifecycle tests: sleep/lock/missed unlock/frozen process/popup open for hours/midnight/diagnostic report read-only); installer WorkTrace-Setup-0.2.56; backup branch backup/pre-registration-debugging-2026-11-09",
       "blockedBy": [],
       "links": [],
       "comments": [
@@ -1746,8 +1746,8 @@
         }
       ],
       "createdAt": "2026-11-09T15:51:24Z",
-      "updatedAt": "2026-11-09T16:32:10Z",
-      "rev": 5
+      "updatedAt": "2026-11-09T16:39:05Z",
+      "rev": 6
     }
   ]
 }
