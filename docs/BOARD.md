@@ -21,6 +21,10 @@ _Empty._
 
 - Registrations can be edited (stakeholder, task, date, start, end, duration) and deleted from Overview (Timesheet day headers open the day); totals update at once; pause from the popup stops work time and resumes by itself; time since start-up is unclassified until assigned; timeline tasks follow each other with no gaps and deadlines only change the title emphasis.
 
+**Evidence**
+
+Commit 6ea6b88; Windows CI run 53 green (all tests incl. new RegistrationIntegrity, editor and popup smoke tests); installer WorkTrace-Setup-0.2.53
+
 ## Review / Test
 
 ### WT-010 · Scheduled check-ins appear reliably
