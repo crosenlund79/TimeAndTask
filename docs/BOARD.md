@@ -25,6 +25,10 @@ _Empty._
 
 Commit 9903c7f; Windows CI run 55 green (ContinuousRegistrationTests, RegistrationIntegrityTests, TimeEstimatorTests, popup stale-search test); installer WorkTrace-Setup-0.2.55; code backup branch backup/pre-continuous-registration-2026-11-09
 
+**Comments (1)**
+
+- 2026-11-09 16:32 · claude: Owner report 2026-11-09: still unclassified gaps and repeated rows. Root cause: non-explicit tracking breaks (sleep/Modern Standby/clock change) restarted as Unclassified; locked time shown as Unclassified; check-ins during a stale lock/sleep state registered nothing. Fixed in 1321524 (ADR-039); diagnostic: WorkTrace.exe --registration-report <date>.
+
 ## Review / Test
 
 ### WT-010 · Scheduled check-ins appear reliably
