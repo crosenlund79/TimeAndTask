@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 67,
+  "nextId": 68,
   "cards": [
     {
       "id": "WT-001",
@@ -1778,6 +1778,38 @@
       "createdAt": "2026-11-09T15:51:24Z",
       "updatedAt": "2026-11-09T17:33:07Z",
       "rev": 11
+    },
+    {
+      "id": "WT-067",
+      "uid": "6b4fa3ad-59e8-42f7-a3f1-7178e0808c0b",
+      "title": "Timesheet: resizable sections (remembered divider) and 'Dock weekly hours to bottom'",
+      "category": "feature",
+      "priority": "normal",
+      "status": "doing",
+      "rank": "i",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Tasks and weekly hours split 50/50 by default with a draggable divider; ratio remembered across sessions; each section scrolls; toolbar fixed; docking keeps weekly hours at the bottom and is remembered; nothing else changes."
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "4d72c9fd-af83-42ce-88a3-7669b719c98a",
+          "type": "created",
+          "at": "2026-11-10T12:36:27Z",
+          "by": "claude",
+          "to": "doing"
+        }
+      ],
+      "createdAt": "2026-11-10T12:36:27Z",
+      "updatedAt": "2026-11-10T12:36:27Z",
+      "rev": 1
     }
   ]
 }

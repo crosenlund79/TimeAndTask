@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 32 | 5 | 0 |
+| 0 | 2 | 8 | 1 | 32 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,7 +13,13 @@ _Empty._
 
 ## In progress
 
-_None._
+### WT-067 · Timesheet: resizable sections (remembered divider) and 'Dock weekly hours to bottom'
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Tasks and weekly hours split 50/50 by default with a draggable divider; ratio remembered across sessions; each section scrolls; toolbar fixed; docking keeps weekly hours at the bottom and is remembered; nothing else changes.
 
 ## Review / Test
 
