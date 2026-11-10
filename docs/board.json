@@ -1785,8 +1785,8 @@
       "title": "Timesheet: resizable sections (remembered divider) and 'Dock weekly hours to bottom'",
       "category": "feature",
       "priority": "normal",
-      "status": "doing",
-      "rank": "i",
+      "status": "review",
+      "rank": "zzzzzzw",
       "archived": false,
       "archivedAt": null,
       "description": "",
@@ -1805,11 +1805,19 @@
           "at": "2026-11-10T12:36:27Z",
           "by": "claude",
           "to": "doing"
+        },
+        {
+          "id": "21601023-d218-45d4-b006-0a6bc58891cc",
+          "type": "status",
+          "at": "2026-11-10T12:43:29Z",
+          "by": "claude",
+          "from": "doing",
+          "to": "review"
         }
       ],
       "createdAt": "2026-11-10T12:36:27Z",
-      "updatedAt": "2026-11-10T12:43:27Z",
-      "rev": 2
+      "updatedAt": "2026-11-10T12:43:29Z",
+      "rev": 3
     }
   ]
 }

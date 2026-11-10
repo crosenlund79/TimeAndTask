@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 1 | 32 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 33 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,17 +13,7 @@ _Empty._
 
 ## In progress
 
-### WT-067 · Timesheet: resizable sections (remembered divider) and 'Dock weekly hours to bottom'
-
-`feature` · priority Normal
-
-**Acceptance criteria**
-
-- Tasks and weekly hours split 50/50 by default with a draggable divider; ratio remembered across sessions; each section scrolls; toolbar fixed; docking keeps weekly hours at the bottom and is remembered; nothing else changes.
-
-**Evidence**
-
-Commit 12d8132; Windows CI run 59 green (UI smoke renders the Timesheet without binding errors; TimesheetLayout_IsRememberedAcrossSessions_AndClamped); installer WorkTrace-Setup-0.2.59
+_None._
 
 ## Review / Test
 
@@ -523,6 +513,18 @@ Commit dcf29be; Windows CI run 58 green (regression tests: future-reaching regis
 
 - 2026-11-09 16:32 · claude: Owner report 2026-11-09: still unclassified gaps and repeated rows. Root cause: non-explicit tracking breaks (sleep/Modern Standby/clock change) restarted as Unclassified; locked time shown as Unclassified; check-ins during a stale lock/sleep state registered nothing. Fixed in 1321524 (ADR-039); diagnostic: WorkTrace.exe --registration-report <date>.
 - 2026-11-09 17:26 · claude: Owner report 2026-11-09 (selection reverts), analysed on the owner's backup: root cause = registration editor saved '13:19-13:19' as 13:19 -> 13:19 next day (24 h manual registration #4 on task 15) which overrode every later selection. Fixed in dcf29be (ADR-040). Stored record #4 left untouched for the owner to decide.
+
+### WT-067 · Timesheet: resizable sections (remembered divider) and 'Dock weekly hours to bottom'
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Tasks and weekly hours split 50/50 by default with a draggable divider; ratio remembered across sessions; each section scrolls; toolbar fixed; docking keeps weekly hours at the bottom and is remembered; nothing else changes.
+
+**Evidence**
+
+Commit 12d8132; Windows CI run 59 green (UI smoke renders the Timesheet without binding errors; TimesheetLayout_IsRememberedAcrossSessions_AndClamped); installer WorkTrace-Setup-0.2.59
 
 ## To do
 
