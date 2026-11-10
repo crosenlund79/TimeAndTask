@@ -11,7 +11,6 @@
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
-      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
@@ -40,34 +39,7 @@
       </StackPanel>
     </DockPanel>
 
-    <!-- Tasks worked on this week: Monday–Friday, each distinct task used that day (no times) -->
-    <Border Grid.Row="2" Style="{StaticResource Card}" Padding="10,8" Margin="0,0,0,10">
-      <DockPanel>
-        <TextBlock DockPanel.Dock="Top" Text="Tasks worked on this week" FontWeight="SemiBold" Margin="0,0,0,6" />
-        <ScrollViewer MaxHeight="170" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-          <ItemsControl ItemsSource="{Binding WeekTasks}" Focusable="False" AutomationProperties.Name="Tasks worked on this week">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <UniformGrid Rows="1" Columns="5" />
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-              <DataTemplate DataType="{x:Type vm:WeekdayTasks}">
-                <StackPanel Margin="0,0,8,0" MinWidth="0">
-                  <TextBlock Margin="0,0,0,4" TextTrimming="CharacterEllipsis">
-                    <Run Text="{Binding Day, Mode=OneWay}" FontWeight="SemiBold" /><Run Text="{Binding Date, StringFormat=' {0}', Mode=OneWay}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" />
-                  </TextBlock>
-                  <TextBlock Text="—" Style="{StaticResource CaptionText}" Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
-                  <ItemsControl ItemsSource="{Binding Tasks}" ItemTemplate="{StaticResource DayTaskTemplate}" Focusable="False" />
-                </StackPanel>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </ScrollViewer>
-      </DockPanel>
-    </Border>
-
-    <Border Grid.Row="3" Margin="0,0,0,10" Padding="10,6" CornerRadius="4" Background="{DynamicResource SystemFillColorCautionBackgroundBrush}"
+    <Border Grid.Row="2" Margin="0,0,0,10" Padding="10,6" CornerRadius="4" Background="{DynamicResource SystemFillColorCautionBackgroundBrush}"
             Visibility="{Binding Warning, Converter={StaticResource NullToCollapsed}}">
       <DockPanel>
         <TextBlock DockPanel.Dock="Left" Text="&#xE7BA;" Style="{StaticResource IconText}" Margin="0,0,8,0" />
@@ -75,229 +47,285 @@
       </DockPanel>
     </Border>
 
-    <Border Grid.Row="4" Style="{StaticResource Card}" Padding="8">
-      <DockPanel>
-        <Grid DockPanel.Dock="Top" Margin="6,0,6,6" TextElement.FontWeight="SemiBold">
-          <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="130" />
-                  <ColumnDefinition Width="110" />
-                  <ColumnDefinition Width="*" MinWidth="160" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="200" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="Stakeholder" />
-                <TextBlock Grid.Column="1" Text="Reference" />
-                <TextBlock Grid.Column="2" Text="Task" />
-                <Button Grid.Column="3" Style="{StaticResource LinkButton}" Content="{Binding DayHeaders[0]}" HorizontalAlignment="Right" Margin="0,0,8,0"
-                        Command="{Binding OpenDayCommand}" CommandParameter="0" ToolTip="Open this day in Overview to edit or delete its registrations" />
-                <Button Grid.Column="4" Style="{StaticResource LinkButton}" Content="{Binding DayHeaders[1]}" HorizontalAlignment="Right" Margin="0,0,8,0"
-                        Command="{Binding OpenDayCommand}" CommandParameter="1" ToolTip="Open this day in Overview to edit or delete its registrations" />
-                <Button Grid.Column="5" Style="{StaticResource LinkButton}" Content="{Binding DayHeaders[2]}" HorizontalAlignment="Right" Margin="0,0,8,0"
-                        Command="{Binding OpenDayCommand}" CommandParameter="2" ToolTip="Open this day in Overview to edit or delete its registrations" />
-                <Button Grid.Column="6" Style="{StaticResource LinkButton}" Content="{Binding DayHeaders[3]}" HorizontalAlignment="Right" Margin="0,0,8,0"
-                        Command="{Binding OpenDayCommand}" CommandParameter="3" ToolTip="Open this day in Overview to edit or delete its registrations" />
-                <Button Grid.Column="7" Style="{StaticResource LinkButton}" Content="{Binding DayHeaders[4]}" HorizontalAlignment="Right" Margin="0,0,8,0"
-                        Command="{Binding OpenDayCommand}" CommandParameter="4" ToolTip="Open this day in Overview to edit or delete its registrations" />
-                <Button Grid.Column="8" Style="{StaticResource LinkButton}" Content="{Binding DayHeaders[5]}" HorizontalAlignment="Right" Margin="0,0,8,0"
-                        Command="{Binding OpenDayCommand}" CommandParameter="5" ToolTip="Open this day in Overview to edit or delete its registrations" />
-                <Button Grid.Column="9" Style="{StaticResource LinkButton}" Content="{Binding DayHeaders[6]}" HorizontalAlignment="Right" Margin="0,0,8,0"
-                        Command="{Binding OpenDayCommand}" CommandParameter="6" ToolTip="Open this day in Overview to edit or delete its registrations" />
-                <TextBlock Grid.Column="10" Text="Total" HorizontalAlignment="Right" Margin="0,0,8,0" />
-                <TextBlock Grid.Column="11" Text="Comments (from check-ins)" Margin="8,0,0,0" />
-        </Grid>
-        <Border DockPanel.Dock="Top" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}" />
-        <Grid>
-          <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding Rows}" Focusable="False" AutomationProperties.Name="Timesheet">
+    <!-- Two sections share the height (50/50 by default) with a draggable divider; each scrolls on its own. The week
+         selector, navigation and exports above stay fixed. Row sizes are applied by the view (saved ratio, or docked). -->
+    <Grid x:Name="Sections" Grid.Row="3">
+      <Grid.RowDefinitions>
+        <RowDefinition x:Name="TasksRow" Height="*" MinHeight="90" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition x:Name="HoursRow" Height="*" MinHeight="150" />
+      </Grid.RowDefinitions>
+
+      <!-- Tasks worked on this week: Monday–Friday, each distinct task used that day (no times) -->
+      <Border Grid.Row="0" Style="{StaticResource Card}" Padding="10,8">
+        <DockPanel>
+          <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+            <CheckBox DockPanel.Dock="Right" Content="Dock weekly hours to bottom" IsChecked="{Binding DockHoursToBottom}" FontSize="12"
+                      VerticalAlignment="Center" AutomationProperties.Name="Dock weekly hours to bottom"
+                      ToolTip="Keep the weekly hours at the bottom with their own height; the tasks use the remaining space. Drag the divider to adjust." />
+            <TextBlock Text="Tasks worked on this week" FontWeight="SemiBold" VerticalAlignment="Center" />
+          </DockPanel>
+          <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding WeekTasks}" Focusable="False" AutomationProperties.Name="Tasks worked on this week">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <UniformGrid Rows="1" Columns="5" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
               <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="{x:Type vm:TimesheetRowViewModel}">
-                  <Grid x:Name="Row" Margin="6,1">
-                    <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="130" />
-                  <ColumnDefinition Width="110" />
-                  <ColumnDefinition Width="*" MinWidth="160" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="64" />
-                  <ColumnDefinition Width="200" />
-                </Grid.ColumnDefinitions>
-                    <TextBlock Text="{Binding Stakeholder}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Stakeholder}" />
-                    <TextBlock Grid.Column="1" Text="{Binding Reference}" VerticalAlignment="Center" FontFamily="{StaticResource MonoFont}" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Grid.Column="2" Text="{Binding Task}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Task}" Margin="0,0,8,0" />
-                    <TextBox Grid.Column="3" Text="{Binding Cells[0].Text, UpdateSourceTrigger=LostFocus}" ToolTip="{Binding Cells[0].ToolTip}"
-                             HorizontalContentAlignment="Right" Margin="2,1" MinWidth="0" Padding="4,3"
-                             Visibility="{Binding Cells[0].IsEditable, Converter={StaticResource BoolToVisibility}}"
-                             AutomationProperties.Name="{Binding DataContext.DayHeaders[0], RelativeSource={RelativeSource AncestorType=UserControl}}">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding Cells[0].IsAdjusted}" Value="True">
-                              <Setter Property="FontWeight" Value="SemiBold" />
-                              <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Cells[0].BaselineChanged}" Value="True">
-                              <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Grid.Column="3" Text="{Binding Cells[0].Text}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
-                               Visibility="{Binding Cells[0].IsEditable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
-                    <TextBox Grid.Column="4" Text="{Binding Cells[1].Text, UpdateSourceTrigger=LostFocus}" ToolTip="{Binding Cells[1].ToolTip}"
-                             HorizontalContentAlignment="Right" Margin="2,1" MinWidth="0" Padding="4,3"
-                             Visibility="{Binding Cells[1].IsEditable, Converter={StaticResource BoolToVisibility}}"
-                             AutomationProperties.Name="{Binding DataContext.DayHeaders[1], RelativeSource={RelativeSource AncestorType=UserControl}}">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding Cells[1].IsAdjusted}" Value="True">
-                              <Setter Property="FontWeight" Value="SemiBold" />
-                              <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Cells[1].BaselineChanged}" Value="True">
-                              <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Grid.Column="4" Text="{Binding Cells[1].Text}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
-                               Visibility="{Binding Cells[1].IsEditable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
-                    <TextBox Grid.Column="5" Text="{Binding Cells[2].Text, UpdateSourceTrigger=LostFocus}" ToolTip="{Binding Cells[2].ToolTip}"
-                             HorizontalContentAlignment="Right" Margin="2,1" MinWidth="0" Padding="4,3"
-                             Visibility="{Binding Cells[2].IsEditable, Converter={StaticResource BoolToVisibility}}"
-                             AutomationProperties.Name="{Binding DataContext.DayHeaders[2], RelativeSource={RelativeSource AncestorType=UserControl}}">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding Cells[2].IsAdjusted}" Value="True">
-                              <Setter Property="FontWeight" Value="SemiBold" />
-                              <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Cells[2].BaselineChanged}" Value="True">
-                              <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Grid.Column="5" Text="{Binding Cells[2].Text}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
-                               Visibility="{Binding Cells[2].IsEditable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
-                    <TextBox Grid.Column="6" Text="{Binding Cells[3].Text, UpdateSourceTrigger=LostFocus}" ToolTip="{Binding Cells[3].ToolTip}"
-                             HorizontalContentAlignment="Right" Margin="2,1" MinWidth="0" Padding="4,3"
-                             Visibility="{Binding Cells[3].IsEditable, Converter={StaticResource BoolToVisibility}}"
-                             AutomationProperties.Name="{Binding DataContext.DayHeaders[3], RelativeSource={RelativeSource AncestorType=UserControl}}">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding Cells[3].IsAdjusted}" Value="True">
-                              <Setter Property="FontWeight" Value="SemiBold" />
-                              <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Cells[3].BaselineChanged}" Value="True">
-                              <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Grid.Column="6" Text="{Binding Cells[3].Text}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
-                               Visibility="{Binding Cells[3].IsEditable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
-                    <TextBox Grid.Column="7" Text="{Binding Cells[4].Text, UpdateSourceTrigger=LostFocus}" ToolTip="{Binding Cells[4].ToolTip}"
-                             HorizontalContentAlignment="Right" Margin="2,1" MinWidth="0" Padding="4,3"
-                             Visibility="{Binding Cells[4].IsEditable, Converter={StaticResource BoolToVisibility}}"
-                             AutomationProperties.Name="{Binding DataContext.DayHeaders[4], RelativeSource={RelativeSource AncestorType=UserControl}}">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding Cells[4].IsAdjusted}" Value="True">
-                              <Setter Property="FontWeight" Value="SemiBold" />
-                              <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Cells[4].BaselineChanged}" Value="True">
-                              <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Grid.Column="7" Text="{Binding Cells[4].Text}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
-                               Visibility="{Binding Cells[4].IsEditable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
-                    <TextBox Grid.Column="8" Text="{Binding Cells[5].Text, UpdateSourceTrigger=LostFocus}" ToolTip="{Binding Cells[5].ToolTip}"
-                             HorizontalContentAlignment="Right" Margin="2,1" MinWidth="0" Padding="4,3"
-                             Visibility="{Binding Cells[5].IsEditable, Converter={StaticResource BoolToVisibility}}"
-                             AutomationProperties.Name="{Binding DataContext.DayHeaders[5], RelativeSource={RelativeSource AncestorType=UserControl}}">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding Cells[5].IsAdjusted}" Value="True">
-                              <Setter Property="FontWeight" Value="SemiBold" />
-                              <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Cells[5].BaselineChanged}" Value="True">
-                              <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Grid.Column="8" Text="{Binding Cells[5].Text}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
-                               Visibility="{Binding Cells[5].IsEditable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
-                    <TextBox Grid.Column="9" Text="{Binding Cells[6].Text, UpdateSourceTrigger=LostFocus}" ToolTip="{Binding Cells[6].ToolTip}"
-                             HorizontalContentAlignment="Right" Margin="2,1" MinWidth="0" Padding="4,3"
-                             Visibility="{Binding Cells[6].IsEditable, Converter={StaticResource BoolToVisibility}}"
-                             AutomationProperties.Name="{Binding DataContext.DayHeaders[6], RelativeSource={RelativeSource AncestorType=UserControl}}">
-                      <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding Cells[6].IsAdjusted}" Value="True">
-                              <Setter Property="FontWeight" Value="SemiBold" />
-                              <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Cells[6].BaselineChanged}" Value="True">
-                              <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Grid.Column="9" Text="{Binding Cells[6].Text}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
-                               Visibility="{Binding Cells[6].IsEditable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
-                    <TextBlock Grid.Column="10" Text="{Binding TotalText}" HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,8,0" />
-                    <TextBlock Grid.Column="11" Text="{Binding Comments}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Comments}"
-                               Style="{StaticResource CaptionText}" Margin="8,0,0,0" />
-                  </Grid>
-                  <DataTemplate.Triggers>
-                    <DataTrigger Binding="{Binding IsTotal}" Value="True">
-                      <Setter TargetName="Row" Property="TextElement.FontWeight" Value="SemiBold" />
-                      <Setter TargetName="Row" Property="Margin" Value="6,8,6,1" />
-                    </DataTrigger>
-                    <DataTrigger Binding="{Binding IsUnclassified}" Value="True">
-                      <Setter TargetName="Row" Property="TextElement.Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
-                    </DataTrigger>
-                  </DataTemplate.Triggers>
+                <DataTemplate DataType="{x:Type vm:WeekdayTasks}">
+                  <StackPanel Margin="0,0,8,0" MinWidth="0">
+                    <TextBlock Margin="0,0,0,4" TextTrimming="CharacterEllipsis">
+                      <Run Text="{Binding Day, Mode=OneWay}" FontWeight="SemiBold" /><Run Text="{Binding Date, StringFormat=' {0}', Mode=OneWay}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" />
+                    </TextBlock>
+                    <TextBlock Text="—" Style="{StaticResource CaptionText}" Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding Tasks}" ItemTemplate="{StaticResource DayTaskTemplate}" Focusable="False" />
+                  </StackPanel>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
           </ScrollViewer>
-          <TextBlock Text="No registered time this week yet. Check-ins appear here as estimated hours." HorizontalAlignment="Center" VerticalAlignment="Center"
-                     Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,40,0,0"
-                     Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" IsHitTestVisible="False" />
-        </Grid>
-      </DockPanel>
-    </Border>
+        </DockPanel>
+      </Border>
+
+      <GridSplitter x:Name="Divider" Grid.Row="1" Height="10" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                    ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" Background="Transparent" Cursor="SizeNS" Focusable="False"
+                    ToolTip="Drag to resize; the ratio is remembered" AutomationProperties.Name="Resize timesheet sections"
+                    DragCompleted="OnDividerDragCompleted">
+        <GridSplitter.Template>
+          <ControlTemplate TargetType="GridSplitter">
+            <Border Background="{TemplateBinding Background}">
+              <Border Width="40" Height="3" CornerRadius="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      Background="{DynamicResource DividerStrokeColorDefaultBrush}" />
+            </Border>
+          </ControlTemplate>
+        </GridSplitter.Template>
+      </GridSplitter>
+
+      <Border Grid.Row="2" Style="{StaticResource Card}" Padding="8">
+        <DockPanel>
+          <Grid DockPanel.Dock="Top" Margin="6,0,6,6" TextElement.FontWeight="SemiBold">
+            <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="130" />
+                    <ColumnDefinition Width="110" />
+                    <ColumnDefinition Width="*" MinWidth="160" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="200" />
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Text="Stakeholder" />
+                  <TextBlock Grid.Column="1" Text="Reference" />
+                  <TextBlock Grid.Column="2" Text="Task" />
+                  <Button Grid.Column="3" Style="{StaticResource LinkButton}" Content="{Binding DayHeaders[0]}" HorizontalAlignment="Right" Margin="0,0,8,0"
+                          Command="{Binding OpenDayCommand}" CommandParameter="0" ToolTip="Open this day in Overview to edit or delete its registrations" />
+                  <Button Grid.Column="4" Style="{StaticResource LinkButton}" Content="{Binding DayHeaders[1]}" HorizontalAlignment="Right" Margin="0,0,8,0"
+                          Command="{Binding OpenDayCommand}" CommandParameter="1" ToolTip="Open this day in Overview to edit or delete its registrations" />
+                  <Button Grid.Column="5" Style="{StaticResource LinkButton}" Content="{Binding DayHeaders[2]}" HorizontalAlignment="Right" Margin="0,0,8,0"
+                          Command="{Binding OpenDayCommand}" CommandParameter="2" ToolTip="Open this day in Overview to edit or delete its registrations" />
+                  <Button Grid.Column="6" Style="{StaticResource LinkButton}" Content="{Binding DayHeaders[3]}" HorizontalAlignment="Right" Margin="0,0,8,0"
+                          Command="{Binding OpenDayCommand}" CommandParameter="3" ToolTip="Open this day in Overview to edit or delete its registrations" />
+                  <Button Grid.Column="7" Style="{StaticResource LinkButton}" Content="{Binding DayHeaders[4]}" HorizontalAlignment="Right" Margin="0,0,8,0"
+                          Command="{Binding OpenDayCommand}" CommandParameter="4" ToolTip="Open this day in Overview to edit or delete its registrations" />
+                  <Button Grid.Column="8" Style="{StaticResource LinkButton}" Content="{Binding DayHeaders[5]}" HorizontalAlignment="Right" Margin="0,0,8,0"
+                          Command="{Binding OpenDayCommand}" CommandParameter="5" ToolTip="Open this day in Overview to edit or delete its registrations" />
+                  <Button Grid.Column="9" Style="{StaticResource LinkButton}" Content="{Binding DayHeaders[6]}" HorizontalAlignment="Right" Margin="0,0,8,0"
+                          Command="{Binding OpenDayCommand}" CommandParameter="6" ToolTip="Open this day in Overview to edit or delete its registrations" />
+                  <TextBlock Grid.Column="10" Text="Total" HorizontalAlignment="Right" Margin="0,0,8,0" />
+                  <TextBlock Grid.Column="11" Text="Comments (from check-ins)" Margin="8,0,0,0" />
+          </Grid>
+          <Border DockPanel.Dock="Top" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}" />
+          <Grid>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+              <ItemsControl ItemsSource="{Binding Rows}" Focusable="False" AutomationProperties.Name="Timesheet">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:TimesheetRowViewModel}">
+                    <Grid x:Name="Row" Margin="6,1">
+                      <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="130" />
+                    <ColumnDefinition Width="110" />
+                    <ColumnDefinition Width="*" MinWidth="160" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="64" />
+                    <ColumnDefinition Width="200" />
+                  </Grid.ColumnDefinitions>
+                      <TextBlock Text="{Binding Stakeholder}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Stakeholder}" />
+                      <TextBlock Grid.Column="1" Text="{Binding Reference}" VerticalAlignment="Center" FontFamily="{StaticResource MonoFont}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Grid.Column="2" Text="{Binding Task}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Task}" Margin="0,0,8,0" />
+                      <TextBox Grid.Column="3" Text="{Binding Cells[0].Text, UpdateSourceTrigger=LostFocus}" ToolTip="{Binding Cells[0].ToolTip}"
+                               HorizontalContentAlignment="Right" Margin="2,1" MinWidth="0" Padding="4,3"
+                               Visibility="{Binding Cells[0].IsEditable, Converter={StaticResource BoolToVisibility}}"
+                               AutomationProperties.Name="{Binding DataContext.DayHeaders[0], RelativeSource={RelativeSource AncestorType=UserControl}}">
+                        <TextBox.Style>
+                          <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                            <Style.Triggers>
+                              <DataTrigger Binding="{Binding Cells[0].IsAdjusted}" Value="True">
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                              </DataTrigger>
+                              <DataTrigger Binding="{Binding Cells[0].BaselineChanged}" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </TextBox.Style>
+                      </TextBox>
+                      <TextBlock Grid.Column="3" Text="{Binding Cells[0].Text}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
+                                 Visibility="{Binding Cells[0].IsEditable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                      <TextBox Grid.Column="4" Text="{Binding Cells[1].Text, UpdateSourceTrigger=LostFocus}" ToolTip="{Binding Cells[1].ToolTip}"
+                               HorizontalContentAlignment="Right" Margin="2,1" MinWidth="0" Padding="4,3"
+                               Visibility="{Binding Cells[1].IsEditable, Converter={StaticResource BoolToVisibility}}"
+                               AutomationProperties.Name="{Binding DataContext.DayHeaders[1], RelativeSource={RelativeSource AncestorType=UserControl}}">
+                        <TextBox.Style>
+                          <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                            <Style.Triggers>
+                              <DataTrigger Binding="{Binding Cells[1].IsAdjusted}" Value="True">
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                              </DataTrigger>
+                              <DataTrigger Binding="{Binding Cells[1].BaselineChanged}" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </TextBox.Style>
+                      </TextBox>
+                      <TextBlock Grid.Column="4" Text="{Binding Cells[1].Text}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
+                                 Visibility="{Binding Cells[1].IsEditable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                      <TextBox Grid.Column="5" Text="{Binding Cells[2].Text, UpdateSourceTrigger=LostFocus}" ToolTip="{Binding Cells[2].ToolTip}"
+                               HorizontalContentAlignment="Right" Margin="2,1" MinWidth="0" Padding="4,3"
+                               Visibility="{Binding Cells[2].IsEditable, Converter={StaticResource BoolToVisibility}}"
+                               AutomationProperties.Name="{Binding DataContext.DayHeaders[2], RelativeSource={RelativeSource AncestorType=UserControl}}">
+                        <TextBox.Style>
+                          <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                            <Style.Triggers>
+                              <DataTrigger Binding="{Binding Cells[2].IsAdjusted}" Value="True">
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                              </DataTrigger>
+                              <DataTrigger Binding="{Binding Cells[2].BaselineChanged}" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </TextBox.Style>
+                      </TextBox>
+                      <TextBlock Grid.Column="5" Text="{Binding Cells[2].Text}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
+                                 Visibility="{Binding Cells[2].IsEditable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                      <TextBox Grid.Column="6" Text="{Binding Cells[3].Text, UpdateSourceTrigger=LostFocus}" ToolTip="{Binding Cells[3].ToolTip}"
+                               HorizontalContentAlignment="Right" Margin="2,1" MinWidth="0" Padding="4,3"
+                               Visibility="{Binding Cells[3].IsEditable, Converter={StaticResource BoolToVisibility}}"
+                               AutomationProperties.Name="{Binding DataContext.DayHeaders[3], RelativeSource={RelativeSource AncestorType=UserControl}}">
+                        <TextBox.Style>
+                          <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                            <Style.Triggers>
+                              <DataTrigger Binding="{Binding Cells[3].IsAdjusted}" Value="True">
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                              </DataTrigger>
+                              <DataTrigger Binding="{Binding Cells[3].BaselineChanged}" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </TextBox.Style>
+                      </TextBox>
+                      <TextBlock Grid.Column="6" Text="{Binding Cells[3].Text}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
+                                 Visibility="{Binding Cells[3].IsEditable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                      <TextBox Grid.Column="7" Text="{Binding Cells[4].Text, UpdateSourceTrigger=LostFocus}" ToolTip="{Binding Cells[4].ToolTip}"
+                               HorizontalContentAlignment="Right" Margin="2,1" MinWidth="0" Padding="4,3"
+                               Visibility="{Binding Cells[4].IsEditable, Converter={StaticResource BoolToVisibility}}"
+                               AutomationProperties.Name="{Binding DataContext.DayHeaders[4], RelativeSource={RelativeSource AncestorType=UserControl}}">
+                        <TextBox.Style>
+                          <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                            <Style.Triggers>
+                              <DataTrigger Binding="{Binding Cells[4].IsAdjusted}" Value="True">
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                              </DataTrigger>
+                              <DataTrigger Binding="{Binding Cells[4].BaselineChanged}" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </TextBox.Style>
+                      </TextBox>
+                      <TextBlock Grid.Column="7" Text="{Binding Cells[4].Text}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
+                                 Visibility="{Binding Cells[4].IsEditable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                      <TextBox Grid.Column="8" Text="{Binding Cells[5].Text, UpdateSourceTrigger=LostFocus}" ToolTip="{Binding Cells[5].ToolTip}"
+                               HorizontalContentAlignment="Right" Margin="2,1" MinWidth="0" Padding="4,3"
+                               Visibility="{Binding Cells[5].IsEditable, Converter={StaticResource BoolToVisibility}}"
+                               AutomationProperties.Name="{Binding DataContext.DayHeaders[5], RelativeSource={RelativeSource AncestorType=UserControl}}">
+                        <TextBox.Style>
+                          <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                            <Style.Triggers>
+                              <DataTrigger Binding="{Binding Cells[5].IsAdjusted}" Value="True">
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                              </DataTrigger>
+                              <DataTrigger Binding="{Binding Cells[5].BaselineChanged}" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </TextBox.Style>
+                      </TextBox>
+                      <TextBlock Grid.Column="8" Text="{Binding Cells[5].Text}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
+                                 Visibility="{Binding Cells[5].IsEditable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                      <TextBox Grid.Column="9" Text="{Binding Cells[6].Text, UpdateSourceTrigger=LostFocus}" ToolTip="{Binding Cells[6].ToolTip}"
+                               HorizontalContentAlignment="Right" Margin="2,1" MinWidth="0" Padding="4,3"
+                               Visibility="{Binding Cells[6].IsEditable, Converter={StaticResource BoolToVisibility}}"
+                               AutomationProperties.Name="{Binding DataContext.DayHeaders[6], RelativeSource={RelativeSource AncestorType=UserControl}}">
+                        <TextBox.Style>
+                          <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                            <Style.Triggers>
+                              <DataTrigger Binding="{Binding Cells[6].IsAdjusted}" Value="True">
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                              </DataTrigger>
+                              <DataTrigger Binding="{Binding Cells[6].BaselineChanged}" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </TextBox.Style>
+                      </TextBox>
+                      <TextBlock Grid.Column="9" Text="{Binding Cells[6].Text}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
+                                 Visibility="{Binding Cells[6].IsEditable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                      <TextBlock Grid.Column="10" Text="{Binding TotalText}" HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,8,0" />
+                      <TextBlock Grid.Column="11" Text="{Binding Comments}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Comments}"
+                                 Style="{StaticResource CaptionText}" Margin="8,0,0,0" />
+                    </Grid>
+                    <DataTemplate.Triggers>
+                      <DataTrigger Binding="{Binding IsTotal}" Value="True">
+                        <Setter TargetName="Row" Property="TextElement.FontWeight" Value="SemiBold" />
+                        <Setter TargetName="Row" Property="Margin" Value="6,8,6,1" />
+                      </DataTrigger>
+                      <DataTrigger Binding="{Binding IsUnclassified}" Value="True">
+                        <Setter TargetName="Row" Property="TextElement.Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                      </DataTrigger>
+                    </DataTemplate.Triggers>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+            <TextBlock Text="No registered time this week yet. Check-ins appear here as estimated hours." HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,40,0,0"
+                       Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" IsHitTestVisible="False" />
+          </Grid>
+        </DockPanel>
+      </Border>
+    </Grid>
   </Grid>
 </UserControl>

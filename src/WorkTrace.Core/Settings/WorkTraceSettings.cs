@@ -226,6 +226,15 @@ public sealed class ReportingSettings
 
     /// <summary>Exports round each day's entry UP to the next 15 minutes; totals are summed from the rounded values. Off by default.</summary>
     public bool ExportRoundUpToQuarter { get; set; }
+
+    /// <summary>Timesheet layout: share of the height for "Tasks worked on this week" (the weekly hours get the rest). Read clamped.</summary>
+    public double TimesheetTasksShare { get; set; } = 0.5;
+
+    /// <summary>Timesheet layout: the weekly hours keep their height at the bottom; the tasks take the remaining space.</summary>
+    public bool TimesheetDockHoursToBottom { get; set; }
+
+    /// <summary>Height of the docked weekly hours in device-independent pixels; 0 = half the available height.</summary>
+    public double TimesheetDockedHoursHeight { get; set; }
 }
 
 public sealed class BoardSettings

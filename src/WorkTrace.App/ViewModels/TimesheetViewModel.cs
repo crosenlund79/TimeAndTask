@@ -132,8 +132,72 @@ public sealed partial class TimesheetViewModel(
 
     private DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(UtcTime.Now(timeProvider), TimeZoneInfo.Local));
 
+    // ---- Layout (window behaviour applies it; the choice is remembered in settings.json) ----
+
+    public const double MinTasksShare = 0.15;
+    public const double MaxTasksShare = 0.85;
+    private bool _loadingLayout;
+    private string? _settingsKey;
+
+    /// <summary>The settings as JSON without the timesheet layout values.</summary>
+    private static string SettingsKey(WorkTrace.Core.Settings.WorkTraceSettings value)
+    {
+        var copy = value.Clone();
+        copy.Reporting.TimesheetTasksShare = 0;
+        copy.Reporting.TimesheetDockHoursToBottom = false;
+        copy.Reporting.TimesheetDockedHoursHeight = 0;
+        return System.Text.Json.JsonSerializer.Serialize(copy);
+    }
+
+    /// <summary>Weekly hours stay at the bottom with their own height; "Tasks worked on this week" takes the rest.</summary>
+    [ObservableProperty]
+    public partial bool DockHoursToBottom { get; set; }
+
+    /// <summary>Share of the height for the tasks section when not docked (50 % by default).</summary>
+    public double TasksShare => Math.Clamp(settings.Current.Reporting.TimesheetTasksShare is var s && double.IsFinite(s) ? s : 0.5, MinTasksShare, MaxTasksShare);
+
+    /// <summary>Saved height of the docked weekly hours; 0 = half the available height.</summary>
+    public double DockedHoursHeight => settings.Current.Reporting.TimesheetDockedHoursHeight is var h && double.IsFinite(h) && h > 0 ? h : 0;
+
+    partial void OnDockHoursToBottomChanged(bool value)
+    {
+        if (!_loadingLayout)
+        {
+            _ = SaveLayoutAsync(r => r.TimesheetDockHoursToBottom = value);
+        }
+    }
+
+    /// <summary>The divider was dragged (not docked): remember the tasks' share of the height.</summary>
+    public Task SaveTasksShareAsync(double share) =>
+        double.IsFinite(share) ? SaveLayoutAsync(r => r.TimesheetTasksShare = Math.Round(Math.Clamp(share, MinTasksShare, MaxTasksShare), 3)) : Task.CompletedTask;
+
+    /// <summary>The divider was dragged while docked: remember the weekly hours' height.</summary>
+    public Task SaveDockedHoursHeightAsync(double height) =>
+        double.IsFinite(height) && height > 0 ? SaveLayoutAsync(r => r.TimesheetDockedHoursHeight = Math.Round(height)) : Task.CompletedTask;
+
+    // One layout save at a time, each starting from the previous one's result (a docking toggle and a divider drag in
+    // quick succession must not overwrite each other). Saves start on the UI thread, so a simple chain suffices.
+    private Task<bool> _layoutSave = Task.FromResult(true);
+
+    private Task<bool> SaveLayoutAsync(Action<WorkTrace.Core.Settings.ReportingSettings> change)
+    {
+        var previous = _layoutSave;
+        _layoutSave = RunAsync(async () =>
+        {
+            await previous;
+            var copy = settings.Current.Clone();
+            change(copy.Reporting);
+            await settings.SaveAsync(copy);
+        }, "Could not save the timesheet layout.");
+        return _layoutSave;
+    }
+
     public async Task ActivateAsync(object? parameter)
     {
+        _loadingLayout = true;
+        DockHoursToBottom = settings.Current.Reporting.TimesheetDockHoursToBottom;
+        _loadingLayout = false;
+
         if (!_listening)
         {
             // Registrations change without leaving the page (check-ins, task switches, pause/stop, estimation settings):
@@ -147,7 +211,17 @@ public sealed partial class TimesheetViewModel(
                     _ = RefreshAsync();
                 }
             };
-            settings.Changed += (_, _) => System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => _ = RefreshAsync());
+            _settingsKey = SettingsKey(settings.Current);
+            settings.Changed += (_, changed) =>
+            {
+                // A layout-only change (divider, docking) never rebuilds the grid.
+                var key = SettingsKey(changed);
+                if (key != _settingsKey)
+                {
+                    _settingsKey = key;
+                    System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => _ = RefreshAsync());
+                }
+            };
         }
 
         await LoadAsync(Monday == default ? Today : Monday);

@@ -8,6 +8,26 @@ namespace WorkTrace.App.Tests;
 public class ViewModelFlowTests
 {
     [Fact]
+    public Task TimesheetLayout_IsRememberedAcrossSessions_AndClamped() => WpfTestHost.RunAsync(async () =>
+    {
+        await using var ctx = await UiTestContext.CreateAsync();
+        var vm = ctx.Get<TimesheetViewModel>();
+        await vm.ActivateAsync(null);
+        Assert.Equal((0.5, false), (vm.TasksShare, vm.DockHoursToBottom)); // 50/50, not docked by default
+
+        await vm.SaveTasksShareAsync(0.3);
+        vm.DockHoursToBottom = true;
+        await vm.SaveDockedHoursHeightAsync(260);
+        await WpfTestHost.SettleAsync();
+
+        var stored = await ctx.Get<WorkTrace.Core.Settings.ISettingsStore>().LoadAsync(); // read back from settings.json
+        Assert.Equal((0.3, true, 260d), (stored.Reporting.TimesheetTasksShare, stored.Reporting.TimesheetDockHoursToBottom, stored.Reporting.TimesheetDockedHoursHeight));
+
+        await vm.SaveTasksShareAsync(0.99);
+        Assert.Equal(TimesheetViewModel.MaxTasksShare, vm.TasksShare); // a readable minimum is kept for the other section
+    });
+
+    [Fact]
     public Task NewTask_SavesAndSelectsIt() => WpfTestHost.RunAsync(async () =>
     {
         await using var ctx = await UiTestContext.CreateAsync();
