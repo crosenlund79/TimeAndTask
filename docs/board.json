@@ -1794,7 +1794,7 @@
         "Tasks and weekly hours split 50/50 by default with a draggable divider; ratio remembered across sessions; each section scrolls; toolbar fixed; docking keeps weekly hours at the bottom and is remembered; nothing else changes."
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Commit 12d8132; Windows CI run 59 green (UI smoke renders the Timesheet without binding errors; TimesheetLayout_IsRememberedAcrossSessions_AndClamped); installer WorkTrace-Setup-0.2.59",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -1808,8 +1808,8 @@
         }
       ],
       "createdAt": "2026-11-10T12:36:27Z",
-      "updatedAt": "2026-11-10T12:36:27Z",
-      "rev": 1
+      "updatedAt": "2026-11-10T12:43:27Z",
+      "rev": 2
     }
   ]
 }

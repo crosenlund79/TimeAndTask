@@ -21,6 +21,10 @@ _Empty._
 
 - Tasks and weekly hours split 50/50 by default with a draggable divider; ratio remembered across sessions; each section scrolls; toolbar fixed; docking keeps weekly hours at the bottom and is remembered; nothing else changes.
 
+**Evidence**
+
+Commit 12d8132; Windows CI run 59 green (UI smoke renders the Timesheet without binding errors; TimesheetLayout_IsRememberedAcrossSessions_AndClamped); installer WorkTrace-Setup-0.2.59
+
 ## Review / Test
 
 ### WT-010 · Scheduled check-ins appear reliably
