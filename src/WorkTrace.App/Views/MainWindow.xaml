@@ -14,6 +14,7 @@
         WindowStartupLocation="CenterScreen">
 
   <Window.InputBindings>
+    <KeyBinding Modifiers="Ctrl" Key="M" Command="{Binding Home.ToggleMiniModeCommand}" />
     <KeyBinding Modifiers="Ctrl" Key="D1" Command="{Binding GoToSectionCommand}" CommandParameter="{x:Static shell:AppSection.Home}" />
     <KeyBinding Modifiers="Ctrl" Key="D2" Command="{Binding GoToSectionCommand}" CommandParameter="{x:Static shell:AppSection.Tasks}" />
     <KeyBinding Modifiers="Ctrl" Key="D3" Command="{Binding GoToSectionCommand}" CommandParameter="{x:Static shell:AppSection.Clients}" />

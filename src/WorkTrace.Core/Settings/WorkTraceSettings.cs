@@ -118,6 +118,23 @@ public sealed class GeneralSettings
 
     /// <summary>Global shortcut for opening the check-in popup, e.g. "Ctrl+Alt+Space".</summary>
     public string GlobalShortcut { get; set; } = "Ctrl+Alt+Space";
+
+    /// <summary>Mini Mode window placement and pin state (remembered between sessions).</summary>
+    public MiniWindowSettings MiniWindow { get; set; } = new();
+}
+
+/// <summary>Mini Mode window: position and size in device-independent pixels (0 size = default), always on top by default.</summary>
+public sealed class MiniWindowSettings
+{
+    public double? Left { get; set; }
+
+    public double? Top { get; set; }
+
+    public double Width { get; set; }
+
+    public double Height { get; set; }
+
+    public bool Topmost { get; set; } = true;
 }
 
 public enum PopupMode

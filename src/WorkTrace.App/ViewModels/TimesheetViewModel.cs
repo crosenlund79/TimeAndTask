@@ -146,6 +146,7 @@ public sealed partial class TimesheetViewModel(
         copy.Reporting.TimesheetTasksShare = 0;
         copy.Reporting.TimesheetDockHoursToBottom = false;
         copy.Reporting.TimesheetDockedHoursHeight = 0;
+        copy.General.MiniWindow = new();
         return System.Text.Json.JsonSerializer.Serialize(copy);
     }
 

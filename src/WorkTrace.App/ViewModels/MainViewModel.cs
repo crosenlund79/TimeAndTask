@@ -21,6 +21,9 @@ public sealed partial class MainViewModel : ObservableObject
 {
     private object? _pendingParameter;
 
+    /// <summary>The Overview's view model (Ctrl+M toggles Mini Mode from any page).</summary>
+    public HomeViewModel Home { get; }
+
     public MainViewModel(
         HomeViewModel home,
         TasksViewModel tasks,
@@ -33,6 +36,7 @@ public sealed partial class MainViewModel : ObservableObject
         NotificationService notifications,
         WorkTrace.Core.Settings.ISettingsStore settingsStore)
     {
+        Home = home;
         Notifications = notifications;
         _settings = settingsStore;
         Sections =

@@ -24,6 +24,11 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
     private readonly IRegistrationEditor _editor;
     private readonly IDialogService _dialogs;
     private readonly ITimer _refreshTimer;
+    private readonly IMiniMode _miniMode;
+
+    /// <summary>Ctrl+M, the Mini Mode button and the mini window's restore button: switch between the windows (tracking is untouched).</summary>
+    [RelayCommand]
+    private void ToggleMiniMode() => _miniMode.Toggle();
     private bool _loadingCurrent;
     private int? _recordedTaskId;
 
@@ -39,9 +44,11 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
         INavigationService navigation,
         INotificationService notifications,
         TimeProvider timeProvider,
-        ILogger<HomeViewModel> logger)
+        ILogger<HomeViewModel> logger,
+        IMiniMode miniMode)
         : base(notifications, logger)
     {
+        _miniMode = miniMode;
         _statusService = statusService;
         _checkIns = checkIns;
         _navigation = navigation;

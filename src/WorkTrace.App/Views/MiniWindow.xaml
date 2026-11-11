@@ -1,0 +1,56 @@
+<Window x:Class="WorkTrace.App.Views.MiniWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:WorkTrace.App.ViewModels"
+        xmlns:views="clr-namespace:WorkTrace.App.Views"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:HomeViewModel}"
+        x:Name="Self"
+        Title="WorkTrace (Mini)"
+        Icon="pack://application:,,,/WorkTrace;component/Assets/worktrace.ico"
+        Width="400" Height="600" MinWidth="330" MinHeight="240"
+        WindowStyle="None" ResizeMode="CanResize" ShowInTaskbar="True" Topmost="True"
+        WindowStartupLocation="Manual"
+        Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+
+  <!-- Minimal chrome: a slim draggable title bar, resizable from every edge. -->
+  <WindowChrome.WindowChrome>
+    <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False" />
+  </WindowChrome.WindowChrome>
+
+  <Window.InputBindings>
+    <KeyBinding Modifiers="Ctrl" Key="M" Command="{Binding ToggleMiniModeCommand}" />
+    <KeyBinding Key="Escape" Command="{Binding ToggleMiniModeCommand}" />
+  </Window.InputBindings>
+
+  <Border BorderThickness="1" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+    <DockPanel>
+      <Grid DockPanel.Dock="Top" Height="34" Margin="10,0,4,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="WorkTrace" FontFamily="Georgia" FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0" />
+        <TextBlock Grid.Column="1" Text="{Binding Tracking.StatusText}" Style="{StaticResource CaptionText}" VerticalAlignment="Center"
+                   TextTrimming="CharacterEllipsis" ToolTip="{Binding Tracking.StatusDetail}" />
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+          <ToggleButton x:Name="PinButton" Width="28" Height="26" Padding="0" FontSize="12" Margin="0,0,2,0"
+                        IsChecked="{Binding Topmost, ElementName=Self}" WindowChrome.IsHitTestVisibleInChrome="True"
+                        AutomationProperties.Name="Always on top" ToolTip="Always on top (click to unpin)">
+            <TextBlock Text="&#xE718;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" />
+          </ToggleButton>
+          <Button Style="{StaticResource IconButton}" Width="28" Height="26" FontSize="12" Content="&#xE740;"
+                  Command="{Binding ToggleMiniModeCommand}" WindowChrome.IsHitTestVisibleInChrome="True"
+                  AutomationProperties.Name="Restore normal window" ToolTip="Back to the normal window (Ctrl+M or Esc)" />
+        </StackPanel>
+      </Grid>
+      <Border DockPanel.Dock="Top" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}" />
+
+      <!-- The same Today panel as the Overview (same view model): scrolls inside when it is taller than the window. -->
+      <views:TodayPanel IsCompact="True" Margin="8" />
+    </DockPanel>
+  </Border>
+</Window>

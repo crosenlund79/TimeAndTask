@@ -255,3 +255,11 @@ spilled 13 h into the next day.
 **Decision:** a manual registration counts only up to its creation time (read-time rule; stored records stay untouched);
 saving one that ends in the future, or lasts 24 h or more, is refused; the editor rejects equal start and end times; editing
 the running row ends it "now" at saving and makes the chosen task the active task (a check-in).
+
+## ADR-041 — Mini Mode reuses the Overview's Today panel
+**Decision:** the Overview's Today card is a `TodayPanel` control bound to the singleton `HomeViewModel`; Mini Mode shows it
+(compact layout) in a small `MiniWindow` (minimal chrome, resizable, in the taskbar, always on top by default with a pin
+toggle). `WindowManager` (`IMiniMode`) hides/shows the normal window, so its position, size and state are kept; any request
+for the normal window ends Mini Mode. Ctrl+M (and Esc in Mini Mode) toggles inside WorkTrace; it is deliberately not a
+global hotkey, which would take Ctrl+M away from every other application. Placement and pin state live in
+`settings.json` (`General.MiniWindow`). No tracking or registration code is involved.

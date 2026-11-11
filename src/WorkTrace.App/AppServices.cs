@@ -14,6 +14,7 @@ public static class AppServices
     {
         services.AddSingleton(lifetime);
         services.AddSingleton<WindowManager>();
+        services.AddSingleton<IMiniMode>(sp => sp.GetRequiredService<WindowManager>());
         services.AddSingleton<TrayIconService>();
 
         services.AddSingleton<NotificationService>();
