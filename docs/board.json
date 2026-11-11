@@ -1834,7 +1834,7 @@
         "Ctrl+M / buttons switch modes without touching tracking; normal window placement kept; mini window shows today's registrations live with edit/delete and check-ins; movable, resizable, pinnable, in the taskbar; placement and pin remembered."
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Commit a4c4ddf; Windows CI run 60 green (MiniModeTests: switching, live update, placement/pin persistence, no registration changes, no binding errors; UI smoke renders the shared Today panel); installer WorkTrace-Setup-0.2.60",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -1848,8 +1848,8 @@
         }
       ],
       "createdAt": "2026-11-11T08:31:24Z",
-      "updatedAt": "2026-11-11T08:31:24Z",
-      "rev": 1
+      "updatedAt": "2026-11-11T08:38:21Z",
+      "rev": 2
     }
   ]
 }

@@ -21,6 +21,10 @@ _Empty._
 
 - Ctrl+M / buttons switch modes without touching tracking; normal window placement kept; mini window shows today's registrations live with edit/delete and check-ins; movable, resizable, pinnable, in the taskbar; placement and pin remembered.
 
+**Evidence**
+
+Commit a4c4ddf; Windows CI run 60 green (MiniModeTests: switching, live update, placement/pin persistence, no registration changes, no binding errors; UI smoke renders the shared Today panel); installer WorkTrace-Setup-0.2.60
+
 ## Review / Test
 
 ### WT-010 · Scheduled check-ins appear reliably
