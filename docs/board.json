@@ -1825,8 +1825,8 @@
       "title": "Mini Mode: Today panel in a compact always-on-top window (Ctrl+M)",
       "category": "feature",
       "priority": "normal",
-      "status": "doing",
-      "rank": "i",
+      "status": "review",
+      "rank": "zzzzzzy",
       "archived": false,
       "archivedAt": null,
       "description": "",
@@ -1845,11 +1845,19 @@
           "at": "2026-11-11T08:31:24Z",
           "by": "claude",
           "to": "doing"
+        },
+        {
+          "id": "31103409-a02c-43f3-96ff-a6a2b6fb01fd",
+          "type": "status",
+          "at": "2026-11-11T08:38:23Z",
+          "by": "claude",
+          "from": "doing",
+          "to": "review"
         }
       ],
       "createdAt": "2026-11-11T08:31:24Z",
-      "updatedAt": "2026-11-11T08:38:21Z",
-      "rev": 2
+      "updatedAt": "2026-11-11T08:38:23Z",
+      "rev": 3
     }
   ]
 }

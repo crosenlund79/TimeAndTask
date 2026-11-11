@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 1 | 33 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 34 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,17 +13,7 @@ _Empty._
 
 ## In progress
 
-### WT-068 · Mini Mode: Today panel in a compact always-on-top window (Ctrl+M)
-
-`feature` · priority Normal
-
-**Acceptance criteria**
-
-- Ctrl+M / buttons switch modes without touching tracking; normal window placement kept; mini window shows today's registrations live with edit/delete and check-ins; movable, resizable, pinnable, in the taskbar; placement and pin remembered.
-
-**Evidence**
-
-Commit a4c4ddf; Windows CI run 60 green (MiniModeTests: switching, live update, placement/pin persistence, no registration changes, no binding errors; UI smoke renders the shared Today panel); installer WorkTrace-Setup-0.2.60
+_None._
 
 ## Review / Test
 
@@ -535,6 +525,18 @@ Commit dcf29be; Windows CI run 58 green (regression tests: future-reaching regis
 **Evidence**
 
 Commit 12d8132; Windows CI run 59 green (UI smoke renders the Timesheet without binding errors; TimesheetLayout_IsRememberedAcrossSessions_AndClamped); installer WorkTrace-Setup-0.2.59
+
+### WT-068 · Mini Mode: Today panel in a compact always-on-top window (Ctrl+M)
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Ctrl+M / buttons switch modes without touching tracking; normal window placement kept; mini window shows today's registrations live with edit/delete and check-ins; movable, resizable, pinnable, in the taskbar; placement and pin remembered.
+
+**Evidence**
+
+Commit a4c4ddf; Windows CI run 60 green (MiniModeTests: switching, live update, placement/pin persistence, no registration changes, no binding errors; UI smoke renders the shared Today panel); installer WorkTrace-Setup-0.2.60
 
 ## To do
 
