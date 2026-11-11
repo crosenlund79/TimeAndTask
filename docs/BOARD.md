@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 33 | 5 | 0 |
+| 0 | 2 | 8 | 1 | 33 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,7 +13,13 @@ _Empty._
 
 ## In progress
 
-_None._
+### WT-068 · Mini Mode: Today panel in a compact always-on-top window (Ctrl+M)
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Ctrl+M / buttons switch modes without touching tracking; normal window placement kept; mini window shows today's registrations live with edit/delete and check-ins; movable, resizable, pinnable, in the taskbar; placement and pin remembered.
 
 ## Review / Test
 

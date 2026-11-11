@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 68,
+  "nextId": 69,
   "cards": [
     {
       "id": "WT-001",
@@ -1818,6 +1818,38 @@
       "createdAt": "2026-11-10T12:36:27Z",
       "updatedAt": "2026-11-10T12:43:29Z",
       "rev": 3
+    },
+    {
+      "id": "WT-068",
+      "uid": "1907e50c-8026-466a-b45d-e2e1b6fe6390",
+      "title": "Mini Mode: Today panel in a compact always-on-top window (Ctrl+M)",
+      "category": "feature",
+      "priority": "normal",
+      "status": "doing",
+      "rank": "i",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Ctrl+M / buttons switch modes without touching tracking; normal window placement kept; mini window shows today's registrations live with edit/delete and check-ins; movable, resizable, pinnable, in the taskbar; placement and pin remembered."
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "4e258d49-5848-4b19-ad30-003f87d13b9e",
+          "type": "created",
+          "at": "2026-11-11T08:31:24Z",
+          "by": "claude",
+          "to": "doing"
+        }
+      ],
+      "createdAt": "2026-11-11T08:31:24Z",
+      "updatedAt": "2026-11-11T08:31:24Z",
+      "rev": 1
     }
   ]
 }
