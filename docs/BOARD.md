@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 34 | 5 | 0 |
+| 0 | 2 | 8 | 1 | 34 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,7 +13,13 @@ _Empty._
 
 ## In progress
 
-_None._
+### WT-069 · Start WorkTrace with Windows (System > General)
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Off by default; toggling registers/unregisters the current user's login start without admin rights; Start minimised decides visibility; only one instance; still works after an installer upgrade; uninstall removes it.
 
 ## Review / Test
 

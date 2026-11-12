@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 69,
+  "nextId": 70,
   "cards": [
     {
       "id": "WT-001",
@@ -1858,6 +1858,38 @@
       "createdAt": "2026-11-11T08:31:24Z",
       "updatedAt": "2026-11-11T08:38:23Z",
       "rev": 3
+    },
+    {
+      "id": "WT-069",
+      "uid": "ac6ec310-319e-4b06-998b-8e18f9433b8d",
+      "title": "Start WorkTrace with Windows (System > General)",
+      "category": "feature",
+      "priority": "normal",
+      "status": "doing",
+      "rank": "i",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Off by default; toggling registers/unregisters the current user's login start without admin rights; Start minimised decides visibility; only one instance; still works after an installer upgrade; uninstall removes it."
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "26ce45d1-d82a-4a58-ad3d-a64cfcf6be78",
+          "type": "created",
+          "at": "2026-11-12T09:40:43Z",
+          "by": "claude",
+          "to": "doing"
+        }
+      ],
+      "createdAt": "2026-11-12T09:40:43Z",
+      "updatedAt": "2026-11-12T09:40:43Z",
+      "rev": 1
     }
   ]
 }
