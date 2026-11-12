@@ -262,6 +262,10 @@
             <Border Style="{StaticResource Card}" Margin="0,0,0,0">
               <StackPanel>
                 <TextBlock Text="General" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+                <controls:SettingRow Header="Start WorkTrace with Windows"
+                                     Description="Starts when you sign in to Windows (only for you; no administrator rights). &#x201C;Start minimised&#x201D; decides whether the window opens.">
+                  <CheckBox IsChecked="{Binding StartWithWindows}" Content="On" AutomationProperties.Name="Start WorkTrace with Windows" />
+                </controls:SettingRow>
                 <controls:SettingRow Header="Start minimised" Description="Start in the notification area without opening this window.">
                   <CheckBox IsChecked="{Binding StartMinimized}" Content="On" AutomationProperties.Name="Start minimised" />
                 </controls:SettingRow>

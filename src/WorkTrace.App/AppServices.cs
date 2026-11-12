@@ -1,3 +1,4 @@
+using WorkTrace.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using WorkTrace.App.Shell;
 using WorkTrace.App.Tracking;
@@ -14,6 +15,7 @@ public static class AppServices
     {
         services.AddSingleton(lifetime);
         services.AddSingleton<WindowManager>();
+        services.AddSingleton<IAutostart, Interop.RunKeyAutostart>();
         services.AddSingleton<IMiniMode>(sp => sp.GetRequiredService<WindowManager>());
         services.AddSingleton<TrayIconService>();
 

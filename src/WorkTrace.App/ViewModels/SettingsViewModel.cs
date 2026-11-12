@@ -16,6 +16,7 @@ public sealed partial class SettingsViewModel(
     TimeReminderService reminders,
     BackupViewModel backup,
     ScreenshotsViewModel screenshots,
+    IAutostart autostart,
     INotificationService notifications,
     ILogger<SettingsViewModel> logger) : ViewModelBase(notifications, logger), ISectionViewModel
 {
@@ -101,6 +102,10 @@ public sealed partial class SettingsViewModel(
 
     [ObservableProperty]
     public partial bool StartMinimized { get; set; }
+
+    /// <summary>Start WorkTrace when the current user signs in to Windows (no administrator rights; off by default).</summary>
+    [ObservableProperty]
+    public partial bool StartWithWindows { get; set; }
 
     [ObservableProperty]
     public partial bool CloseToTray { get; set; }
@@ -347,6 +352,7 @@ public sealed partial class SettingsViewModel(
         Shortcut = s.General.GlobalShortcut;
         ShortcutError = null;
         StartMinimized = s.General.StartMinimized;
+        StartWithWindows = s.General.StartWithWindows;
         CloseToTray = s.General.CloseToTray;
         AutoAddTasksToBoard = s.Board.AutoAddTasks;
         BoardEnabled = s.Board.IsEnabled;
@@ -494,6 +500,29 @@ public sealed partial class SettingsViewModel(
     partial void OnShutdownReminderChanged(bool value) => Apply(s => s.Reminders.OnShutdown = value);
 
     partial void OnStartMinimizedChanged(bool value) => Apply(s => s.General.StartMinimized = value);
+
+    /// <summary>Registers or removes the login start right away, then remembers the choice.</summary>
+    partial void OnStartWithWindowsChanged(bool value)
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        try
+        {
+            autostart.Apply(value);
+            Apply(s => s.General.StartWithWindows = value);
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or System.IO.IOException or InvalidOperationException)
+        {
+            Logger.LogWarning(ex, "Could not change the Windows start-up registration");
+            Notifications.Show("Could not change starting with Windows. See the log for details.", NotificationKind.Warning);
+            _loading = true;
+            StartWithWindows = !value;
+            _loading = false;
+        }
+    }
 
     partial void OnCloseToTrayChanged(bool value) => Apply(s => s.General.CloseToTray = value);
 

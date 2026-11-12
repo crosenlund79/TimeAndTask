@@ -59,6 +59,11 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
+[Registry]
+; WorkTrace itself writes "Start with Windows" (HKCU Run) when the setting is on and refreshes it at every start;
+; setup never creates it (upgrades keep it), uninstall removes it.
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: none; ValueName: "{#AppName}"; Flags: uninsdeletevalue
+
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "Start WorkTrace"; Flags: nowait postinstall skipifsilent
 

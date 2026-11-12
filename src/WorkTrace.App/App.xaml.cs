@@ -40,7 +40,12 @@ public partial class App : Application, IAppLifetime
         _singleInstance = SingleInstanceGuard.TryAcquire();
         if (_singleInstance is null)
         {
-            SingleInstanceGuard.SignalRunningInstance();
+            // Already running: a login start exits quietly; a user start brings the running WorkTrace forward.
+            if (!e.Args.Contains(Interop.RunKeyAutostart.Argument, StringComparer.OrdinalIgnoreCase))
+            {
+                SingleInstanceGuard.SignalRunningInstance();
+            }
+
             Shutdown(0);
             return;
         }
@@ -82,6 +87,16 @@ public partial class App : Application, IAppLifetime
                 _logger?.LogInformation("Closing at the installer's request");
                 ShutdownCore(exitCode: 0);
             }));
+
+            // Keep the login start in line with the setting and pointing at this executable (valid after upgrades).
+            try
+            {
+                _host.Services.GetRequiredService<IAutostart>().Apply(settings.General.StartWithWindows);
+            }
+            catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or System.IO.IOException or InvalidOperationException)
+            {
+                _logger.LogWarning(ex, "Could not update the Windows start-up registration");
+            }
 
             if (firstRun || !settings.General.StartMinimized || e.Args.Contains("--show", StringComparer.OrdinalIgnoreCase))
             {

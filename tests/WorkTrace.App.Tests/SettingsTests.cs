@@ -24,6 +24,32 @@ public class SettingsTests
     });
 
     [Fact]
+    public Task StartWithWindows_IsOffByDefault_RegistersAtOnce_AndRevertsWhenWindowsRefuses() => WpfTestHost.RunAsync(async () =>
+    {
+        await using var ctx = await UiTestContext.CreateAsync();
+        var vm = ctx.Get<SettingsViewModel>();
+        await vm.ActivateAsync(null);
+        Assert.False(vm.StartWithWindows);
+        Assert.Empty(ctx.Autostart.Applied); // loading the page changes nothing
+
+        vm.StartWithWindows = true;
+        await WpfTestHost.SettleAsync();
+        Assert.True(ctx.Autostart.IsRegistered);
+        Assert.True(ctx.Get<ISettingsStore>().Current.General.StartWithWindows);
+
+        vm.StartWithWindows = false;
+        await WpfTestHost.SettleAsync();
+        Assert.Equal([true, false], ctx.Autostart.Applied);
+        Assert.False(ctx.Get<ISettingsStore>().Current.General.StartWithWindows);
+
+        ctx.Autostart.Fail = true;
+        vm.StartWithWindows = true;
+        await WpfTestHost.SettleAsync();
+        Assert.False(vm.StartWithWindows); // the switch shows the real state
+        Assert.False(ctx.Get<ISettingsStore>().Current.General.StartWithWindows);
+    });
+
+    [Fact]
     public Task InvalidShortcut_IsRejected() => WpfTestHost.RunAsync(async () =>
     {
         await using var ctx = await UiTestContext.CreateAsync();

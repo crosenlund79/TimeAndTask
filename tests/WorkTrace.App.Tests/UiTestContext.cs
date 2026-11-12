@@ -25,6 +25,8 @@ internal sealed class UiTestContext : IAsyncDisposable
 
     public FakeFileDialogService Files { get; } = new();
 
+    public FakeAutostart Autostart { get; } = new();
+
     public FakeTimeProvider Time { get; } = new(new DateTimeOffset(2026, 10, 28, 9, 0, 0, TimeSpan.Zero));
 
     public T Get<T>()
@@ -42,6 +44,7 @@ internal sealed class UiTestContext : IAsyncDisposable
         services.AddWorkTraceApp(new FakeLifetime());
         services.AddSingleton<IDialogService>(context.Dialogs);
         services.AddSingleton<IFileDialogService>(context.Files);
+        services.AddSingleton<WorkTrace.Core.Settings.IAutostart>(context.Autostart); // never touch the runner's registry
         context.Services = services.BuildServiceProvider();
 
         await context.Get<DatabaseInitializer>().InitializeAsync();
@@ -126,4 +129,25 @@ internal sealed class FakeFileDialogService : IFileDialogService
     public void OpenFile(string path) => Opened.Add(path);
 
     public void CopyText(string text) => Opened.Add("copied:" + text);
+}
+
+/// <summary>Records autostart changes instead of writing the Windows Run key.</summary>
+public sealed class FakeAutostart : WorkTrace.Core.Settings.IAutostart
+{
+    public bool IsRegistered { get; private set; }
+
+    public bool Fail { get; set; }
+
+    public List<bool> Applied { get; } = [];
+
+    public void Apply(bool enabled)
+    {
+        if (Fail)
+        {
+            throw new UnauthorizedAccessException("denied");
+        }
+
+        Applied.Add(enabled);
+        IsRegistered = enabled;
+    }
 }
