@@ -1865,8 +1865,8 @@
       "title": "Start WorkTrace with Windows (System > General)",
       "category": "feature",
       "priority": "normal",
-      "status": "doing",
-      "rank": "i",
+      "status": "review",
+      "rank": "zzzzzzz",
       "archived": false,
       "archivedAt": null,
       "description": "",
@@ -1885,11 +1885,19 @@
           "at": "2026-11-12T09:40:43Z",
           "by": "claude",
           "to": "doing"
+        },
+        {
+          "id": "4c485fa2-5ac2-49a0-b8ab-2e92c7145a2b",
+          "type": "status",
+          "at": "2026-11-12T09:47:40Z",
+          "by": "claude",
+          "from": "doing",
+          "to": "review"
         }
       ],
       "createdAt": "2026-11-12T09:40:43Z",
-      "updatedAt": "2026-11-12T09:47:38Z",
-      "rev": 2
+      "updatedAt": "2026-11-12T09:47:40Z",
+      "rev": 3
     }
   ]
 }

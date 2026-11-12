@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 1 | 34 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 35 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,17 +13,7 @@ _Empty._
 
 ## In progress
 
-### WT-069 · Start WorkTrace with Windows (System > General)
-
-`feature` · priority Normal
-
-**Acceptance criteria**
-
-- Off by default; toggling registers/unregisters the current user's login start without admin rights; Start minimised decides visibility; only one instance; still works after an installer upgrade; uninstall removes it.
-
-**Evidence**
-
-Commit ec7c850; Windows CI run 61 green (SettingsTests.StartWithWindows_..., real-app tests unaffected); installer WorkTrace-Setup-0.2.61
+_None._
 
 ## Review / Test
 
@@ -547,6 +537,18 @@ Commit 12d8132; Windows CI run 59 green (UI smoke renders the Timesheet without 
 **Evidence**
 
 Commit a4c4ddf; Windows CI run 60 green (MiniModeTests: switching, live update, placement/pin persistence, no registration changes, no binding errors; UI smoke renders the shared Today panel); installer WorkTrace-Setup-0.2.60
+
+### WT-069 · Start WorkTrace with Windows (System > General)
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Off by default; toggling registers/unregisters the current user's login start without admin rights; Start minimised decides visibility; only one instance; still works after an installer upgrade; uninstall removes it.
+
+**Evidence**
+
+Commit ec7c850; Windows CI run 61 green (SettingsTests.StartWithWindows_..., real-app tests unaffected); installer WorkTrace-Setup-0.2.61
 
 ## To do
 
