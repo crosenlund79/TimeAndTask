@@ -1874,7 +1874,7 @@
         "Off by default; toggling registers/unregisters the current user's login start without admin rights; Start minimised decides visibility; only one instance; still works after an installer upgrade; uninstall removes it."
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Commit ec7c850; Windows CI run 61 green (SettingsTests.StartWithWindows_..., real-app tests unaffected); installer WorkTrace-Setup-0.2.61",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -1888,8 +1888,8 @@
         }
       ],
       "createdAt": "2026-11-12T09:40:43Z",
-      "updatedAt": "2026-11-12T09:40:43Z",
-      "rev": 1
+      "updatedAt": "2026-11-12T09:47:38Z",
+      "rev": 2
     }
   ]
 }

@@ -21,6 +21,10 @@ _Empty._
 
 - Off by default; toggling registers/unregisters the current user's login start without admin rights; Start minimised decides visibility; only one instance; still works after an installer upgrade; uninstall removes it.
 
+**Evidence**
+
+Commit ec7c850; Windows CI run 61 green (SettingsTests.StartWithWindows_..., real-app tests unaffected); installer WorkTrace-Setup-0.2.61
+
 ## Review / Test
 
 ### WT-010 · Scheduled check-ins appear reliably
