@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 70,
+  "nextId": 71,
   "cards": [
     {
       "id": "WT-001",
@@ -1898,6 +1898,38 @@
       "createdAt": "2026-11-12T09:40:43Z",
       "updatedAt": "2026-11-12T09:47:40Z",
       "rev": 3
+    },
+    {
+      "id": "WT-070",
+      "uid": "5bc2e0ab-0bb0-40f4-9e75-de9bd555dd6e",
+      "title": "Popup refinements: inactivity-gated check-ins, strict interval, right-of-centre position, Edit on minor task reminders",
+      "category": "feature",
+      "priority": "high",
+      "status": "doing",
+      "rank": "i",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Automatic check-ins only after 10 s of inactivity (retry 60 s, both in System > Tracking & popup); never two automatic popups closer than the interval; manual check-ins immediate; popup centred two-thirds across the active monitor; minor task reminder has Edit opening the editor; registrations unaffected."
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "5ea80225-26bc-4826-8f62-6ff8b1ee5167",
+          "type": "created",
+          "at": "2026-11-16T12:04:48Z",
+          "by": "claude",
+          "to": "doing"
+        }
+      ],
+      "createdAt": "2026-11-16T12:04:48Z",
+      "updatedAt": "2026-11-16T12:04:48Z",
+      "rev": 1
     }
   ]
 }

@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 35 | 5 | 0 |
+| 0 | 2 | 8 | 1 | 35 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,7 +13,13 @@ _Empty._
 
 ## In progress
 
-_None._
+### WT-070 · Popup refinements: inactivity-gated check-ins, strict interval, right-of-centre position, Edit on minor task reminders
+
+`feature` · priority High
+
+**Acceptance criteria**
+
+- Automatic check-ins only after 10 s of inactivity (retry 60 s, both in System > Tracking & popup); never two automatic popups closer than the interval; manual check-ins immediate; popup centred two-thirds across the active monitor; minor task reminder has Edit opening the editor; registrations unaffected.
 
 ## Review / Test
 
