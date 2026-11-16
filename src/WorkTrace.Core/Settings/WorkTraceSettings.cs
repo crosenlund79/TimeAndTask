@@ -43,6 +43,8 @@ public sealed class WorkTraceSettings
 
         Range(errors, "Tracking.CheckInIntervalMinutes", Tracking.CheckInIntervalMinutes, TrackingSettings.MinIntervalMinutes, TrackingSettings.MaxIntervalMinutes);
         Range(errors, "Tracking.AutoDismissSeconds", Tracking.AutoDismissSeconds, 10, 3600);
+        Range(errors, "Tracking.PopupIdleSeconds", Tracking.PopupIdleSeconds, 0, 600);
+        Range(errors, "Tracking.PopupRetrySeconds", Tracking.PopupRetrySeconds, 10, 1800);
         Range(errors, "Tracking.MaxEstimationHorizonMinutes", Tracking.MaxEstimationHorizonMinutes, 5, 24 * 60);
         Range(errors, "Tracking.LockGraceMinutes", Tracking.LockGraceMinutes, 0, 120);
         if (Tracking.MaxEstimationHorizonMinutes < Tracking.CheckInIntervalMinutes)
@@ -185,6 +187,12 @@ public sealed class TrackingSettings
     public PopupPosition PopupPosition { get; set; } = PopupPosition.BottomRight;
 
     public int AutoDismissSeconds { get; set; } = 120;
+
+    /// <summary>An automatic check-in appears only after this much keyboard/mouse inactivity (0 = always at once).</summary>
+    public int PopupIdleSeconds { get; set; } = 10;
+
+    /// <summary>While the user is active, a due automatic check-in is checked again after this long.</summary>
+    public int PopupRetrySeconds { get; set; } = 60;
 
     public bool ReminderSound { get; set; }
 

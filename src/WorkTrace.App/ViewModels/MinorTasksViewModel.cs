@@ -220,8 +220,21 @@ public sealed partial class MinorTasksViewModel : ViewModelBase
         var local = item.Summary.ReminderAtUtc is { } r ? TimeZoneInfo.ConvertTimeFromUtc(r, TimeZoneInfo.Local) : (DateTime?)null;
         EditReminderDate = local?.Date;
         EditReminderTime = local?.ToString("HH:mm", CultureInfo.InvariantCulture) ?? "09:00";
+        EditCompleted = item.Summary.IsCompleted;
         EditError = null;
     }
+
+    /// <summary>Opens the editor for a minor task (open or completed), e.g. from its reminder popup.</summary>
+    public bool EditById(int id)
+    {
+        var item = Active.Concat(Completed).FirstOrDefault(i => i.Id == id);
+        Edit(item);
+        return item is not null;
+    }
+
+    /// <summary>Done in the editor: saving marks it done (no more reminders) or reopens it.</summary>
+    [ObservableProperty]
+    public partial bool EditCompleted { get; set; }
 
     [RelayCommand]
     private void CancelEdit() => Editing = null;
@@ -244,6 +257,10 @@ public sealed partial class MinorTasksViewModel : ViewModelBase
         try
         {
             await _minorTasks.UpdateAsync(item.Id, new MinorTaskInput(EditTitle, EditDescription, PickerOption.FromKey(EditClientKey ?? 0), reminder));
+            if (EditCompleted != item.Summary.IsCompleted)
+            {
+                await _minorTasks.SetCompletedAsync(item.Id, EditCompleted);
+            }
         }
         catch (DomainValidationException ex)
         {

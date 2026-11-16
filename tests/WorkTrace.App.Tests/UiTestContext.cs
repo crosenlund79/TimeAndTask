@@ -45,6 +45,7 @@ internal sealed class UiTestContext : IAsyncDisposable
         services.AddSingleton<IDialogService>(context.Dialogs);
         services.AddSingleton<IFileDialogService>(context.Files);
         services.AddSingleton<WorkTrace.Core.Settings.IAutostart>(context.Autostart); // never touch the runner's registry
+        services.AddSingleton<WorkTrace.Core.Tracking.IUserIdleProbe>(new UnknownIdle()); // UI tests type real keys: never defer their popups
         context.Services = services.BuildServiceProvider();
 
         await context.Get<DatabaseInitializer>().InitializeAsync();
@@ -150,4 +151,10 @@ public sealed class FakeAutostart : WorkTrace.Core.Settings.IAutostart
         Applied.Add(enabled);
         IsRegistered = enabled;
     }
+}
+
+/// <summary>Idle time unknown (counts as idle), so automatic check-ins in UI tests are never deferred by the test's own input.</summary>
+public sealed class UnknownIdle : WorkTrace.Core.Tracking.IUserIdleProbe
+{
+    public TimeSpan? GetIdleTime() => null;
 }

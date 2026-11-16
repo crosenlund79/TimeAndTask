@@ -108,6 +108,12 @@ internal sealed class TrackingStore(IDbContextFactory<WorkTraceDbContext> contex
         await db.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<DateTime?> GetLastPromptShownAsync(CancellationToken cancellationToken = default)
+    {
+        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+        return await db.CheckInPrompts.AsNoTracking().Where(p => p.ShownAtUtc != null).MaxAsync(p => p.ShownAtUtc, cancellationToken);
+    }
+
     public async Task<int> CreatePromptAsync(DateTime scheduledAtUtc, DateTime? shownAtUtc, CheckInOutcome outcome, CancellationToken cancellationToken = default)
     {
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);

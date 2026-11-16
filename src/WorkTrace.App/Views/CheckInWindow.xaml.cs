@@ -201,20 +201,48 @@ public partial class CheckInWindow : Window
         Close();
     }
 
+    /// <summary>
+    /// On the monitor in use (foreground window, else mouse pointer). "Centre" puts the popup's centre two-thirds across
+    /// the work area, vertically centred, so it is not in the middle of the user's work. Always fully inside the work area.
+    /// </summary>
     private void PlaceOnScreen()
     {
-        var area = SystemParameters.WorkArea;
+        var area = MonitorWorkArea();
+        var width = ActualWidth > 0 ? ActualWidth : Width;
         var height = ActualHeight > 0 ? ActualHeight : 320;
-        Left = _position == PopupPosition.Center
-            ? area.Left + ((area.Width - Width) / 2)
-            : area.Right - Width - ScreenMargin;
-        Top = _position switch
+        var left = _position == PopupPosition.Center
+            ? area.Left + (area.Width * 2 / 3) - (width / 2)
+            : area.Right - width - ScreenMargin;
+        var top = _position switch
         {
             PopupPosition.TopRight => area.Top + ScreenMargin,
             PopupPosition.Center => area.Top + ((area.Height - height) / 2),
             _ => area.Bottom - height - ScreenMargin,
         };
+        Left = Math.Max(area.Left, Math.Min(left, area.Right - width));
+        Top = Math.Max(area.Top, Math.Min(top, area.Bottom - height));
     }
+
+    /// <summary>The active monitor's work area in device-independent units (the primary one if unavailable).</summary>
+    /// <remarks>Decided once per popup, so growing or clicking it never moves it to another screen.</remarks>
+    private Rect MonitorWorkArea()
+    {
+        if (_workArea is { } known)
+        {
+            return known;
+        }
+
+        if (NativeMethods.ActiveMonitorWorkArea(new WindowInteropHelper(this).Handle) is { } work)
+        {
+            var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(this);
+            _workArea = new Rect(work.Left / dpi.DpiScaleX, work.Top / dpi.DpiScaleY, (work.Right - work.Left) / dpi.DpiScaleX, (work.Bottom - work.Top) / dpi.DpiScaleY);
+            return _workArea.Value;
+        }
+
+        return SystemParameters.WorkArea;
+    }
+
+    private Rect? _workArea;
 
     /// <summary>
     /// After activation WPF focuses the window itself, not a control; then typing goes nowhere. Move focus

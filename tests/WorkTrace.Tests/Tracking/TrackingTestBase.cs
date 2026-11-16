@@ -30,6 +30,9 @@ public abstract class TrackingTestBase : IAsyncLifetime
 
     protected FakePresenter Presenter { get; } = new();
 
+    /// <summary>Keyboard/mouse idle time the engine sees; null (unknown) counts as idle.</summary>
+    protected FakeIdleProbe Idle { get; } = new();
+
     protected ISettingsStore Settings => Services.GetRequiredService<ISettingsStore>();
 
     protected ITrackingStore Store => Services.GetRequiredService<ITrackingStore>();
@@ -71,7 +74,7 @@ public abstract class TrackingTestBase : IAsyncLifetime
 
     protected async Task StartEngineAsync()
     {
-        Engine = new TrackingEngine(Store, Settings, Presenter, Clock, NullLogger<TrackingEngine>.Instance, TimeZoneInfo.Utc, Monotonic, checkIns: CheckIns);
+        Engine = new TrackingEngine(Store, Settings, Presenter, Clock, NullLogger<TrackingEngine>.Instance, TimeZoneInfo.Utc, Monotonic, checkIns: CheckIns, idleProbe: Idle);
         await Engine.StartAsync(Ct);
     }
 
@@ -178,4 +181,11 @@ public sealed class FakePresenter : ICheckInPresenter
             shown.Completion.TrySetResult(PromptOutcome.Closed);
         }
     }
+}
+
+public sealed class FakeIdleProbe : IUserIdleProbe
+{
+    public TimeSpan? IdleTime { get; set; }
+
+    public TimeSpan? GetIdleTime() => IdleTime;
 }

@@ -49,9 +49,43 @@ public sealed partial class SettingsViewModel(
         new(300, "After 5 minutes"), new(600, "After 10 minutes"),
     ];
 
+    /// <summary>Keyboard/mouse inactivity before an automatic check-in may appear (keys avoid the picker's 0 = none).</summary>
+    public IReadOnlyList<PickerOption> IdleOptions { get; } =
+    [
+        new(1000, "Show at once"), new(5, "5 seconds"), new(10, "10 seconds"), new(20, "20 seconds"), new(30, "30 seconds"), new(60, "1 minute"),
+    ];
+
+    public IReadOnlyList<PickerOption> RetryOptions { get; } =
+    [
+        new(30, "30 seconds"), new(60, "1 minute"), new(120, "2 minutes"), new(300, "5 minutes"),
+    ];
+
+    /// <summary>Picker key of <see cref="TrackingSettings.PopupIdleSeconds"/> (1000 = 0 seconds, "show at once").</summary>
+    [ObservableProperty]
+    public partial int? IdleKey { get; set; }
+
+    [ObservableProperty]
+    public partial int? RetrySeconds { get; set; }
+
+    partial void OnIdleKeyChanged(int? value)
+    {
+        if (value is { } key)
+        {
+            Apply(s => s.Tracking.PopupIdleSeconds = key == 1000 ? 0 : key);
+        }
+    }
+
+    partial void OnRetrySecondsChanged(int? value)
+    {
+        if (value is { } seconds)
+        {
+            Apply(s => s.Tracking.PopupRetrySeconds = seconds);
+        }
+    }
+
     public IReadOnlyList<PickerOption> PositionOptions { get; } =
     [
-        new((int)PopupPosition.BottomRight, "Bottom right"), new((int)PopupPosition.TopRight, "Top right"), new((int)PopupPosition.Center, "Centre of the screen"),
+        new((int)PopupPosition.BottomRight, "Bottom right"), new((int)PopupPosition.TopRight, "Top right"), new((int)PopupPosition.Center, "Right of centre"),
     ];
 
     [ObservableProperty]
@@ -345,6 +379,8 @@ public sealed partial class SettingsViewModel(
         IsUnobtrusiveMode = s.Tracking.PopupMode == PopupMode.Unobtrusive;
         PositionKey = (int)s.Tracking.PopupPosition;
         AutoDismissSeconds = s.Tracking.AutoDismissSeconds;
+        IdleKey = s.Tracking.PopupIdleSeconds == 0 ? 1000 : s.Tracking.PopupIdleSeconds;
+        RetrySeconds = s.Tracking.PopupRetrySeconds;
         ReminderSound = s.Tracking.ReminderSound;
         RememberLastTask = s.Tracking.RememberLastTask;
         PromptOnStart = s.Tracking.PromptOnStart;

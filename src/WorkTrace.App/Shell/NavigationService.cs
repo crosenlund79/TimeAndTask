@@ -26,3 +26,6 @@ public sealed record CreateNewRequest;
 
 /// <summary>Opens the Tasks page on its planning timeline.</summary>
 public sealed record ShowTimelineRequest;
+
+/// <summary>Navigation parameter: open a minor task in its editor (from its reminder popup).</summary>
+public sealed record EditMinorTaskRequest(int MinorTaskId);

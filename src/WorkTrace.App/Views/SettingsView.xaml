@@ -91,7 +91,17 @@
                   <ComboBox Width="180" ItemsSource="{Binding PositionOptions}" DisplayMemberPath="Name"
                             SelectedValuePath="Id" SelectedValue="{Binding PositionKey}" AutomationProperties.Name="Popup position" />
                 </controls:SettingRow>
-                <controls:SettingRow Header="Close unanswered check-ins" Description="An unanswered check-in makes the time after it uncertain. The countdown stops as soon as you interact.">
+                <controls:SettingRow Header="Wait for a pause in typing"
+                                     Description="Automatic check-ins appear only after this long without keyboard or mouse use. Check-ins you open yourself appear at once.">
+                  <ComboBox Width="180" ItemsSource="{Binding IdleOptions}" DisplayMemberPath="Name"
+                            SelectedValuePath="Id" SelectedValue="{Binding IdleKey}" AutomationProperties.Name="Required inactivity before popup" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="While you are busy, check again after"
+                                     Description="A due check-in waits silently and is tried again after this delay. It is never repeated or queued.">
+                  <ComboBox Width="180" ItemsSource="{Binding RetryOptions}" DisplayMemberPath="Name"
+                            SelectedValuePath="Id" SelectedValue="{Binding RetrySeconds}" AutomationProperties.Name="Retry delay when active" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="Close unanswered check-ins" Description="An unanswered check-in never changes the task being registered. The countdown stops as soon as you interact.">
                   <ComboBox Width="180" ItemsSource="{Binding AutoDismissOptions}" DisplayMemberPath="Name"
                             SelectedValuePath="Id" SelectedValue="{Binding AutoDismissSeconds}" AutomationProperties.Name="Auto-dismiss" />
                 </controls:SettingRow>

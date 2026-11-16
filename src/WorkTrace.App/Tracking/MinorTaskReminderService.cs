@@ -20,6 +20,7 @@ internal sealed class MinorTaskReminderService(
     ICheckInPresenter checkIns,
     TimeReminderService timeReminders,
     ReminderSlot slot,
+    WorkTrace.App.Shell.WindowManager windows,
     TimeProvider timeProvider,
     ILogger<MinorTaskReminderService> logger) : IDisposable
 {
@@ -90,14 +91,20 @@ internal sealed class MinorTaskReminderService(
             + (string.IsNullOrWhiteSpace(task.Description) ? "" : "\n" + task.Description)
             + (task.ClientName is { } client ? $"\n{client}" : "")
             + (more > 0 ? $"\n\n({more} more minor task{(more == 1 ? "" : "s")} due)" : "");
-        var window = new TimeReminderWindow("Reminder", message, yesNo: true, AutoClose, ("Mark done", "Remind me later", " · minor task"))
+        var window = new TimeReminderWindow("Reminder", message, yesNo: true, AutoClose, ("Mark done", "Remind me later", " · minor task"), showEdit: true)
         {
             ShowActivated = false,
         };
         window.Show();
-        if (await window.Answer == ReminderAnswer.Done)
+        switch (await window.Answer)
         {
-            await minorTasks.SetCompletedAsync(task.Id, true);
+            case ReminderAnswer.Done:
+                await minorTasks.SetCompletedAsync(task.Id, true);
+                break;
+            case ReminderAnswer.Edit:
+                // The snooze above keeps it quiet while it is edited; a changed reminder time starts afresh, Done ends it.
+                windows.ShowMainWindow(WorkTrace.App.Shell.AppSection.Tasks, new WorkTrace.App.Shell.EditMinorTaskRequest(task.Id));
+                break;
         }
 
         MinorTasksViewModel.RaiseChanged();

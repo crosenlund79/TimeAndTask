@@ -122,6 +122,8 @@ public sealed partial class TrackingController : ObservableObject
         CheckInAttemptResult.SkippedPopupOpen => "skipped, a check-in was already open",
         CheckInAttemptResult.SuppressedLocked => "held back, session locked",
         CheckInAttemptResult.NotTracking => "not shown, tracking not active",
+        CheckInAttemptResult.DeferredActive => "waiting for a pause in typing or mouse use",
+        CheckInAttemptResult.SkippedTooSoon => "skipped, the previous check-in was less than an interval ago",
         _ => "failed",
     };
 

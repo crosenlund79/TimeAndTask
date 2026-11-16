@@ -48,6 +48,73 @@ internal static partial class NativeMethods
     [LibraryImport("user32.dll")]
     internal static partial IntPtr GetForegroundWindow();
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct LASTINPUTINFO
+    {
+        public uint cbSize;
+        public uint dwTime;
+    }
+
+    /// <summary>Tick count of the session's last keyboard/mouse input (Windows keeps it; reading it records nothing).</summary>
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool GetLastInputInfo(ref LASTINPUTINFO plii);
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct POINT
+    {
+        public int X;
+        public int Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct RECT
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MONITORINFO
+    {
+        public uint cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public uint dwFlags;
+    }
+
+    internal const uint MONITOR_DEFAULTTONEAREST = 2;
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool GetCursorPos(out POINT point);
+
+    [LibraryImport("user32.dll")]
+    internal static partial IntPtr MonitorFromPoint(POINT point, uint flags);
+
+    [LibraryImport("user32.dll")]
+    internal static partial IntPtr MonitorFromWindow(IntPtr hwnd, uint flags);
+
+    [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool GetMonitorInfo(IntPtr monitor, ref MONITORINFO info);
+
+    /// <summary>
+    /// Work area (pixels) of the monitor in use: the one with the foreground window, else the one with the mouse
+    /// pointer (when the foreground window is <paramref name="self"/> or there is none). Null when unavailable.
+    /// </summary>
+    internal static RECT? ActiveMonitorWorkArea(IntPtr self)
+    {
+        var foreground = GetForegroundWindow();
+        var monitor = foreground != IntPtr.Zero && foreground != self
+            ? MonitorFromWindow(foreground, MONITOR_DEFAULTTONEAREST)
+            : GetCursorPos(out var point) ? MonitorFromPoint(point, MONITOR_DEFAULTTONEAREST) : IntPtr.Zero;
+        var info = new MONITORINFO { cbSize = (uint)Marshal.SizeOf<MONITORINFO>() };
+        return monitor != IntPtr.Zero && GetMonitorInfo(monitor, ref info) ? info.rcWork : null;
+    }
+
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static partial bool SetForegroundWindow(IntPtr hWnd);

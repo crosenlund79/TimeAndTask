@@ -16,6 +16,7 @@ public static class AppServices
         services.AddSingleton(lifetime);
         services.AddSingleton<WindowManager>();
         services.AddSingleton<IAutostart, Interop.RunKeyAutostart>();
+        services.AddSingleton<WorkTrace.Core.Tracking.IUserIdleProbe, Interop.UserIdleProbe>();
         services.AddSingleton<IMiniMode>(sp => sp.GetRequiredService<WindowManager>());
         services.AddSingleton<TrayIconService>();
 

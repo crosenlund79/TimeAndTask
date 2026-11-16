@@ -10,6 +10,9 @@ public enum ReminderAnswer
     NotYet = 0,
     Done = 1,
     Tomorrow = 2,
+
+    /// <summary>Open the item in its editor (minor task reminders).</summary>
+    Edit = 3,
 }
 
 /// <summary>
@@ -22,9 +25,11 @@ public partial class TimeReminderWindow : Window
     private readonly DispatcherTimer _autoClose;
 
     /// <param name="yesNo">Shutdown style: only Yes / No (labels replaceable through <paramref name="labels"/>).</param>
-    public TimeReminderWindow(string heading, string message, bool yesNo, TimeSpan autoClose, (string Yes, string No, string Caption)? labels = null)
+    /// <param name="showEdit">Adds an Edit button (minor task reminders).</param>
+    public TimeReminderWindow(string heading, string message, bool yesNo, TimeSpan autoClose, (string Yes, string No, string Caption)? labels = null, bool showEdit = false)
     {
         InitializeComponent();
+        EditButton.Visibility = showEdit ? Visibility.Visible : Visibility.Collapsed;
         HeadingText.Text = heading;
         MessageText.Text = message;
         if (labels is { } l)
@@ -67,6 +72,8 @@ public partial class TimeReminderWindow : Window
     private void OnNotYet(object sender, RoutedEventArgs e) => Finish(ReminderAnswer.NotYet);
 
     private void OnTomorrow(object sender, RoutedEventArgs e) => Finish(ReminderAnswer.Tomorrow);
+
+    private void OnEdit(object sender, RoutedEventArgs e) => Finish(ReminderAnswer.Edit);
 
     private void OnClose(object sender, RoutedEventArgs e) => Finish(ReminderAnswer.NotYet);
 

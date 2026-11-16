@@ -41,6 +41,12 @@ public enum CheckInAttemptResult
     Answered = 5,
     Missed = 6,
     Dismissed = 7,
+
+    /// <summary>Not shown yet: keyboard or mouse was in use; checked again after the retry delay (nothing is stored).</summary>
+    DeferredActive = 8,
+
+    /// <summary>Not shown: the previous automatic check-in appeared less than one check-in interval ago.</summary>
+    SkippedTooSoon = 9,
 }
 
 public sealed record CheckInAttempt(DateTime AtUtc, CheckInAttemptResult Result);
@@ -63,6 +69,15 @@ public sealed record TrackingStatus(
 public interface ISessionStateProbe
 {
     bool? IsSessionLocked();
+}
+
+/// <summary>
+/// Time since the last keyboard or mouse input in the session (Windows' own counter, read on demand: no input is
+/// recorded and nothing polls). Null when it cannot be determined, which counts as idle.
+/// </summary>
+public interface IUserIdleProbe
+{
+    TimeSpan? GetIdleTime();
 }
 
 /// <summary>How a shown check-in popup ended.</summary>
@@ -124,6 +139,9 @@ public interface ITrackingStore
     Task EndLockAsync(int lockId, DateTime endUtc, CancellationToken cancellationToken = default);
 
     Task<int> CreatePromptAsync(DateTime scheduledAtUtc, DateTime? shownAtUtc, CheckInOutcome outcome, CancellationToken cancellationToken = default);
+
+    /// <summary>When the most recent check-in popup was shown (any run), or null.</summary>
+    Task<DateTime?> GetLastPromptShownAsync(CancellationToken cancellationToken = default);
 
     /// <summary>Sets the outcome of a prompt that is still pending; resolved prompts are left alone.</summary>
     Task ResolvePromptAsync(int promptId, CheckInOutcome outcome, DateTime resolvedAtUtc, CancellationToken cancellationToken = default);

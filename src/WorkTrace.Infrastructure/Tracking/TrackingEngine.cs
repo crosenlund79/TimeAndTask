@@ -65,7 +65,6 @@ public sealed class TrackingEngine : IAsyncDisposable
     private int? _openPromptId;
     private DateTime? _nextPromptUtc;
     private (DateTime DueUtc, PromptReason Reason)? _extraPrompt;
-    private DateTime? _lastPromptUtc;
     private DateTime _baselineWallUtc;
 
     /// <summary>The last moment the engine is known to have run while tracking (timer runs, segment starts).</summary>
@@ -74,6 +73,13 @@ public sealed class TrackingEngine : IAsyncDisposable
     private DateTime? _suspendedAtUtc;
 
     private readonly ICheckInService? _checkIns;
+    private readonly IUserIdleProbe? _idleProbe;
+
+    /// <summary>When the last automatic popup appeared (this run or, after a restart, from the database).</summary>
+    private DateTime? _lastAutoShownUtc;
+
+    /// <summary>One automatic check-in waiting for a pause in keyboard/mouse use (never more than one; nothing stored yet).</summary>
+    private (DateTime ScheduledUtc, PromptReason Reason, DateTime RetryUtc)? _pending;
     private long _baselineTimestamp;
     private CheckInAttempt? _lastAttempt;
     private string? _lastError;
@@ -92,8 +98,10 @@ public sealed class TrackingEngine : IAsyncDisposable
         TimeZoneInfo? timeZone = null,
         TimeProvider? monotonicClock = null,
         ISessionStateProbe? sessionProbe = null,
-        ICheckInService? checkIns = null)
+        ICheckInService? checkIns = null,
+        IUserIdleProbe? idleProbe = null)
     {
+        _idleProbe = idleProbe;
         _sessionProbe = sessionProbe;
         _checkIns = checkIns;
         _store = store;
@@ -125,6 +133,7 @@ public sealed class TrackingEngine : IAsyncDisposable
             }
 
             var repaired = await _store.RecoverAsync(cancellationToken);
+            _lastAutoShownUtc = await _store.GetLastPromptShownAsync(cancellationToken); // spacing holds across restarts
             _started = true;
             _timer = _time.CreateTimer(_ => _lastTimerRun = OnTimerAsync(), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
             _settings.Changed += OnSettingsChanged;
@@ -262,8 +271,8 @@ public sealed class TrackingEngine : IAsyncDisposable
                 return;
             }
 
-            result = await TriggerPromptAsync(now, PromptReason.Scheduled, now, ct);
-            _nextPromptUtc = ComputeNextPrompt(now);
+            // Asked for by the user: shown at once (no inactivity wait, no spacing) and the automatic schedule is unchanged.
+            result = await ShowPromptAsync(now, PromptReason.Scheduled, now, automatic: false, ct);
         });
 
         return result;
@@ -283,6 +292,12 @@ public sealed class TrackingEngine : IAsyncDisposable
             await WithGateAsync(async ct =>
             {
                 var now = Now;
+                if (_pending is not null)
+                {
+                    _pending = null; // the user just answered: the owed check-in is done
+                    _nextPromptUtc = ComputeNextPrompt(now);
+                }
+
                 if (_suspended)
                 {
                     _logger.LogWarning("Check-in while marked asleep; resuming tracking");
@@ -377,12 +392,17 @@ public sealed class TrackingEngine : IAsyncDisposable
                     SetBaseline(now);
                 }
 
-                if (_extraPrompt is { } extra && extra.DueUtc <= now)
+                // One automatic prompt per run at most: a deferred one first, then a start/resume prompt, then the slot.
+                if (_pending is { } pending && pending.RetryUtc <= now)
+                {
+                    await TriggerPromptAsync(pending.ScheduledUtc, pending.Reason, now, ct);
+                }
+                else if (_extraPrompt is { } extra && extra.DueUtc <= now)
                 {
                     _extraPrompt = null;
                     await TriggerPromptAsync(now, extra.Reason, now, ct);
                 }
-                else if (_nextPromptUtc is { } due && due <= now)
+                else if (_pending is null && _nextPromptUtc is { } due && due <= now)
                 {
                     // Scheduled at the slot time: that is where uncertainty starts if unanswered.
                     await TriggerPromptAsync(due, PromptReason.Scheduled, now, ct);
@@ -400,10 +420,31 @@ public sealed class TrackingEngine : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// An automatic check-in is due. It appears only if the previous automatic popup is at least one check-in interval
+    /// ago, no popup is open, the session is not locked and the keyboard/mouse have been idle long enough; while the
+    /// user is active it waits as the single pending prompt and is checked again after the retry delay. Nothing here
+    /// touches the registrations.
+    /// </summary>
     private async Task<CheckInAttemptResult> TriggerPromptAsync(DateTime scheduledUtc, PromptReason reason, DateTime now, CancellationToken ct)
     {
-        _lastPromptUtc = now;
+        _pending = null;
+        if (_lastAutoShownUtc is { } last && last <= now && now - last < TimeSpan.FromMinutes(Tracking.CheckInIntervalMinutes))
+        {
+            return Record(now, CheckInAttemptResult.SkippedTooSoon, reason.ToString());
+        }
 
+        if (!_presenter.IsOpen && !_locked && _idleProbe?.GetIdleTime() is { } idle && idle < TimeSpan.FromSeconds(Tracking.PopupIdleSeconds))
+        {
+            _pending = (scheduledUtc, reason, now + TimeSpan.FromSeconds(Tracking.PopupRetrySeconds));
+            return Record(now, CheckInAttemptResult.DeferredActive, reason.ToString());
+        }
+
+        return await ShowPromptAsync(scheduledUtc, reason, now, automatic: true, ct);
+    }
+
+    private async Task<CheckInAttemptResult> ShowPromptAsync(DateTime scheduledUtc, PromptReason reason, DateTime now, bool automatic, CancellationToken ct)
+    {
         if (_presenter.IsOpen)
         {
             // The user is already looking at a check-in; a second popup would only get in the way.
@@ -429,6 +470,11 @@ public sealed class TrackingEngine : IAsyncDisposable
 
         var promptId = await _store.CreatePromptAsync(scheduledUtc, now, CheckInOutcome.Pending, ct);
         _openPromptId = promptId;
+        if (automatic)
+        {
+            _lastAutoShownUtc = now;
+        }
+
         Record(now, CheckInAttemptResult.Shown, reason.ToString());
         _lastPromptRun = RunPromptAsync(promptId, scheduledUtc, reason);
         return CheckInAttemptResult.Shown;
@@ -525,6 +571,7 @@ public sealed class TrackingEngine : IAsyncDisposable
 
         _nextPromptUtc = null;
         _extraPrompt = null;
+        _pending = null;
     }
 
     private async Task EndLockAsync(DateTime now, CancellationToken ct)
@@ -597,7 +644,6 @@ public sealed class TrackingEngine : IAsyncDisposable
         }
 
         SetBaseline(now);
-        _lastPromptUtc = null;
         _nextPromptUtc = ComputeNextPrompt(now);
     }
 
@@ -633,7 +679,6 @@ public sealed class TrackingEngine : IAsyncDisposable
             }
 
             SetBaseline(now);
-            _lastPromptUtc = null;
             _nextPromptUtc = ComputeNextPrompt(now);
         }
 
@@ -644,15 +689,21 @@ public sealed class TrackingEngine : IAsyncDisposable
 
     private DateTime? ComputeNextPrompt(DateTime now)
     {
-        if (!Tracking.PeriodicPromptsEnabled || _segmentId is null)
+        // While a deferred prompt is pending it is the one owed: overdue slots are never queued.
+        if (!Tracking.PeriodicPromptsEnabled || _segmentId is null || _pending is not null)
         {
             return null;
         }
 
-        // Keep prompts at least half an interval apart (e.g. a start-up prompt at 9:28 skips the 9:30 slot).
+        // Counted from the last automatic popup's appearance (also a deferred or start-up one): exactly one interval later.
+        // Without a recent appearance (first one of the day, after a long pause) the next clock-aligned slot.
         var interval = TimeSpan.FromMinutes(Tracking.CheckInIntervalMinutes);
-        var after = _lastPromptUtc is { } last && last + (interval / 2) > now ? last + (interval / 2) : now;
-        return CheckInSchedule.NextSlotUtc(after, Tracking.CheckInIntervalMinutes, _timeZone);
+        if (_lastAutoShownUtc is { } last && (last < now ? last : now) + interval is var fromLast && fromLast > now)
+        {
+            return fromLast;
+        }
+
+        return CheckInSchedule.NextSlotUtc(now, Tracking.CheckInIntervalMinutes, _timeZone);
     }
 
     private void Reschedule()
@@ -680,6 +731,7 @@ public sealed class TrackingEngine : IAsyncDisposable
         {
             Consider(_nextPromptUtc);
             Consider(_extraPrompt?.DueUtc);
+            Consider(_pending?.RetryUtc);
             Consider(_baselineWallUtc + HeartbeatInterval);
         }
         else if (_paused && Tracking.PausedUntilUtc is { } until)
@@ -727,6 +779,12 @@ public sealed class TrackingEngine : IAsyncDisposable
             if (_extraPrompt is { } pending && (pending.Reason == PromptReason.WelcomeBack ? !Tracking.PeriodicPromptsEnabled : !Tracking.PromptOnStart))
             {
                 _extraPrompt = null;
+            }
+
+            if (_pending is { Reason: PromptReason.Scheduled } && !Tracking.PeriodicPromptsEnabled)
+            {
+                _pending = null;
+                _nextPromptUtc = ComputeNextPrompt(now);
             }
         });
 

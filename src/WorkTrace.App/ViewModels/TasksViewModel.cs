@@ -195,6 +195,13 @@ public sealed partial class TasksViewModel : ViewModelBase, ISectionViewModel, I
             NewTask();
         }
 
+        if (parameter is EditMinorTaskRequest edit)
+        {
+            ShowTimeline = false;
+            MinorGroup.IsExpanded = true;
+            Minor.EditById(edit.MinorTaskId);
+        }
+
     }
 
     partial void OnSearchTextChanged(string? value) => ScheduleReload();

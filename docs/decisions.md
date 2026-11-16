@@ -263,3 +263,12 @@ toggle). `WindowManager` (`IMiniMode`) hides/shows the normal window, so its pos
 for the normal window ends Mini Mode. Ctrl+M (and Esc in Mini Mode) toggles inside WorkTrace; it is deliberately not a
 global hotkey, which would take Ctrl+M away from every other application. Placement and pin state live in
 `settings.json` (`General.MiniWindow`). No tracking or registration code is involved.
+
+## ADR-042 — Automatic check-ins wait for a pause and keep a strict minimum spacing
+**Decision (owner, 2026-11-16):** an automatic check-in that becomes due while the keyboard or mouse was used within
+`PopupIdleSeconds` (10 s) is held as the single pending prompt (nothing stored) and checked again after
+`PopupRetrySeconds` (60 s); it appears once the user pauses. The next automatic popup is due exactly one check-in interval
+after the last automatic appearance (persisted via the prompts table, so also across restarts); start/resume/welcome-back
+prompts that would come sooner are skipped (`SkippedTooSoon`). Manual check-ins appear at once and leave the schedule alone.
+Idle time comes from Windows' last-input counter, read only when a prompt is due (no hooks, no input logging, no polling).
+The "Right of centre" position puts the popup's centre two-thirds across the active monitor's work area.

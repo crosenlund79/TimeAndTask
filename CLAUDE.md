@@ -63,7 +63,10 @@ dotnet tool restore && dotnet ef migrations add <Name> -p src/WorkTrace.Infrastr
 - Tracking is owned by `TrackingEngine` (Infrastructure): one timer, state changes serialised by a gate,
   popups shown via `ICheckInPresenter` without holding the gate. Segments end at the moment tracking stops
   (pause/sleep/shutdown/clock jump); crash recovery closes them at the last heartbeat. Prompts are never
-  replayed (next slot computed from now); unanswered prompts are stored Missed/Dismissed/Suppressed.
+  replayed or queued; unanswered prompts are stored Missed/Dismissed/Suppressed. Automatic popups (slots, start/resume,
+  welcome back) are at least one check-in interval apart, counted from the last automatic appearance, and wait for
+  `PopupIdleSeconds` of keyboard/mouse inactivity (`IUserIdleProbe`, GetLastInputInfo on demand) as one pending prompt
+  retried every `PopupRetrySeconds`; manual check-ins bypass both and never move the schedule (ADR-042).
   Pause state lives in settings (`Tracking.Enabled`, `PausedUntilUtc`) so it survives restarts.
 - Manual check-ins always activate the popup (escalating `ForceForeground`, focus the search box explicitly);
   scheduled popups in Unobtrusive mode must never take focus. `FocusTests` (incl. a real-keystroke test from

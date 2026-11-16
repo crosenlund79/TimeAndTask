@@ -26,7 +26,7 @@ public class TrackingEngineTests : TrackingTestBase
     }
 
     [Fact]
-    public async Task StartupPrompt_IsShownShortlyAfterStart_AndSkipsAnImmediatelyFollowingSlot()
+    public async Task StartupPrompt_IsShownShortlyAfterStart_AndTheNextComesOneFullIntervalLater()
     {
         Clock.SetUtcNow(At(9, 25));
         await StartEngineAsync();
@@ -37,9 +37,9 @@ public class TrackingEngineTests : TrackingTestBase
         Presenter.Complete(PromptOutcome.TimedOut);
         await Engine.IdleAsync();
 
-        // 09:30 is too close to the start-up prompt; the next prompt is at 10:00.
-        Assert.Equal(At(10, 0), Engine.Status.NextCheckInUtc);
-        await AdvanceToAsync(9, 59);
+        // Automatic popups are at least one interval apart, counted from the start-up prompt's appearance (09:25:20).
+        Assert.Equal(At(9, 55, 20), Engine.Status.NextCheckInUtc);
+        await AdvanceToAsync(9, 55);
         Assert.Single(Presenter.Shown);
     }
 
@@ -354,7 +354,8 @@ public class TrackingEngineTests : TrackingTestBase
             await Engine.IdleAsync();
         }
 
-        Assert.Equal([At(9, 8), At(9, 9), At(9, 10)], Presenter.Shown.Select(s => s.ScheduledUtc));
+        // One per minute, never closer than the interval (the fake clock moves in 10-second steps, hence 09:10:05).
+        Assert.Equal([At(9, 8), At(9, 9), At(9, 10, 5)], Presenter.Shown.Select(s => s.ScheduledUtc));
         Assert.Equal(3, (await PromptsAsync()).Count);
     }
 

@@ -8,6 +8,41 @@ namespace WorkTrace.App.Tests;
 public class ViewModelFlowTests
 {
     [Fact]
+    public Task MinorTaskReminder_Edit_OpensTheEditor_AndSavingUpdatesTheReminderState() => WpfTestHost.RunAsync(async () =>
+    {
+        await using var ctx = await UiTestContext.CreateAsync();
+        var service = ctx.Get<IMinorTaskService>();
+        var now = ctx.Time.GetUtcNow().UtcDateTime;
+        var due = await service.CreateAsync(new MinorTaskInput("Call the accountant", null, null, now.AddMinutes(-5)));
+        await service.SnoozeAsync(due.Id, now.AddMinutes(30)); // what the reminder does before showing its popup
+        var other = await service.CreateAsync(new MinorTaskInput("Order toner", null, null, now.AddMinutes(-5)));
+        await service.SnoozeAsync(other.Id, now.AddMinutes(30));
+
+        // The popup's Edit button navigates with this request.
+        var tasks = ctx.Get<TasksViewModel>();
+        await tasks.ActivateAsync(new EditMinorTaskRequest(due.Id));
+        Assert.True(tasks.MinorGroup.IsExpanded);
+        Assert.Equal(due.Id, tasks.Minor.Editing?.Id);
+
+        // Description and a later reminder: the snooze is replaced by the new reminder time, so it does not pop up again now.
+        tasks.Minor.EditDescription = "Ask about the VAT return";
+        tasks.Minor.EditReminderDate = DateTime.Today.AddDays(1);
+        tasks.Minor.EditReminderTime = "10:00";
+        await tasks.Minor.SaveEditCommand.ExecuteAsync(null);
+        Assert.Null(tasks.Minor.EditError);
+        var saved = (await service.GetAsync(includeCompleted: true)).Single(m => m.Id == due.Id);
+        Assert.Equal(("Ask about the VAT return", (DateTime?)null), (saved.Description, saved.SnoozedUntilUtc));
+        Assert.DoesNotContain(await service.GetDueAsync(now.AddHours(1)), m => m.Id == due.Id);
+
+        // Done in the editor: completed, never reminded again.
+        Assert.True(tasks.Minor.EditById(other.Id));
+        tasks.Minor.EditCompleted = true;
+        await tasks.Minor.SaveEditCommand.ExecuteAsync(null);
+        Assert.True((await service.GetAsync(includeCompleted: true)).Single(m => m.Id == other.Id).IsCompleted);
+        Assert.DoesNotContain(await service.GetDueAsync(now.AddDays(3)), m => m.Id == other.Id);
+    });
+
+    [Fact]
     public Task TimesheetLayout_IsRememberedAcrossSessions_AndClamped() => WpfTestHost.RunAsync(async () =>
     {
         await using var ctx = await UiTestContext.CreateAsync();
