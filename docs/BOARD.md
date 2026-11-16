@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 1 | 35 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 36 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,17 +13,7 @@ _Empty._
 
 ## In progress
 
-### WT-070 · Popup refinements: inactivity-gated check-ins, strict interval, right-of-centre position, Edit on minor task reminders
-
-`feature` · priority High
-
-**Acceptance criteria**
-
-- Automatic check-ins only after 10 s of inactivity (retry 60 s, both in System > Tracking & popup); never two automatic popups closer than the interval; manual check-ins immediate; popup centred two-thirds across the active monitor; minor task reminder has Edit opening the editor; registrations unaffected.
-
-**Evidence**
-
-Commit 9558a6a; Windows CI run 62 green (PopupPacingTests: deferral while active, strict interval, manual override; minor task edit flow test; RealAppTests/SchedulingTests unaffected); installer WorkTrace-Setup-0.2.62
+_None._
 
 ## Review / Test
 
@@ -559,6 +549,18 @@ Commit a4c4ddf; Windows CI run 60 green (MiniModeTests: switching, live update, 
 **Evidence**
 
 Commit ec7c850; Windows CI run 61 green (SettingsTests.StartWithWindows_..., real-app tests unaffected); installer WorkTrace-Setup-0.2.61
+
+### WT-070 · Popup refinements: inactivity-gated check-ins, strict interval, right-of-centre position, Edit on minor task reminders
+
+`feature` · priority High
+
+**Acceptance criteria**
+
+- Automatic check-ins only after 10 s of inactivity (retry 60 s, both in System > Tracking & popup); never two automatic popups closer than the interval; manual check-ins immediate; popup centred two-thirds across the active monitor; minor task reminder has Edit opening the editor; registrations unaffected.
+
+**Evidence**
+
+Commit 9558a6a; Windows CI run 62 green (PopupPacingTests: deferral while active, strict interval, manual override; minor task edit flow test; RealAppTests/SchedulingTests unaffected); installer WorkTrace-Setup-0.2.62
 
 ## To do
 

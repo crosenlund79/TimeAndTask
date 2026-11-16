@@ -1905,8 +1905,8 @@
       "title": "Popup refinements: inactivity-gated check-ins, strict interval, right-of-centre position, Edit on minor task reminders",
       "category": "feature",
       "priority": "high",
-      "status": "doing",
-      "rank": "i",
+      "status": "review",
+      "rank": "zzzzzzzi",
       "archived": false,
       "archivedAt": null,
       "description": "",
@@ -1925,11 +1925,19 @@
           "at": "2026-11-16T12:04:48Z",
           "by": "claude",
           "to": "doing"
+        },
+        {
+          "id": "72b6e382-49ef-45de-bf45-c98edb4b2cfa",
+          "type": "status",
+          "at": "2026-11-16T12:12:06Z",
+          "by": "claude",
+          "from": "doing",
+          "to": "review"
         }
       ],
       "createdAt": "2026-11-16T12:04:48Z",
-      "updatedAt": "2026-11-16T12:12:04Z",
-      "rev": 2
+      "updatedAt": "2026-11-16T12:12:06Z",
+      "rev": 3
     }
   ]
 }
