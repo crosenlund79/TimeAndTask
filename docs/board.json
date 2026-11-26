@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 71,
+  "nextId": 72,
   "cards": [
     {
       "id": "WT-001",
@@ -1938,6 +1938,38 @@
       "createdAt": "2026-11-16T12:04:48Z",
       "updatedAt": "2026-11-16T12:12:06Z",
       "rev": 3
+    },
+    {
+      "id": "WT-071",
+      "uid": "80c0d69d-4c9e-4dff-8a65-fd56ff40e2a7",
+      "title": "Portable WorkTrace ZIP on every build + check-in popup stays put next to the tray",
+      "category": "feature",
+      "priority": "high",
+      "status": "doing",
+      "rank": "i",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Every successful build has WorkTrace-Portable-win-x64.zip (self-contained, runs unzipped from any folder without admin/runtime) plus the installer; the check-in popup opens bottom-right above the tray of the active monitor and never moves or resizes while typing, opening lists or showing messages."
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "5694106b-e180-45b3-a80d-3c5a5e088ecd",
+          "type": "created",
+          "at": "2026-11-26T10:09:16Z",
+          "by": "claude",
+          "to": "doing"
+        }
+      ],
+      "createdAt": "2026-11-26T10:09:16Z",
+      "updatedAt": "2026-11-26T10:09:16Z",
+      "rev": 1
     }
   ]
 }
