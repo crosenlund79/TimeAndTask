@@ -21,6 +21,10 @@ _Empty._
 
 - Every successful build has WorkTrace-Portable-win-x64.zip (self-contained, runs unzipped from any folder without admin/runtime) plus the installer; the check-in popup opens bottom-right above the tray of the active monitor and never moves or resizes while typing, opening lists or showing messages.
 
+**Evidence**
+
+Commit 946f789; Windows CI run 63 green; portable check: 'WorkTrace 0.2.63 ran from a fresh folder without an installed runtime (182.8 MB)'; artifacts WorkTrace-Portable-win-x64 (81 MB zip) + WorkTrace-Setup-0.2.63 from the same run; popup stability asserted in CheckInTests
+
 ## Review / Test
 
 ### WT-010 · Scheduled check-ins appear reliably
