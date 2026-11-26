@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 1 | 36 | 5 | 0 |
+| 0 | 2 | 8 | 0 | 37 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,17 +13,7 @@ _Empty._
 
 ## In progress
 
-### WT-071 · Portable WorkTrace ZIP on every build + check-in popup stays put next to the tray
-
-`feature` · priority High
-
-**Acceptance criteria**
-
-- Every successful build has WorkTrace-Portable-win-x64.zip (self-contained, runs unzipped from any folder without admin/runtime) plus the installer; the check-in popup opens bottom-right above the tray of the active monitor and never moves or resizes while typing, opening lists or showing messages.
-
-**Evidence**
-
-Commit 946f789; Windows CI run 63 green; portable check: 'WorkTrace 0.2.63 ran from a fresh folder without an installed runtime (182.8 MB)'; artifacts WorkTrace-Portable-win-x64 (81 MB zip) + WorkTrace-Setup-0.2.63 from the same run; popup stability asserted in CheckInTests
+_None._
 
 ## Review / Test
 
@@ -571,6 +561,18 @@ Commit ec7c850; Windows CI run 61 green (SettingsTests.StartWithWindows_..., rea
 **Evidence**
 
 Commit 9558a6a; Windows CI run 62 green (PopupPacingTests: deferral while active, strict interval, manual override; minor task edit flow test; RealAppTests/SchedulingTests unaffected); installer WorkTrace-Setup-0.2.62
+
+### WT-071 · Portable WorkTrace ZIP on every build + check-in popup stays put next to the tray
+
+`feature` · priority High
+
+**Acceptance criteria**
+
+- Every successful build has WorkTrace-Portable-win-x64.zip (self-contained, runs unzipped from any folder without admin/runtime) plus the installer; the check-in popup opens bottom-right above the tray of the active monitor and never moves or resizes while typing, opening lists or showing messages.
+
+**Evidence**
+
+Commit 946f789; Windows CI run 63 green; portable check: 'WorkTrace 0.2.63 ran from a fresh folder without an installed runtime (182.8 MB)'; artifacts WorkTrace-Portable-win-x64 (81 MB zip) + WorkTrace-Setup-0.2.63 from the same run; popup stability asserted in CheckInTests
 
 ## To do
 

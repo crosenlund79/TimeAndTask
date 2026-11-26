@@ -1945,8 +1945,8 @@
       "title": "Portable WorkTrace ZIP on every build + check-in popup stays put next to the tray",
       "category": "feature",
       "priority": "high",
-      "status": "doing",
-      "rank": "i",
+      "status": "review",
+      "rank": "zzzzzzzr",
       "archived": false,
       "archivedAt": null,
       "description": "",
@@ -1965,11 +1965,19 @@
           "at": "2026-11-26T10:09:16Z",
           "by": "claude",
           "to": "doing"
+        },
+        {
+          "id": "a7896a64-ea62-4908-b2ba-326f20f70943",
+          "type": "status",
+          "at": "2026-11-26T10:17:38Z",
+          "by": "claude",
+          "from": "doing",
+          "to": "review"
         }
       ],
       "createdAt": "2026-11-26T10:09:16Z",
-      "updatedAt": "2026-11-26T10:17:35Z",
-      "rev": 2
+      "updatedAt": "2026-11-26T10:17:38Z",
+      "rev": 3
     }
   ]
 }
