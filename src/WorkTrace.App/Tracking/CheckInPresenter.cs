@@ -71,7 +71,7 @@ public sealed class CheckInPresenter(IServiceProvider services, ISettingsStore s
             _ = services.GetRequiredService<TrackingController>().PauseCommand.ExecuteAsync(
                 ((int)duration.TotalMinutes).ToString(System.Globalization.CultureInfo.InvariantCulture)));
 
-        var window = new CheckInWindow(viewModel, settings.Current.Tracking.PopupPosition, takeFocus, logger);
+        var window = new CheckInWindow(viewModel, takeFocus, logger);
         _window = window;
         _isOpen = true;
         window.Closed += (_, _) =>
@@ -94,7 +94,7 @@ public sealed class CheckInPresenter(IServiceProvider services, ISettingsStore s
             throw;
         }
 
-        _ = LoadAsync(viewModel);
+        _ = LoadAsync(viewModel, window);
         logger.LogInformation(
             "Check-in popup shown ({Kind}, {Mode}, auto-close {Seconds} s)",
             promptId is null ? "manual" : reason.ToString(),
@@ -103,7 +103,7 @@ public sealed class CheckInPresenter(IServiceProvider services, ISettingsStore s
         return window;
     }
 
-    private async Task LoadAsync(CheckInViewModel viewModel)
+    private async Task LoadAsync(CheckInViewModel viewModel, CheckInWindow window)
     {
         try
         {
@@ -113,5 +113,8 @@ public sealed class CheckInPresenter(IServiceProvider services, ISettingsStore s
         {
             logger.LogError(ex, "Loading the check-in popup failed");
         }
+
+        // Content is complete: fix the popup's size and place it once; from here on it never moves by itself.
+        window.SettleLayout();
     }
 }

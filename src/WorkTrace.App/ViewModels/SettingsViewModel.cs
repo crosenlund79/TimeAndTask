@@ -83,11 +83,6 @@ public sealed partial class SettingsViewModel(
         }
     }
 
-    public IReadOnlyList<PickerOption> PositionOptions { get; } =
-    [
-        new((int)PopupPosition.BottomRight, "Bottom right"), new((int)PopupPosition.TopRight, "Top right"), new((int)PopupPosition.Center, "Right of centre"),
-    ];
-
     [ObservableProperty]
     public partial bool PeriodicPromptsEnabled { get; set; }
 
@@ -109,9 +104,6 @@ public sealed partial class SettingsViewModel(
 
     [ObservableProperty]
     public partial bool IsUnobtrusiveMode { get; set; }
-
-    [ObservableProperty]
-    public partial int? PositionKey { get; set; }
 
     [ObservableProperty]
     public partial int? AutoDismissSeconds { get; set; }
@@ -377,7 +369,6 @@ public sealed partial class SettingsViewModel(
         IntervalError = null;
         IsFocusedMode = s.Tracking.PopupMode == PopupMode.Focused;
         IsUnobtrusiveMode = s.Tracking.PopupMode == PopupMode.Unobtrusive;
-        PositionKey = (int)s.Tracking.PopupPosition;
         AutoDismissSeconds = s.Tracking.AutoDismissSeconds;
         IdleKey = s.Tracking.PopupIdleSeconds == 0 ? 1000 : s.Tracking.PopupIdleSeconds;
         RetrySeconds = s.Tracking.PopupRetrySeconds;
@@ -469,14 +460,6 @@ public sealed partial class SettingsViewModel(
         if (value)
         {
             Apply(s => s.Tracking.PopupMode = PopupMode.Unobtrusive);
-        }
-    }
-
-    partial void OnPositionKeyChanged(int? value)
-    {
-        if (value is { } key)
-        {
-            Apply(s => s.Tracking.PopupPosition = (PopupPosition)key);
         }
     }
 

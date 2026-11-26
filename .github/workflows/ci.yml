@@ -94,13 +94,45 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-      - name: Upload portable build (secondary)
+      # ---- Portable WorkTrace (primary artifact) ----
+      # Self-contained: includes the .NET runtime, so it runs from any user-writable folder without installing anything,
+      # without administrator rights and without registry entries. Data stays in %LocalAppData%\WorkTrace.
+      - name: Publish portable (self-contained, win-x64)
+        run: dotnet publish src/WorkTrace.App/WorkTrace.App.csproj -c Release -r win-x64 --self-contained true -o publish/WorkTrace-Portable -p:Version=${{ steps.version.outputs.version }}
+
+      # Copies it to a fresh folder, starts it with a throwaway data folder and checks that it runs and creates its data.
+      - name: Check portable build
+        shell: pwsh
+        run: |
+          $dir = (Resolve-Path publish\WorkTrace-Portable).Path
+          foreach ($file in 'WorkTrace.exe', 'coreclr.dll', 'hostfxr.dll', 'hostpolicy.dll', 'PresentationFramework.dll', 'WorkTrace.Infrastructure.dll') {
+            if (-not (Test-Path (Join-Path $dir $file))) { throw "Portable build is missing $file" }
+          }
+          if (-not (Get-ChildItem $dir -Recurse -Filter e_sqlite3.dll)) { throw 'Portable build is missing the SQLite native library' }
+          $version = (Get-Item (Join-Path $dir 'WorkTrace.exe')).VersionInfo.ProductVersion
+          if (-not $version.StartsWith('${{ steps.version.outputs.version }}')) { throw "Portable WorkTrace.exe reports $version" }
+          $run = Join-Path $env:RUNNER_TEMP 'portable-run'
+          $data = Join-Path $env:RUNNER_TEMP 'portable-data'
+          Copy-Item $dir $run -Recurse
+          $env:WORKTRACE_DATA_DIR = $data
+          $p = Start-Process (Join-Path $run 'WorkTrace.exe') -PassThru
+          Start-Sleep -Seconds 20
+          if ($p.HasExited) { throw "Portable WorkTrace exited with code $($p.ExitCode)" }
+          if (-not (Test-Path (Join-Path $data 'worktrace.db'))) { throw 'Portable WorkTrace did not create its database' }
+          $log = Get-ChildItem (Join-Path $data 'logs') -Filter *.log | Select-Object -First 1
+          if (-not $log -or -not (Select-String -Path $log.FullName -Pattern 'WorkTrace .* starting' -Quiet)) { throw 'Portable WorkTrace did not log its start' }
+          Stop-Process -Id $p.Id -Force
+          $mb = [math]::Round(((Get-ChildItem $dir -Recurse | Measure-Object Length -Sum).Sum / 1MB), 1)
+          Write-Output "Portable OK: WorkTrace $version ran from $run without an installed runtime ($mb MB)."
+
+      # GitHub delivers an artifact as "<name>.zip": WorkTrace-Portable-win-x64.zip with WorkTrace.exe at its root.
+      - name: Upload portable (primary)
         id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: WorkTrace-win-x64
-          path: publish/WorkTrace
-          retention-days: 14
+          name: WorkTrace-Portable-win-x64
+          path: publish/WorkTrace-Portable
+          retention-days: 30
           if-no-files-found: error
 
       # ---- "New version ready" email (docs/build-notifications.md) ----
@@ -150,6 +182,7 @@ jobs:
           NOTIFY_TO: ${{ secrets.WORKTRACE_NOTIFY_EMAIL }}
           NOTIFY_FROM: ${{ vars.WORKTRACE_NOTIFY_FROM || 'WorkTrace CI <onboarding@resend.dev>' }}
           ARTIFACT_URL: ${{ steps.upload_setup.outputs.artifact-url }}
+          PORTABLE_URL: ${{ steps.upload.outputs.artifact-url }}
           VERSION: ${{ steps.version.outputs.version }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           BRANCH: ${{ github.ref_name }}
@@ -166,12 +199,12 @@ jobs:
           $short = $env:SHA.Substring(0, 7)
           $html = @"
           <p>WorkTrace $($env:VERSION) passed all tests on Windows.</p>
-          <p><a href="$($env:ARTIFACT_URL)"><b>Download WorkTrace-Setup $($env:VERSION)</b></a> (sign in to GitHub; kept 30 days). Run it to install or upgrade; your data is kept.</p>
+          <p><a href="$($env:PORTABLE_URL)"><b>Download WorkTrace $($env:VERSION) portable</b></a> (ZIP; unzip anywhere and run WorkTrace.exe, nothing to install) &middot; <a href="$($env:ARTIFACT_URL)">installer</a>. Sign in to GitHub; kept 30 days. Your data is kept.</p>
           <p><b>Changes</b></p><ul>$items</ul>
           <p>Commit <code>$short</code> ($(Esc $env:SHA)) on <code>$(Esc $env:BRANCH)</code><br>
           <a href="$($env:RUN_URL)">CI run</a></p>
           "@
-          $text = "WorkTrace $($env:VERSION) passed all tests on Windows.`n`nInstaller: $($env:ARTIFACT_URL)`n`nChanges:`n" +
+          $text = "WorkTrace $($env:VERSION) passed all tests on Windows.`n`nPortable (ZIP): $($env:PORTABLE_URL)`nInstaller: $($env:ARTIFACT_URL)`n`nChanges:`n" +
             (($subjects | ForEach-Object { "- $_" }) -join "`n") + "`n`nCommit $($env:SHA) on $($env:BRANCH)`nCI run: $($env:RUN_URL)"
           $body = @{
             from = $env:NOTIFY_FROM

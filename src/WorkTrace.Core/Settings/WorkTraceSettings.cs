@@ -184,6 +184,7 @@ public sealed class TrackingSettings
 
     public PopupMode PopupMode { get; set; } = PopupMode.Unobtrusive;
 
+    /// <summary>No longer used: check-ins appear next to the notification area like the reminders (kept so settings files load).</summary>
     public PopupPosition PopupPosition { get; set; } = PopupPosition.BottomRight;
 
     public int AutoDismissSeconds { get; set; } = 120;

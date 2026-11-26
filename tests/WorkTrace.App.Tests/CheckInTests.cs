@@ -42,19 +42,26 @@ public class CheckInTests
         WpfTestHost.UnhandledExceptions.Clear();
 
         var vm = await OpenAsync(ctx, promptId: null, autoDismiss: 120);
-        var window = new CheckInWindow(vm, PopupPosition.BottomRight, takeFocus: mode == PopupMode.Focused);
+        var window = new CheckInWindow(vm, takeFocus: mode == PopupMode.Focused);
         window.Show();
         try
         {
             await WpfTestHost.SettleAsync();
+            window.SettleLayout(); // what the presenter does once the content has loaded
+            await WpfTestHost.SettleAsync();
             Assert.True(vm.HasPrevious);
+            var placed = (window.Left, window.Top, window.ActualWidth, window.ActualHeight);
 
+            // Typing, refreshed suggestions and expanding the details never move or resize the popup.
             vm.SearchText = "meet";
             await vm.WhenSearchSettledAsync();
+            await WpfTestHost.SettleAsync();
+            Assert.Equal(placed, (window.Left, window.Top, window.ActualWidth, window.ActualHeight));
             vm.SearchText = "something new";
             await vm.WhenSearchSettledAsync();
             vm.IsExpanded = true;
             await WpfTestHost.SettleAsync();
+            Assert.Equal(placed, (window.Left, window.Top, window.ActualWidth, window.ActualHeight));
 
             // Every picker shows a selection ("Any client", "None", "Not specified" by default).
             var combos = FindAll<System.Windows.Controls.ComboBox>(window)

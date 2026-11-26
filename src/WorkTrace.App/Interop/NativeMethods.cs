@@ -102,17 +102,17 @@ internal static partial class NativeMethods
     internal static partial bool GetMonitorInfo(IntPtr monitor, ref MONITORINFO info);
 
     /// <summary>
-    /// Work area (pixels) of the monitor in use: the one with the foreground window, else the one with the mouse
+    /// Bounds and work area (pixels) of the monitor in use: the one with the foreground window, else the one with the mouse
     /// pointer (when the foreground window is <paramref name="self"/> or there is none). Null when unavailable.
     /// </summary>
-    internal static RECT? ActiveMonitorWorkArea(IntPtr self)
+    internal static (RECT Bounds, RECT Work)? ActiveMonitor(IntPtr self)
     {
         var foreground = GetForegroundWindow();
         var monitor = foreground != IntPtr.Zero && foreground != self
             ? MonitorFromWindow(foreground, MONITOR_DEFAULTTONEAREST)
             : GetCursorPos(out var point) ? MonitorFromPoint(point, MONITOR_DEFAULTTONEAREST) : IntPtr.Zero;
         var info = new MONITORINFO { cbSize = (uint)Marshal.SizeOf<MONITORINFO>() };
-        return monitor != IntPtr.Zero && GetMonitorInfo(monitor, ref info) ? info.rcWork : null;
+        return monitor != IntPtr.Zero && GetMonitorInfo(monitor, ref info) ? (info.rcMonitor, info.rcWork) : null;
     }
 
     [LibraryImport("user32.dll")]

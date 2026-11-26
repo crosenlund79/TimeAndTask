@@ -87,10 +87,6 @@
                   </StackPanel>
                 </RadioButton>
                 <Border Style="{StaticResource SettingsDivider}" />
-                <controls:SettingRow Header="Position">
-                  <ComboBox Width="180" ItemsSource="{Binding PositionOptions}" DisplayMemberPath="Name"
-                            SelectedValuePath="Id" SelectedValue="{Binding PositionKey}" AutomationProperties.Name="Popup position" />
-                </controls:SettingRow>
                 <controls:SettingRow Header="Wait for a pause in typing"
                                      Description="Automatic check-ins appear only after this long without keyboard or mouse use. Check-ins you open yourself appear at once.">
                   <ComboBox Width="180" ItemsSource="{Binding IdleOptions}" DisplayMemberPath="Name"

@@ -35,6 +35,9 @@
         </Style.Triggers>
       </Style>
     </Border.Style>
+    <!-- The window's size is fixed once it has loaded (it never moves or resizes while you type); anything that grows
+         later, such as "More details", scrolls inside it. -->
+    <ScrollViewer x:Name="ContentScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
     <StackPanel Margin="16,12,16,12">
 
       <!-- Header (drag to move) -->
@@ -98,8 +101,9 @@
                   AutomationProperties.Name="Stakeholder" />
       </Grid>
 
-      <!-- Search results -->
-      <ListBox x:Name="SuggestionList" Margin="0,6,0,0" MaxHeight="232" Style="{StaticResource RowListBox}"
+      <!-- Search results and recent tasks share one fixed-height area, so typing never changes the popup's size -->
+      <Grid Height="238" VerticalAlignment="Top">
+      <ListBox x:Name="SuggestionList" Margin="0,6,0,0" MaxHeight="232" VerticalAlignment="Top" Style="{StaticResource RowListBox}"
                ItemsSource="{Binding Suggestions}" SelectedItem="{Binding SelectedSuggestion}"
                MouseDoubleClick="OnSuggestionDoubleClick"
                Visibility="{Binding IsSearching, Converter={StaticResource BoolToVisibility}}"
@@ -145,7 +149,7 @@
       </ListBox>
 
       <!-- Recent tasks: one click or Alt+number records immediately -->
-      <StackPanel Margin="0,8,0,0"
+      <StackPanel Margin="0,8,0,0" VerticalAlignment="Top"
                   Visibility="{Binding HasRecent, Converter={StaticResource BoolToVisibility}}">
         <TextBlock Text="Recent — click or press Alt+number to record" Style="{StaticResource CaptionText}" FontSize="11" Margin="0,0,0,4" />
         <ItemsControl ItemsSource="{Binding Recent}" Focusable="False">
@@ -170,6 +174,7 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
       </StackPanel>
+      </Grid>
 
       <!-- Note -->
       <Grid Margin="0,4,0,0">
@@ -270,5 +275,6 @@
         <TextBlock Text="{Binding CountdownText}" Style="{StaticResource CaptionText}" FontSize="11" Margin="0,4,0,0" />
       </StackPanel>
     </StackPanel>
+    </ScrollViewer>
   </Border>
 </Window>

@@ -155,7 +155,7 @@ public class FocusTests
         var (_, recent) = await SeedRecentAsync(ctx);
         var vm = ctx.Get<CheckInViewModel>();
         vm.Configure(null, null, PromptReason.Scheduled, null);
-        var window = new CheckInWindow(vm, PopupPosition.BottomRight, takeFocus: false);
+        var window = new CheckInWindow(vm, takeFocus: false);
         var closed = false;
         window.Closed += (_, _) => closed = true;
         window.Show();

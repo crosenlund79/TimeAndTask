@@ -21,13 +21,12 @@ public partial class CheckInWindow : Window
     private const double ScreenMargin = 16;
 
     private readonly CheckInViewModel _viewModel;
-    private readonly PopupPosition _position;
     private readonly bool _takeFocus;
     private readonly DispatcherTimer _tick;
     private readonly ILogger? _logger;
     private bool _swallowAltCode;
 
-    public CheckInWindow(CheckInViewModel viewModel, PopupPosition position, bool takeFocus, ILogger? logger = null)
+    public CheckInWindow(CheckInViewModel viewModel, bool takeFocus, ILogger? logger = null)
     {
         _logger = logger;
         if (CaptureCreationTraces)
@@ -36,7 +35,6 @@ public partial class CheckInWindow : Window
         }
 
         _viewModel = viewModel;
-        _position = position;
         _takeFocus = takeFocus;
         DataContext = viewModel;
         InitializeComponent();
@@ -57,7 +55,6 @@ public partial class CheckInWindow : Window
         viewModel.CloseRequested += OnCloseRequested;
         SourceInitialized += (_, _) => NativeMethods.StylePopup(new WindowInteropHelper(this).Handle);
         Loaded += OnLoaded;
-        SizeChanged += (_, _) => PlaceOnScreen();
         Activated += (_, _) => FocusSearchIfNeeded();
         PreviewKeyDown += OnWindowPreviewKeyDown;
         PreviewTextInput += OnWindowPreviewTextInput;
@@ -202,47 +199,71 @@ public partial class CheckInWindow : Window
     }
 
     /// <summary>
-    /// On the monitor in use (foreground window, else mouse pointer). "Centre" puts the popup's centre two-thirds across
-    /// the work area, vertically centred, so it is not in the middle of the user's work. Always fully inside the work area.
+    /// Like the reminder popups: in the corner next to the notification area (bottom right; top or left when the taskbar
+    /// is there) of the monitor in use (foreground window, else mouse pointer), inside its work area. Placed while the
+    /// popup opens and again once by <see cref="SettleLayout"/>; after that it never moves by itself.
     /// </summary>
     private void PlaceOnScreen()
     {
-        var area = MonitorWorkArea();
+        if (_settled)
+        {
+            return;
+        }
+
+        var (area, taskbarTop, taskbarLeft) = MonitorWorkArea();
         var width = ActualWidth > 0 ? ActualWidth : Width;
         var height = ActualHeight > 0 ? ActualHeight : 320;
-        var left = _position == PopupPosition.Center
-            ? area.Left + (area.Width * 2 / 3) - (width / 2)
-            : area.Right - width - ScreenMargin;
-        var top = _position switch
-        {
-            PopupPosition.TopRight => area.Top + ScreenMargin,
-            PopupPosition.Center => area.Top + ((area.Height - height) / 2),
-            _ => area.Bottom - height - ScreenMargin,
-        };
+        var left = taskbarLeft ? area.Left + ScreenMargin : area.Right - width - ScreenMargin;
+        var top = taskbarTop ? area.Top + ScreenMargin : area.Bottom - height - ScreenMargin;
         Left = Math.Max(area.Left, Math.Min(left, area.Right - width));
         Top = Math.Max(area.Top, Math.Min(top, area.Bottom - height));
     }
 
-    /// <summary>The active monitor's work area in device-independent units (the primary one if unavailable).</summary>
+    /// <summary>
+    /// Called once the popup's content has loaded: fixes its size (at most the work area) and its final position, so
+    /// typing, opening a list, validation messages or refreshed suggestions never move or resize it. Growth after this
+    /// (e.g. "More details") scrolls inside the popup. The user can still drag it by the header.
+    /// </summary>
+    public void SettleLayout()
+    {
+        if (_settled || !IsLoaded)
+        {
+            return;
+        }
+
+        UpdateLayout();
+        var (area, _, _) = MonitorWorkArea();
+        var height = Math.Min(ActualHeight, area.Height - (2 * ScreenMargin));
+        SizeToContent = SizeToContent.Manual;
+        Height = height;
+        PlaceOnScreen();
+        _settled = true;
+    }
+
+    private bool _settled;
+
+    /// <summary>The active monitor's work area in device-independent units (the primary one if unavailable) and the taskbar edge.</summary>
     /// <remarks>Decided once per popup, so growing or clicking it never moves it to another screen.</remarks>
-    private Rect MonitorWorkArea()
+    private (Rect Area, bool TaskbarTop, bool TaskbarLeft) MonitorWorkArea()
     {
         if (_workArea is { } known)
         {
             return known;
         }
 
-        if (NativeMethods.ActiveMonitorWorkArea(new WindowInteropHelper(this).Handle) is { } work)
+        if (NativeMethods.ActiveMonitor(new WindowInteropHelper(this).Handle) is { } monitor)
         {
             var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(this);
-            _workArea = new Rect(work.Left / dpi.DpiScaleX, work.Top / dpi.DpiScaleY, (work.Right - work.Left) / dpi.DpiScaleX, (work.Bottom - work.Top) / dpi.DpiScaleY);
+            var work = monitor.Work;
+            var area = new Rect(work.Left / dpi.DpiScaleX, work.Top / dpi.DpiScaleY, (work.Right - work.Left) / dpi.DpiScaleX, (work.Bottom - work.Top) / dpi.DpiScaleY);
+            _workArea = (area, work.Top > monitor.Bounds.Top, work.Left > monitor.Bounds.Left);
             return _workArea.Value;
         }
 
-        return SystemParameters.WorkArea;
+        return (SystemParameters.WorkArea, false, false);
     }
 
-    private Rect? _workArea;
+    private (Rect Area, bool TaskbarTop, bool TaskbarLeft)? _workArea;
 
     /// <summary>
     /// After activation WPF focuses the window itself, not a control; then typing goes nowhere. Move focus
