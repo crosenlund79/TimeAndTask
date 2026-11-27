@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 72,
+  "nextId": 73,
   "cards": [
     {
       "id": "WT-001",
@@ -1978,6 +1978,38 @@
       "createdAt": "2026-11-26T10:09:16Z",
       "updatedAt": "2026-11-26T10:17:38Z",
       "rev": 3
+    },
+    {
+      "id": "WT-072",
+      "uid": "0d6be955-13a2-4a03-9ab6-e745e55c5510",
+      "title": "Copy Danish status for next week (Bruno) + weekly reporting reminder",
+      "category": "feature",
+      "priority": "normal",
+      "status": "doing",
+      "rank": "i",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Overview button copies a Danish status (HTML + text) with next week's tasks by stakeholder, provisional estimates marked *, and belægning in bold; weekly reminder (off, Fri 14:30) with Open Timesheet / Copy / Later / Done for this week"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "65bd0a9b-efd4-4b1a-9f5a-85f01ca16bd2",
+          "type": "created",
+          "at": "2026-11-27T14:39:33Z",
+          "by": "claude",
+          "to": "doing"
+        }
+      ],
+      "createdAt": "2026-11-27T14:39:33Z",
+      "updatedAt": "2026-11-27T14:39:33Z",
+      "rev": 1
     }
   ]
 }

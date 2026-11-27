@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 0 | 37 | 5 | 0 |
+| 0 | 2 | 8 | 1 | 37 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -13,7 +13,13 @@ _Empty._
 
 ## In progress
 
-_None._
+### WT-072 · Copy Danish status for next week (Bruno) + weekly reporting reminder
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Overview button copies a Danish status (HTML + text) with next week's tasks by stakeholder, provisional estimates marked *, and belægning in bold; weekly reminder (off, Fri 14:30) with Open Timesheet / Copy / Later / Done for this week
 
 ## Review / Test
 
