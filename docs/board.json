@@ -2025,8 +2025,8 @@
       "title": "Recurring minor tasks (personal nudges)",
       "category": "feature",
       "priority": "normal",
-      "status": "doing",
-      "rank": "r",
+      "status": "review",
+      "rank": "zzzzzzzy",
       "archived": false,
       "archivedAt": null,
       "description": "",
@@ -2045,11 +2045,19 @@
           "at": "2026-11-27T14:44:17Z",
           "by": "claude",
           "to": "doing"
+        },
+        {
+          "id": "63f68f2d-d2ab-484c-8655-04ed53126bd7",
+          "type": "status",
+          "at": "2026-11-27T14:51:50Z",
+          "by": "claude",
+          "from": "doing",
+          "to": "review"
         }
       ],
       "createdAt": "2026-11-27T14:44:17Z",
-      "updatedAt": "2026-11-27T14:51:48Z",
-      "rev": 2
+      "updatedAt": "2026-11-27T14:51:50Z",
+      "rev": 3
     }
   ]
 }
