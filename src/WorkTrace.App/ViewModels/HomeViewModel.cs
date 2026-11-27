@@ -45,9 +45,12 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
         INotificationService notifications,
         TimeProvider timeProvider,
         ILogger<HomeViewModel> logger,
-        IMiniMode miniMode)
+        IMiniMode miniMode,
+        WeeklyStatusService weeklyStatus)
         : base(notifications, logger)
     {
+        _weeklyStatus = weeklyStatus;
+
         _miniMode = miniMode;
         _statusService = statusService;
         _checkIns = checkIns;
@@ -359,6 +362,14 @@ public sealed partial class HomeViewModel : ViewModelBase, ISectionViewModel
             _recordedTaskId = null;
         }
     }
+
+    private readonly WeeklyStatusService _weeklyStatus;
+
+    /// <summary>Copies the Danish status for next week (HTML + text) to the clipboard; nothing is sent or changed.</summary>
+    [RelayCommand]
+    private async Task CopyWeeklyStatusAsync() => await RunAsync(
+        async () => Notifications.Show(WeeklyStatusService.Confirmation(await _weeklyStatus.CopyAsync())),
+        "Could not copy the status for next week.");
 
     [RelayCommand]
     private void NewTask() => _navigation.Navigate(AppSection.Tasks, new CreateNewRequest());

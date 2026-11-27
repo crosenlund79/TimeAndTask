@@ -14,7 +14,11 @@ public sealed record QueueEntry(
     double StartDay = 0,
     double EndDay = 0,
     DateOnly StartDate = default,
-    DateOnly EndDate = default);
+    DateOnly EndDate = default,
+    IReadOnlyList<DayShare>? Allocation = null);
+
+/// <summary>Minutes of a planned task that fall on one working day.</summary>
+public sealed record DayShare(DateOnly Date, int Minutes);
 
 /// <summary>A working day (Monday-Friday) on the planning axis; public holidays have no capacity.</summary>
 public sealed record PlanDay(DateOnly Date, Holiday? Holiday)
@@ -104,16 +108,18 @@ public static class TaskPipeline
             SkipFull();
             var startDay = day + (minute / (double)WorkingDayMinutes);
             var startDate = Day(day).Date;
+            var allocation = new List<DayShare>();
             for (var remaining = duration; remaining > 0;)
             {
                 SkipFull();
                 var take = Math.Min(remaining, Day(day).CapacityMinutes - minute);
+                allocation.Add(new DayShare(Day(day).Date, take));
                 minute += take;
                 remaining -= take;
             }
 
             var endDay = day + (minute / (double)WorkingDayMinutes);
-            result.Add(new QueueEntry(task, result.Count + 1, start, duration, provisional, startDay, endDay, startDate, Day(day).Date));
+            result.Add(new QueueEntry(task, result.Count + 1, start, duration, provisional, startDay, endDay, startDate, Day(day).Date, allocation));
             start += duration;
         }
 

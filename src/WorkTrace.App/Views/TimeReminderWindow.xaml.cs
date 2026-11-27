@@ -60,6 +60,58 @@ public partial class TimeReminderWindow : Window
 
     public Task<ReminderAnswer> Answer => _answer.Task;
 
+    private Action? _openTimesheet;
+    private Func<Task<string>>? _copyStatus;
+
+    /// <summary>
+    /// Weekly reporting reminder: Open Timesheet / Copy next week's status (both keep the popup open) / Remind me later /
+    /// Done for this week. <paramref name="copyStatus"/> returns the confirmation shown in the popup.
+    /// </summary>
+    public void UseWeeklyActions(Action openTimesheet, Func<Task<string>> copyStatus)
+    {
+        _openTimesheet = openTimesheet;
+        _copyStatus = copyStatus;
+        PeriodicButtons.Visibility = Visibility.Collapsed;
+        ShutdownButtons.Visibility = Visibility.Collapsed;
+        WeeklyButtons.Visibility = Visibility.Visible;
+        CaptionRun.Text = " · weekly reporting";
+        Title = "WorkTrace – weekly reporting";
+    }
+
+    private void OnOpenTimesheet(object sender, RoutedEventArgs e)
+    {
+        RestartAutoClose();
+        _openTimesheet?.Invoke();
+    }
+
+    private async void OnCopyStatus(object sender, RoutedEventArgs e)
+    {
+        RestartAutoClose();
+        if (_copyStatus is null)
+        {
+            return;
+        }
+
+        string text;
+        try
+        {
+            text = await _copyStatus();
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            text = "Could not copy the status: " + ex.Message;
+        }
+
+        StatusText.Text = text;
+        StatusText.Visibility = Visibility.Visible;
+    }
+
+    private void RestartAutoClose()
+    {
+        _autoClose.Stop();
+        _autoClose.Start();
+    }
+
     private void Finish(ReminderAnswer answer)
     {
         _autoClose.Stop();

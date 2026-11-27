@@ -34,6 +34,8 @@ public static class AppServices
         services.AddSingleton<TimeReminderService>();
         services.AddSingleton<MaintenanceReminderService>();
         services.AddSingleton<PlanningReminderService>();
+        services.AddSingleton<WeeklyStatusService>();
+        services.AddSingleton<WeeklyStatusReminderService>();
         services.AddSingleton<MinorTaskReminderService>();
         services.AddSingleton<ReminderSlot>();
         services.AddSingleton<ScreenshotCaptureService>();

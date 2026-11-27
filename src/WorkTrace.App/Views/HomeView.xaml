@@ -55,6 +55,13 @@
                      Visibility="{Binding Tracking.HasWarning, Converter={StaticResource BoolToVisibility}}" />
         </StackPanel>
         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button Padding="14,6" Margin="0,0,8,0" Command="{Binding CopyWeeklyStatusCommand}"
+                  ToolTip="Copies a Danish status for Bruno about next week's planned tasks and workload, ready to paste into Outlook">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="&#xE8C8;" Style="{StaticResource IconText}" FontSize="12" Margin="0,0,8,0" />
+              <TextBlock Text="Copy status for next week" />
+            </StackPanel>
+          </Button>
           <Button Padding="14,6" Margin="0,0,8,0" Style="{DynamicResource AccentButtonStyle}" Command="{Binding Tracking.RecordNowCommand}" CommandParameter="overview"
                   ToolTip="Record what you are working on (global shortcut, see Settings)">
             <StackPanel Orientation="Horizontal">

@@ -157,6 +157,28 @@
                 </controls:SettingRow>
               </StackPanel>
             </Border>
+            <!-- Weekly reporting reminder -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+              <StackPanel>
+                <TextBlock Text="Weekly reporting reminder" Style="{StaticResource SectionTitleText}" Margin="0,0,0,6" />
+                <controls:SettingRow Header="Remind me to report the week"
+                                     Description="One popup to register the week's hours and send next week's status to Bruno (Open Timesheet, Copy next week's status, Remind me later, Done for this week). After Done for this week it stays away until next week.">
+                  <CheckBox IsChecked="{Binding WeeklyReportEnabled}" Content="On" AutomationProperties.Name="Weekly reporting reminder" />
+                </controls:SettingRow>
+                <controls:SettingRow Header="When">
+                  <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                      <ComboBox Width="140" ItemsSource="{Binding WeekdayOptions}" DisplayMemberPath="Name"
+                                SelectedValuePath="Id" SelectedValue="{Binding WeeklyReportDayKey}" AutomationProperties.Name="Weekly reporting reminder day" />
+                      <TextBlock Text="at" Margin="8,0" VerticalAlignment="Center" />
+                      <ComboBox Width="96" IsEditable="True" IsTextSearchEnabled="True" ItemsSource="{Binding QuarterHours}" MaxDropDownHeight="240"
+                                Text="{Binding WeeklyReportTime, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Weekly reporting reminder time" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding WeeklyReportTimeError}" Style="{StaticResource ErrorText}" />
+                  </StackPanel>
+                </controls:SettingRow>
+              </StackPanel>
+            </Border>
           </StackPanel>
         </ScrollViewer>
       </TabItem>

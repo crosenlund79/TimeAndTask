@@ -69,3 +69,29 @@ public static class TimeRegistrationReminders
         return list[(int)((uint)counter % (uint)list.Length)];
     }
 }
+
+/// <summary>
+/// Weekly reporting reminder ("register the week's hours and send next week's status"): due from the configured day and time
+/// until the end of that week (Sunday), unless that week was answered "Done for this week".
+/// </summary>
+public static class WeeklyReportReminder
+{
+    public const string Message = "Har du husket at registrere ugens timer og sende status for næste uge til Bruno? ☕";
+
+    /// <summary>Monday of the week containing <paramref name="date"/>.</summary>
+    public static DateOnly WeekOf(DateOnly date) => date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
+
+    public static bool IsDue(DateTime local, ReminderSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        var today = DateOnly.FromDateTime(local);
+        var week = WeekOf(today);
+        if (!settings.WeeklyReportEnabled || settings.WeeklyReportDoneWeek == week)
+        {
+            return false;
+        }
+
+        var due = week.AddDays(((int)settings.WeeklyReportDay + 6) % 7).ToDateTime(settings.WeeklyReportTime);
+        return local >= due;
+    }
+}

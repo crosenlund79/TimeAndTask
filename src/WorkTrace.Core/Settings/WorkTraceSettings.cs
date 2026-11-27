@@ -307,6 +307,16 @@ public sealed class ReminderSettings
 
     /// <summary>Windows shut down on this day while time registration was outstanding: ask at the next start.</summary>
     public DateOnly? AskAfterShutdownForDay { get; set; }
+
+    /// <summary>Weekly "register the week's hours and send next week's status" reminder (one popup for both).</summary>
+    public bool WeeklyReportEnabled { get; set; }
+
+    public DayOfWeek WeeklyReportDay { get; set; } = DayOfWeek.Friday;
+
+    public TimeOnly WeeklyReportTime { get; set; } = new(14, 30);
+
+    /// <summary>Monday of the reporting week answered "Done for this week": no more weekly reminders that week.</summary>
+    public DateOnly? WeeklyReportDoneWeek { get; set; }
 }
 
 public enum BackupFrequency

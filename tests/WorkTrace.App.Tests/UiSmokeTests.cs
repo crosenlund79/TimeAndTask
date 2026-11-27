@@ -216,6 +216,40 @@ public class UiSmokeTests
         return Task.CompletedTask;
     });
 
+    [Fact]
+    public Task CopyStatusForNextWeek_PutsHtmlAndText_OnTheClipboard() => WpfTestHost.RunAsync(async () =>
+    {
+        await using var ctx = await UiTestContext.CreateAsync();
+        var client = await ctx.Get<IClientService>().CreateAsync(new ClientInput("Esvagt", null, false));
+        await ctx.Get<ITaskService>().CreateAsync(new TaskInput(client.Id, null, "4711", "Oprettelse af vare", null, null, EstimatedRemainingMinutes: 6000)); // spans next week whatever today is
+        WpfTestHost.BindingErrors.Take();
+
+        var home = ctx.Get<HomeViewModel>();
+        await home.CopyWeeklyStatusCommand.ExecuteAsync(null);
+
+        var data = Clipboard.GetDataObject()!;
+        Assert.True(data.GetDataPresent(DataFormats.Html));
+        var text = (string)data.GetData(DataFormats.UnicodeText);
+        Assert.StartsWith("Hej Bruno,", text, StringComparison.Ordinal);
+        Assert.Contains("Kunde \"Esvagt\":", text, StringComparison.Ordinal);
+        Assert.EndsWith("Ha' en god weekend\r\n", text, StringComparison.Ordinal);
+        Assert.Contains("<b>", (string)data.GetData(DataFormats.Html), StringComparison.Ordinal);
+        Assert.Contains("copied", ctx.Get<INotificationService>().Current?.Message, StringComparison.Ordinal);
+
+        // The weekly reporting reminder renders its four actions; Copy keeps it open and confirms in the popup.
+        var window = new TimeReminderWindow("Ugens rapportering", WorkTrace.Core.Tracking.WeeklyReportReminder.Message, yesNo: false, TimeSpan.FromMinutes(5));
+        var opened = false;
+        window.UseWeeklyActions(() => opened = true, () => Task.FromResult("Copied."));
+        window.Show();
+        await WpfTestHost.SettleAsync();
+        Assert.True(window.WeeklyButtons.IsVisible);
+        Assert.False(window.PeriodicButtons.IsVisible);
+        window.Close();
+        Assert.False(opened);
+        Assert.Equal(ReminderAnswer.NotYet, await window.Answer);
+        Assert.Empty(WpfTestHost.BindingErrors.Take());
+    });
+
     /// <summary>A valid 1×1 PNG.</summary>
     private static byte[] TinyPng() => Convert.FromBase64String(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");

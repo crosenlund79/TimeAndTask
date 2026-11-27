@@ -288,6 +288,52 @@ public sealed partial class SettingsViewModel(
     }
 
     [ObservableProperty]
+    public partial bool WeeklyReportEnabled { get; set; }
+
+    partial void OnWeeklyReportEnabledChanged(bool value) => Apply(s => s.Reminders.WeeklyReportEnabled = value);
+
+    public IReadOnlyList<PickerOption> WeekdayOptions { get; } =
+    [
+        new(1, "Monday"), new(2, "Tuesday"), new(3, "Wednesday"), new(4, "Thursday"), new(5, "Friday"), new(6, "Saturday"), new(7, "Sunday"),
+    ];
+
+    /// <summary>1 = Monday … 7 = Sunday.</summary>
+    [ObservableProperty]
+    public partial int? WeeklyReportDayKey { get; set; }
+
+    partial void OnWeeklyReportDayKeyChanged(int? value)
+    {
+        if (value is { } key)
+        {
+            Apply(s => s.Reminders.WeeklyReportDay = (DayOfWeek)(key % 7));
+        }
+    }
+
+    [ObservableProperty]
+    public partial string? WeeklyReportTime { get; set; }
+
+    [ObservableProperty]
+    public partial string? WeeklyReportTimeError { get; private set; }
+
+    partial void OnWeeklyReportTimeChanged(string? value)
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        if (!TimeOnly.TryParse(value?.Trim(), System.Globalization.CultureInfo.InvariantCulture, out var time)
+            && !TimeOnly.TryParse(value?.Trim(), System.Globalization.CultureInfo.CurrentCulture, out time))
+        {
+            WeeklyReportTimeError = "Use a time such as 14:30.";
+            return;
+        }
+
+        WeeklyReportTimeError = null;
+        Apply(s => s.Reminders.WeeklyReportTime = time);
+    }
+
+    [ObservableProperty]
     public partial bool PlanningReminderWeekdaysOnly { get; set; }
 
     partial void OnPlanningReminderWeekdaysOnlyChanged(bool value) => Apply(s => s.Tasks.PlanningReminderWeekdaysOnly = value);
@@ -390,6 +436,10 @@ public sealed partial class SettingsViewModel(
         PlanningReminderTime = s.Tasks.PlanningReminderTime.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
         PlanningTimeError = null;
         PlanningReminderWeekdaysOnly = s.Tasks.PlanningReminderWeekdaysOnly;
+        WeeklyReportEnabled = s.Reminders.WeeklyReportEnabled;
+        WeeklyReportDayKey = s.Reminders.WeeklyReportDay == DayOfWeek.Sunday ? 7 : (int)s.Reminders.WeeklyReportDay;
+        WeeklyReportTime = s.Reminders.WeeklyReportTime.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+        WeeklyReportTimeError = null;
         ExportRoundUpToQuarter = s.Reporting.ExportRoundUpToQuarter;
         ScreenshotModeKey = (int)s.Screenshots.Mode + 1;
         ScreenshotInterval = s.Screenshots.CaptureIntervalMinutes;

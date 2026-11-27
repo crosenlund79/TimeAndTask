@@ -38,6 +38,13 @@
         <Button Content="Not yet" Padding="12,5" Margin="0,0,6,0" Click="OnNotYet" />
         <Button Content="Yes, all done!" Padding="14,5" Style="{DynamicResource AccentButtonStyle}" Click="OnDone" />
       </WrapPanel>
+      <TextBlock x:Name="StatusText" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,-6,0,10" Visibility="Collapsed" />
+      <WrapPanel x:Name="WeeklyButtons" HorizontalAlignment="Right" Visibility="Collapsed">
+        <Button Content="Open Timesheet" Padding="12,5" Margin="0,0,6,6" Click="OnOpenTimesheet" />
+        <Button Content="Copy next week's status" Padding="12,5" Margin="0,0,6,6" Click="OnCopyStatus" />
+        <Button Content="Remind me later" Padding="12,5" Margin="0,0,6,6" Click="OnNotYet" />
+        <Button Content="Done for this week" Padding="14,5" Margin="0,0,0,6" Style="{DynamicResource AccentButtonStyle}" Click="OnDone" />
+      </WrapPanel>
       <WrapPanel x:Name="ShutdownButtons" HorizontalAlignment="Right" Visibility="Collapsed">
         <Button x:Name="EditButton" Content="Edit" Padding="14,5" Margin="0,0,6,0" Click="OnEdit" Visibility="Collapsed"
                 ToolTip="Open this minor task to change its description, reminder or status" />

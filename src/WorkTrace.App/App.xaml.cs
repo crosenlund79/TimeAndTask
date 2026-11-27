@@ -190,6 +190,7 @@ public partial class App : Application, IAppLifetime
         _ = reminders.AskAfterShutdownAsync();
         services.GetRequiredService<MaintenanceReminderService>().Start();
         services.GetRequiredService<PlanningReminderService>().Start();
+        services.GetRequiredService<WeeklyStatusReminderService>().Start();
         services.GetRequiredService<MinorTaskReminderService>().Start();
     }
 
@@ -276,6 +277,7 @@ public partial class App : Application, IAppLifetime
             _host?.Services.GetService<TimeReminderService>()?.Dispose();
             _host?.Services.GetService<MaintenanceReminderService>()?.Dispose();
             _host?.Services.GetService<PlanningReminderService>()?.Dispose();
+            _host?.Services.GetService<WeeklyStatusReminderService>()?.Dispose();
             _host?.Services.GetService<MinorTaskReminderService>()?.Dispose();
             _host?.Services.GetService<ScreenshotCaptureService>()?.Dispose();
             _host?.Services.GetService<BackupScheduler>()?.Dispose();
