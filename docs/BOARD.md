@@ -5,25 +5,13 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 2 | 37 | 5 | 0 |
+| 0 | 2 | 8 | 1 | 38 | 5 | 0 |
 
 ## Inbox (0)
 
 _Empty._
 
 ## In progress
-
-### WT-072 · Copy Danish status for next week (Bruno) + weekly reporting reminder
-
-`feature` · priority Normal
-
-**Acceptance criteria**
-
-- Overview button copies a Danish status (HTML + text) with next week's tasks by stakeholder, provisional estimates marked *, and belægning in bold; weekly reminder (off, Fri 14:30) with Open Timesheet / Copy / Later / Done for this week
-
-**Evidence**
-
-Commits b0c16f3 (weekly status) + 3a97db4 (recurring minor tasks); Windows CI run 65 green incl. tests and portable check; WorkTrace-Portable-win-x64 + WorkTrace-Setup-0.2.65
 
 ### WT-073 · Recurring minor tasks (personal nudges)
 
@@ -591,6 +579,18 @@ Commit 9558a6a; Windows CI run 62 green (PopupPacingTests: deferral while active
 **Evidence**
 
 Commit 946f789; Windows CI run 63 green; portable check: 'WorkTrace 0.2.63 ran from a fresh folder without an installed runtime (182.8 MB)'; artifacts WorkTrace-Portable-win-x64 (81 MB zip) + WorkTrace-Setup-0.2.63 from the same run; popup stability asserted in CheckInTests
+
+### WT-072 · Copy Danish status for next week (Bruno) + weekly reporting reminder
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Overview button copies a Danish status (HTML + text) with next week's tasks by stakeholder, provisional estimates marked *, and belægning in bold; weekly reminder (off, Fri 14:30) with Open Timesheet / Copy / Later / Done for this week
+
+**Evidence**
+
+Commits b0c16f3 (weekly status) + 3a97db4 (recurring minor tasks); Windows CI run 65 green incl. tests and portable check; WorkTrace-Portable-win-x64 + WorkTrace-Setup-0.2.65
 
 ## To do
 

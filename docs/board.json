@@ -1985,8 +1985,8 @@
       "title": "Copy Danish status for next week (Bruno) + weekly reporting reminder",
       "category": "feature",
       "priority": "normal",
-      "status": "doing",
-      "rank": "i",
+      "status": "review",
+      "rank": "zzzzzzzw",
       "archived": false,
       "archivedAt": null,
       "description": "",
@@ -2005,11 +2005,19 @@
           "at": "2026-11-27T14:39:33Z",
           "by": "claude",
           "to": "doing"
+        },
+        {
+          "id": "b900368c-d51e-4ae3-88bf-516b61d05449",
+          "type": "status",
+          "at": "2026-11-27T14:51:46Z",
+          "by": "claude",
+          "from": "doing",
+          "to": "review"
         }
       ],
       "createdAt": "2026-11-27T14:39:33Z",
-      "updatedAt": "2026-11-27T14:51:43Z",
-      "rev": 2
+      "updatedAt": "2026-11-27T14:51:46Z",
+      "rev": 3
     },
     {
       "id": "WT-073",
