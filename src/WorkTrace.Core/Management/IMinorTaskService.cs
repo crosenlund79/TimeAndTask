@@ -1,7 +1,9 @@
 namespace WorkTrace.Core.Management;
 
-/// <param name="ReminderAtUtc">Null = no reminder.</param>
-public sealed record MinorTaskInput(string? Title, string? Description = null, int? ClientId = null, DateTime? ReminderAtUtc = null);
+/// <param name="ReminderAtUtc">Null = no reminder. Ignored for a recurring one (the next occurrence is computed).</param>
+/// <param name="Recurrence">Null or <see cref="Entities.MinorTaskRepeat.None"/> = one-time.</param>
+public sealed record MinorTaskInput(string? Title, string? Description = null, int? ClientId = null, DateTime? ReminderAtUtc = null,
+    MinorTaskRecurrence? Recurrence = null);
 
 public sealed record MinorTaskSummary(
     int Id,
@@ -14,7 +16,12 @@ public sealed record MinorTaskSummary(
     DateTime? SnoozedUntilUtc,
     bool IsCompleted,
     DateTime? CompletedAtUtc,
-    DateTime CreatedAtUtc);
+    DateTime CreatedAtUtc,
+    MinorTaskRecurrence? Recurrence = null,
+    bool ReminderDisabled = false)
+{
+    public bool IsRecurring => Recurrence is not null;
+}
 
 /// <summary>Minor tasks: reminder-only to-dos, independent of tasks, time registration and the Board.</summary>
 public interface IMinorTaskService
@@ -34,6 +41,18 @@ public interface IMinorTaskService
 
     Task DeleteAsync(int id, CancellationToken cancellationToken = default);
 
-    /// <summary>Open minor tasks whose reminder time has come and that are not snoozed (oldest reminder first).</summary>
+    /// <summary>
+    /// The reminder's Done: a one-time minor task is completed; a recurring one only acknowledges this occurrence and moves to
+    /// the next one (the minor task stays open, no new record).
+    /// </summary>
+    Task AcknowledgeAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>"Disable reminder" (or enable it again): stops future notifications, keeps the minor task and its schedule.</summary>
+    Task SetReminderDisabledAsync(int id, bool disabled, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Open minor tasks whose reminder time has come and that are not snoozed (oldest reminder first). A recurring one that is
+    /// due outside its active period (e.g. missed while WorkTrace was closed) is moved to its next occurrence instead.
+    /// </summary>
     Task<IReadOnlyList<MinorTaskSummary>> GetDueAsync(DateTime nowUtc, CancellationToken cancellationToken = default);
 }

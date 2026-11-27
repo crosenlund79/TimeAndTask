@@ -106,6 +106,15 @@ public class UiSmokeTests
             Assert.Single(tasks.Minor.Active);
             tasks.Minor.EditCommand.Execute(tasks.Minor.Active[0]);
             await WpfTestHost.SettleAsync(5);
+            tasks.Minor.EditRecurring = true;                 // renders the schedule editor (repeat, active hours, days)
+            await WpfTestHost.SettleAsync(5);
+            await tasks.Minor.SaveEditCommand.ExecuteAsync(null);
+            await WpfTestHost.SettleAsync(5);
+            Assert.True(tasks.Minor.Active[0].IsRecurring);
+            Assert.StartsWith("Next ", tasks.Minor.Active[0].ReminderText, StringComparison.Ordinal);
+            tasks.Minor.EditCommand.Execute(tasks.Minor.Active[0]);
+            tasks.Minor.EditRepeatKey = MinorTasksViewModel.DailyKey;
+            await WpfTestHost.SettleAsync(5);
             tasks.Minor.CancelEditCommand.Execute(null);
             tasks.Minor.Active[0].IsCompleted = true;
             await WpfTestHost.SettleAsync(10);

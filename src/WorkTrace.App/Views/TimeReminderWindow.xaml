@@ -46,6 +46,8 @@
         <Button Content="Done for this week" Padding="14,5" Margin="0,0,0,6" Style="{DynamicResource AccentButtonStyle}" Click="OnDone" />
       </WrapPanel>
       <WrapPanel x:Name="ShutdownButtons" HorizontalAlignment="Right" Visibility="Collapsed">
+        <Button x:Name="DisableButton" Content="Disable reminder" Padding="12,5" Margin="0,0,6,0" Click="OnDisable" Visibility="Collapsed"
+                ToolTip="No more reminders for this recurring minor task (it and its schedule are kept)" />
         <Button x:Name="EditButton" Content="Edit" Padding="14,5" Margin="0,0,6,0" Click="OnEdit" Visibility="Collapsed"
                 ToolTip="Open this minor task to change its description, reminder or status" />
         <Button x:Name="NoButton" Content="No" Padding="16,5" Margin="0,0,6,0" Click="OnNotYet" />

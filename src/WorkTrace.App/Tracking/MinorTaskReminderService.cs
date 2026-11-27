@@ -10,7 +10,8 @@ namespace WorkTrace.App.Tracking;
 
 /// <summary>
 /// Reminders for minor tasks: when an open minor task's reminder time has come (also one that passed while WorkTrace
-/// was not running), a WorkTrace popup offers Mark done / Remind me later. Ignoring or "later" snoozes it for
+/// was not running), a WorkTrace popup offers Mark done / Remind me later; a recurring one Done for now / Snooze / Edit /
+/// Disable reminder (a missed recurring occurrence is shown at most once, see <see cref="IMinorTaskService.GetDueAsync"/>). Ignoring or "later" snoozes it for
 /// <see cref="Snooze"/> without changing the reminder time; completed minor tasks are never reminded. One popup at a
 /// time, never together with a check-in or another reminder. UI thread only.
 /// </summary>
@@ -91,7 +92,8 @@ internal sealed class MinorTaskReminderService(
             + (string.IsNullOrWhiteSpace(task.Description) ? "" : "\n" + task.Description)
             + (task.ClientName is { } client ? $"\n{client}" : "")
             + (more > 0 ? $"\n\n({more} more minor task{(more == 1 ? "" : "s")} due)" : "");
-        var window = new TimeReminderWindow("Reminder", message, yesNo: true, AutoClose, ("Mark done", "Remind me later", " · minor task"), showEdit: true)
+        var labels = task.IsRecurring ? ("Done for now", "Snooze", " · recurring reminder") : ("Mark done", "Remind me later", " · minor task");
+        var window = new TimeReminderWindow("Reminder", message, yesNo: true, AutoClose, labels, showEdit: true, showDisable: task.IsRecurring)
         {
             ShowActivated = false,
         };
@@ -99,7 +101,11 @@ internal sealed class MinorTaskReminderService(
         switch (await window.Answer)
         {
             case ReminderAnswer.Done:
-                await minorTasks.SetCompletedAsync(task.Id, true);
+                // One-time: completed. Recurring: only this occurrence; the next one is scheduled (no new record).
+                await minorTasks.AcknowledgeAsync(task.Id);
+                break;
+            case ReminderAnswer.Disable:
+                await minorTasks.SetReminderDisabledAsync(task.Id, true);
                 break;
             case ReminderAnswer.Edit:
                 // The snooze above keeps it quiet while it is edited; a changed reminder time starts afresh, Done ends it.

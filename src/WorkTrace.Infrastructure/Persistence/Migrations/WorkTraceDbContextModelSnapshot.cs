@@ -632,6 +632,12 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("ActiveFromMinute")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ActiveUntilMinute")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("ClientId")
                         .HasColumnType("INTEGER");
 
@@ -653,6 +659,21 @@ namespace WorkTrace.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("ReminderAtUtc")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("ReminderDisabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RepeatDailyMinute")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RepeatDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RepeatIntervalMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RepeatKind")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("SnoozedUntilUtc")
                         .HasColumnType("TEXT");

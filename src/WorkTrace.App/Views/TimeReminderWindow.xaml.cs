@@ -13,6 +13,9 @@ public enum ReminderAnswer
 
     /// <summary>Open the item in its editor (minor task reminders).</summary>
     Edit = 3,
+
+    /// <summary>Stop a recurring minor task's reminders.</summary>
+    Disable = 4,
 }
 
 /// <summary>
@@ -26,10 +29,13 @@ public partial class TimeReminderWindow : Window
 
     /// <param name="yesNo">Shutdown style: only Yes / No (labels replaceable through <paramref name="labels"/>).</param>
     /// <param name="showEdit">Adds an Edit button (minor task reminders).</param>
-    public TimeReminderWindow(string heading, string message, bool yesNo, TimeSpan autoClose, (string Yes, string No, string Caption)? labels = null, bool showEdit = false)
+    /// <param name="showDisable">Adds a Disable reminder button (recurring minor tasks).</param>
+    public TimeReminderWindow(string heading, string message, bool yesNo, TimeSpan autoClose, (string Yes, string No, string Caption)? labels = null,
+        bool showEdit = false, bool showDisable = false)
     {
         InitializeComponent();
         EditButton.Visibility = showEdit ? Visibility.Visible : Visibility.Collapsed;
+        DisableButton.Visibility = showDisable ? Visibility.Visible : Visibility.Collapsed;
         HeadingText.Text = heading;
         MessageText.Text = message;
         if (labels is { } l)
@@ -126,6 +132,8 @@ public partial class TimeReminderWindow : Window
     private void OnTomorrow(object sender, RoutedEventArgs e) => Finish(ReminderAnswer.Tomorrow);
 
     private void OnEdit(object sender, RoutedEventArgs e) => Finish(ReminderAnswer.Edit);
+
+    private void OnDisable(object sender, RoutedEventArgs e) => Finish(ReminderAnswer.Disable);
 
     private void OnClose(object sender, RoutedEventArgs e) => Finish(ReminderAnswer.NotYet);
 

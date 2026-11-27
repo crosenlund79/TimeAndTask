@@ -24,10 +24,20 @@ public sealed partial class MinorTaskItemViewModel : ObservableObject
         IsCompleted = summary.IsCompleted;
         _loading = false;
         IsOverdue = !summary.IsCompleted && summary.ReminderAtUtc is { } at && at <= nowUtc;
-        ReminderText = summary.ReminderAtUtc is { } r
+        var when = summary.ReminderAtUtc is { } r
             ? TimeZoneInfo.ConvertTimeFromUtc(r, TimeZoneInfo.Local).ToString("ddd d MMM HH:mm", CultureInfo.CurrentCulture)
             : null;
+        ReminderText = summary.Recurrence is null ? when
+            : summary.ReminderDisabled ? "Reminder off"
+            : when is null ? null : $"Next {when}";
+        RecurrenceText = summary.Recurrence?.Describe();
     }
+
+    /// <summary>A recurring reminder (personal nudge): Done only acknowledges the current occurrence.</summary>
+    public bool IsRecurring => Summary.IsRecurring;
+
+    /// <summary>"Every 1 h · Mon–Fri 08:00–16:00" (tooltip of the recurring icon).</summary>
+    public string? RecurrenceText { get; }
 
     public MinorTaskSummary Summary { get; }
 
@@ -143,6 +153,51 @@ public sealed partial class MinorTasksViewModel : ViewModelBase
     [ObservableProperty]
     public partial string? EditError { get; private set; }
 
+    // ---- Recurring reminder (editor) ----
+
+    /// <summary>Daily key in <see cref="RepeatOptions"/>; the others are interval minutes.</summary>
+    public const int DailyKey = -1;
+
+    public IReadOnlyList<PickerOption> RepeatOptions { get; } =
+    [
+        new(15, "Every 15 minutes"), new(30, "Every 30 minutes"), new(45, "Every 45 minutes"), new(60, "Every hour"), new(90, "Every 1 hour 30 minutes"),
+        new(120, "Every 2 hours"), new(180, "Every 3 hours"), new(240, "Every 4 hours"), new(DailyKey, "Once a day at"),
+    ];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowOneTimeReminder))]
+    public partial bool EditRecurring { get; set; }
+
+    public bool ShowOneTimeReminder => !EditRecurring;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(EditIsDaily), nameof(EditIsInterval))]
+    public partial int? EditRepeatKey { get; set; }
+
+    public bool EditIsDaily => EditRepeatKey == DailyKey;
+
+    public bool EditIsInterval => !EditIsDaily;
+
+    [ObservableProperty]
+    public partial string? EditDailyTime { get; set; }
+
+    [ObservableProperty]
+    public partial string? EditActiveFrom { get; set; }
+
+    [ObservableProperty]
+    public partial string? EditActiveUntil { get; set; }
+
+    /// <summary>Monday … Sunday toggles.</summary>
+    public IReadOnlyList<WeekdayToggle> EditDays { get; } =
+        [.. Enumerable.Range(0, 7).Select(i => new WeekdayToggle((DayOfWeek)((i + 1) % 7)))];
+
+    [ObservableProperty]
+    public partial bool EditReminderDisabled { get; set; }
+
+    /// <summary>"Next reminder: Fri 27 Nov 10:00" for a saved recurring minor task.</summary>
+    [ObservableProperty]
+    public partial string? EditNextText { get; private set; }
+
     public async Task LoadAsync()
     {
         IReadOnlyList<MinorTaskSummary> all = [];
@@ -221,7 +276,49 @@ public sealed partial class MinorTasksViewModel : ViewModelBase
         EditReminderDate = local?.Date;
         EditReminderTime = local?.ToString("HH:mm", CultureInfo.InvariantCulture) ?? "09:00";
         EditCompleted = item.Summary.IsCompleted;
+        var rule = item.Summary.Recurrence ?? MinorTaskRecurrence.Default;
+        EditRecurring = item.Summary.IsRecurring;
+        EditRepeatKey = rule.Kind == WorkTrace.Core.Entities.MinorTaskRepeat.Daily ? DailyKey
+            : RepeatOptions.Any(o => o.Id == rule.IntervalMinutes) ? rule.IntervalMinutes : 60;
+        EditDailyTime = Hhmm(rule.DailyAt);
+        EditActiveFrom = Hhmm(rule.ActiveFrom);
+        EditActiveUntil = Hhmm(rule.ActiveUntil);
+        foreach (var day in EditDays)
+        {
+            day.IsOn = rule.IsActiveDay(day.Day);
+        }
+
+        EditReminderDisabled = item.Summary.ReminderDisabled;
+        EditNextText = item.IsRecurring ? item.ReminderText : null;
         EditError = null;
+    }
+
+    private static string Hhmm(TimeOnly time) => time.ToString("HH:mm", CultureInfo.InvariantCulture);
+
+    private static bool TryTime(string? text, out TimeOnly time) =>
+        TimeOnly.TryParse(text?.Trim(), CultureInfo.InvariantCulture, out time) || TimeOnly.TryParse(text?.Trim(), CultureInfo.CurrentCulture, out time);
+
+    /// <summary>The editor's schedule, or an error for an unreadable time.</summary>
+    private bool TryRecurrence(out MinorTaskRecurrence? rule, out string? error)
+    {
+        rule = null;
+        error = null;
+        if (!EditRecurring)
+        {
+            return true;
+        }
+
+        if (!TryTime(EditDailyTime, out var daily) || !TryTime(EditActiveFrom, out var from) || !TryTime(EditActiveUntil, out var until))
+        {
+            error = "Use times such as 08:00.";
+            return false;
+        }
+
+        var days = EditDays.Where(d => d.IsOn).Aggregate(0, (bits, d) => bits | WorkTrace.Core.Entities.MinorTaskRecurrenceDays.Bit(d.Day));
+        rule = EditIsDaily
+            ? new MinorTaskRecurrence(WorkTrace.Core.Entities.MinorTaskRepeat.Daily, 60, daily, days, from, until)
+            : new MinorTaskRecurrence(WorkTrace.Core.Entities.MinorTaskRepeat.Interval, EditRepeatKey ?? 60, daily, days, from, until);
+        return true;
     }
 
     /// <summary>Opens the editor for a minor task (open or completed), e.g. from its reminder popup.</summary>
@@ -254,9 +351,20 @@ public sealed partial class MinorTasksViewModel : ViewModelBase
             return;
         }
 
+        if (!TryRecurrence(out var rule, out error))
+        {
+            EditError = error;
+            return;
+        }
+
         try
         {
-            await _minorTasks.UpdateAsync(item.Id, new MinorTaskInput(EditTitle, EditDescription, PickerOption.FromKey(EditClientKey ?? 0), reminder));
+            await _minorTasks.UpdateAsync(item.Id, new MinorTaskInput(EditTitle, EditDescription, PickerOption.FromKey(EditClientKey ?? 0), reminder, rule));
+            if (rule is not null && EditReminderDisabled != item.Summary.ReminderDisabled)
+            {
+                await _minorTasks.SetReminderDisabledAsync(item.Id, EditReminderDisabled);
+            }
+
             if (EditCompleted != item.Summary.IsCompleted)
             {
                 await _minorTasks.SetCompletedAsync(item.Id, EditCompleted);
@@ -264,7 +372,8 @@ public sealed partial class MinorTasksViewModel : ViewModelBase
         }
         catch (DomainValidationException ex)
         {
-            EditError = ex.Errors.For(nameof(MinorTaskInput.Title)) ?? ex.Errors.For(nameof(MinorTaskInput.Description)) ?? ex.Message;
+            EditError = ex.Errors.For(nameof(MinorTaskInput.Title)) ?? ex.Errors.For(nameof(MinorTaskInput.Description))
+                ?? ex.Errors.For(nameof(MinorTaskInput.Recurrence)) ?? ex.Message;
             return;
         }
 
@@ -327,4 +436,15 @@ public sealed partial class MinorTasksViewModel : ViewModelBase
         reminderUtc = DateTime.SpecifyKind(TimeZoneInfo.ConvertTimeToUtc(local, TimeZoneInfo.Local), DateTimeKind.Utc);
         return true;
     }
+}
+
+/// <summary>One weekday checkbox of a recurring reminder's schedule.</summary>
+public sealed partial class WeekdayToggle(DayOfWeek day) : ObservableObject
+{
+    public DayOfWeek Day { get; } = day;
+
+    public string Name { get; } = day.ToString()[..3];
+
+    [ObservableProperty]
+    public partial bool IsOn { get; set; }
 }

@@ -188,6 +188,9 @@
                         <StackPanel Grid.Column="1" Margin="2,1,8,0">
                           <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Description}" />
                           <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8EE;" Style="{StaticResource IconText}" FontSize="10" Margin="0,1,4,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" ToolTip="{Binding RecurrenceText}"
+                                       Visibility="{Binding IsRecurring, Converter={StaticResource BoolToVisibility}}" AutomationProperties.Name="Recurring reminder" />
                             <TextBlock x:Name="Reminder" Text="{Binding ReminderText, StringFormat='&#x23F0; {0}'}" Style="{StaticResource CaptionText}" Margin="0,0,10,0"
                                        Visibility="{Binding ReminderText, Converter={StaticResource NullToCollapsed}}" />
                             <Ellipse Width="7" Height="7" Margin="0,1,5,0" VerticalAlignment="Center" Fill="{Binding StakeholderColor, Converter={StaticResource HexBrush}}"
@@ -221,11 +224,52 @@
                   <TextBlock Text="Stakeholder (optional)" Style="{StaticResource FieldLabelText}" />
                   <ComboBox ItemsSource="{Binding ClientOptions}" DisplayMemberPath="DisplayName" SelectedValuePath="Id" SelectedValue="{Binding EditClientKey}"
                             AutomationProperties.Name="Minor task stakeholder" />
-                  <TextBlock Text="Reminder (optional)" Style="{StaticResource FieldLabelText}" />
-                  <StackPanel Orientation="Horizontal">
-                    <DatePicker Width="140" SelectedDate="{Binding EditReminderDate}" AutomationProperties.Name="Minor task reminder date" />
-                    <ComboBox Width="82" Margin="6,0,0,0" IsEditable="True" ItemsSource="{Binding QuarterHours}" MaxDropDownHeight="240"
-                              Text="{Binding EditReminderTime, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Minor task reminder time" />
+                  <CheckBox Content="Recurring reminder" IsChecked="{Binding EditRecurring}" Margin="0,10,0,0" AutomationProperties.Name="Recurring reminder"
+                            ToolTip="A personal nudge that comes back on a schedule; Done in the reminder only ends the current one" />
+                  <StackPanel Visibility="{Binding ShowOneTimeReminder, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="Reminder (optional)" Style="{StaticResource FieldLabelText}" />
+                    <StackPanel Orientation="Horizontal">
+                      <DatePicker Width="140" SelectedDate="{Binding EditReminderDate}" AutomationProperties.Name="Minor task reminder date" />
+                      <ComboBox Width="82" Margin="6,0,0,0" IsEditable="True" ItemsSource="{Binding QuarterHours}" MaxDropDownHeight="240"
+                                Text="{Binding EditReminderTime, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Minor task reminder time" />
+                    </StackPanel>
+                  </StackPanel>
+                  <StackPanel Visibility="{Binding EditRecurring, Converter={StaticResource BoolToVisibility}}" Margin="0,2,0,0">
+                    <TextBlock Text="Repeat" Style="{StaticResource FieldLabelText}" />
+                    <StackPanel Orientation="Horizontal">
+                      <ComboBox Width="210" ItemsSource="{Binding RepeatOptions}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectedValue="{Binding EditRepeatKey}"
+                                AutomationProperties.Name="Repeat" />
+                      <ComboBox Width="82" Margin="6,0,0,0" IsEditable="True" ItemsSource="{Binding QuarterHours}" MaxDropDownHeight="240"
+                                Text="{Binding EditDailyTime, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Daily reminder time"
+                                Visibility="{Binding EditIsDaily, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
+                    <StackPanel Visibility="{Binding EditIsInterval, Converter={StaticResource BoolToVisibility}}">
+                      <TextBlock Text="Active hours" Style="{StaticResource FieldLabelText}" />
+                      <StackPanel Orientation="Horizontal">
+                        <ComboBox Width="82" IsEditable="True" ItemsSource="{Binding QuarterHours}" MaxDropDownHeight="240"
+                                  Text="{Binding EditActiveFrom, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Active from" />
+                        <TextBlock Text="to" Margin="8,0" VerticalAlignment="Center" />
+                        <ComboBox Width="82" IsEditable="True" ItemsSource="{Binding QuarterHours}" MaxDropDownHeight="240"
+                                  Text="{Binding EditActiveUntil, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Active until" />
+                      </StackPanel>
+                    </StackPanel>
+                    <TextBlock Text="Days" Style="{StaticResource FieldLabelText}" />
+                    <ItemsControl ItemsSource="{Binding EditDays}" Focusable="False" AutomationProperties.Name="Active days">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <WrapPanel />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:WeekdayToggle}">
+                          <CheckBox Content="{Binding Name}" IsChecked="{Binding IsOn}" MinWidth="0" Margin="0,0,10,0" AutomationProperties.Name="{Binding Name}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{Binding EditNextText}" Style="{StaticResource CaptionText}" Margin="0,6,0,0"
+                               Visibility="{Binding EditNextText, Converter={StaticResource NullToCollapsed}}" />
+                    <CheckBox Content="Reminder disabled (keeps the schedule)" IsChecked="{Binding EditReminderDisabled}" Margin="0,6,0,0"
+                              AutomationProperties.Name="Reminder disabled" />
                   </StackPanel>
                   <CheckBox Content="Done (no more reminders)" IsChecked="{Binding EditCompleted}" Margin="0,10,0,0" AutomationProperties.Name="Minor task done" />
                   <TextBlock Text="{Binding EditError}" Style="{StaticResource ErrorText}" />
