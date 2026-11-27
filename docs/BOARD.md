@@ -21,6 +21,10 @@ _Empty._
 
 - Minor task can be a recurring reminder (every N min within active hours on active days, or daily at a time; default Mon-Fri 08-16); popup Done for now / Snooze / Edit / Disable reminder; missed occurrences not replayed; never on Board, never tracked
 
+**Evidence**
+
+Commits b0c16f3 (weekly status) + 3a97db4 (recurring minor tasks); Windows CI run 65 green incl. tests and portable check; WorkTrace-Portable-win-x64 + WorkTrace-Setup-0.2.65
+
 ## Review / Test
 
 ### WT-010 · Scheduled check-ins appear reliably
