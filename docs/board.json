@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "nextId": 73,
+  "nextId": 74,
   "cards": [
     {
       "id": "WT-001",
@@ -2009,6 +2009,38 @@
       ],
       "createdAt": "2026-11-27T14:39:33Z",
       "updatedAt": "2026-11-27T14:39:33Z",
+      "rev": 1
+    },
+    {
+      "id": "WT-073",
+      "uid": "6c9b7b01-cc63-4b68-83e6-c3aa0491a136",
+      "title": "Recurring minor tasks (personal nudges)",
+      "category": "feature",
+      "priority": "normal",
+      "status": "doing",
+      "rank": "r",
+      "archived": false,
+      "archivedAt": null,
+      "description": "",
+      "acceptance": [
+        "Minor task can be a recurring reminder (every N min within active hours on active days, or daily at a time; default Mon-Fri 08-16); popup Done for now / Snooze / Edit / Disable reminder; missed occurrences not replayed; never on Board, never tracked"
+      ],
+      "notes": "",
+      "evidence": "",
+      "blockedBy": [],
+      "links": [],
+      "comments": [],
+      "history": [
+        {
+          "id": "c1b68b1a-f823-4da3-9dea-b1555cf7b3c8",
+          "type": "created",
+          "at": "2026-11-27T14:44:17Z",
+          "by": "claude",
+          "to": "doing"
+        }
+      ],
+      "createdAt": "2026-11-27T14:44:17Z",
+      "updatedAt": "2026-11-27T14:44:17Z",
       "rev": 1
     }
   ]

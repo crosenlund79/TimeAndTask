@@ -5,7 +5,7 @@
 
 | Inbox | Backlog | To do | In progress | Review / Test | Done | Archived |
 |---|---|---|---|---|---|---|
-| 0 | 2 | 8 | 1 | 37 | 5 | 0 |
+| 0 | 2 | 8 | 2 | 37 | 5 | 0 |
 
 ## Inbox (0)
 
@@ -20,6 +20,14 @@ _Empty._
 **Acceptance criteria**
 
 - Overview button copies a Danish status (HTML + text) with next week's tasks by stakeholder, provisional estimates marked *, and belægning in bold; weekly reminder (off, Fri 14:30) with Open Timesheet / Copy / Later / Done for this week
+
+### WT-073 · Recurring minor tasks (personal nudges)
+
+`feature` · priority Normal
+
+**Acceptance criteria**
+
+- Minor task can be a recurring reminder (every N min within active hours on active days, or daily at a time; default Mon-Fri 08-16); popup Done for now / Snooze / Edit / Disable reminder; missed occurrences not replayed; never on Board, never tracked
 
 ## Review / Test
 
