@@ -1994,7 +1994,7 @@
         "Overview button copies a Danish status (HTML + text) with next week's tasks by stakeholder, provisional estimates marked *, and belægning in bold; weekly reminder (off, Fri 14:30) with Open Timesheet / Copy / Later / Done for this week"
       ],
       "notes": "",
-      "evidence": "",
+      "evidence": "Commits b0c16f3 (weekly status) + 3a97db4 (recurring minor tasks); Windows CI run 65 green incl. tests and portable check; WorkTrace-Portable-win-x64 + WorkTrace-Setup-0.2.65",
       "blockedBy": [],
       "links": [],
       "comments": [],
@@ -2008,8 +2008,8 @@
         }
       ],
       "createdAt": "2026-11-27T14:39:33Z",
-      "updatedAt": "2026-11-27T14:39:33Z",
-      "rev": 1
+      "updatedAt": "2026-11-27T14:51:43Z",
+      "rev": 2
     },
     {
       "id": "WT-073",

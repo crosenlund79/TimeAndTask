@@ -21,6 +21,10 @@ _Empty._
 
 - Overview button copies a Danish status (HTML + text) with next week's tasks by stakeholder, provisional estimates marked *, and belægning in bold; weekly reminder (off, Fri 14:30) with Open Timesheet / Copy / Later / Done for this week
 
+**Evidence**
+
+Commits b0c16f3 (weekly status) + 3a97db4 (recurring minor tasks); Windows CI run 65 green incl. tests and portable check; WorkTrace-Portable-win-x64 + WorkTrace-Setup-0.2.65
+
 ### WT-073 · Recurring minor tasks (personal nudges)
 
 `feature` · priority Normal
